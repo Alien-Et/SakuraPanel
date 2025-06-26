@@ -329,7 +329,7 @@ async function 加载节点和配置(env, hostName) {
     const 节点路径缓存 = await env.KV数据库.get('node_file_paths');
     let 节点文件路径 = 节点路径缓存 
       ? JSON.parse(节点路径缓存) 
-      : ['https://v2.i-sweet.us.kg/ips.txt', 'https://v2.i-sweet.us.kg/url.txt'];
+      : ['https://raw.githubusercontent.com/Alien-Et/SakuraPanel/refs/heads/main/ips.txt', 'https://v2.i-sweet.us.kg/url.txt'];
 
     const 手动节点缓存 = await env.KV数据库.get('manual_preferred_ips');
     let 手动节点列表 = [];
