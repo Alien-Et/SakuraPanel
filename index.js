@@ -186,7 +186,7 @@ export default {
           const validToken = await env.KV数据库.get('current_token');
           if (!token || token !== validToken) return createRedirectResponse('/login');
           const uuid = await getOrInitializeUUID(env);
-          return createHTMLResponse(generateSubscriptionPage(CONFIG_PATH, hostName, uuid, LIGHT_BG_IMAGE, DARK_BG_IMAGE));
+          return createHTMLResponse(generateSubscriptionPage(uuid, hostName, LIGHT_BG_IMAGE, DARK_BG_IMAGE));
 
         case `/${CONFIG_PATH}/logout`:
           await env.KV数据库.delete('current_token');

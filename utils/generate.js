@@ -137,11 +137,12 @@ export async function generateUniversalConfig(env, hostName) {
 /**
  * 生成订阅页面
  * @param {string} uuid - 用户UUID
+ * @param {string} hostName - 主机名
  * @param {string} lightBgImage - 浅色背景图URL
  * @param {string} darkBgImage - 深色背景图URL
  * @returns {string} 订阅页面HTML内容
  */
-export function generateSubscriptionPage(uuid, lightBgImage, darkBgImage) {
+export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgImage) {
   return `
     <!DOCTYPE html>
     <html lang="zh-CN">
@@ -198,6 +199,7 @@ export function generateSubscriptionPage(uuid, lightBgImage, darkBgImage) {
           background: #ff6b6b;
           color: white;
           border: none;
+
           padding: 5px 15px;
           border-radius: 5px;
           cursor: pointer;
@@ -305,19 +307,19 @@ export function generateSubscriptionPage(uuid, lightBgImage, darkBgImage) {
           
           <div class="config-item">
             <h3>🐱 猫咪配置</h3>
-            <div class="config-url" id="cat-config-url">https://${location.hostname}/config/cat?uuid=${uuid}</div>
+            <div class="config-url" id="cat-config-url">https://${hostName}/config/cat?uuid=${uuid}</div>
             <div class="btn-group">
               <button class="action-btn" onclick="copyToClipboard(document.getElementById('cat-config-url').textContent)">复制链接</button>
-              <a href="https://${location.hostname}/config/cat?uuid=${uuid}" target="_blank" class="action-btn">打开</a>
+              <a href="https://${hostName}/config/cat?uuid=${uuid}" target="_blank" class="action-btn">打开</a>
             </div>
           </div>
           
           <div class="config-item">
             <h3>🌐 通用配置</h3>
-            <div class="config-url" id="universal-config-url">https://${location.hostname}/config/universal?uuid=${uuid}</div>
+            <div class="config-url" id="universal-config-url">https://${hostName}/config/universal?uuid=${uuid}</div>
             <div class="btn-group">
               <button class="action-btn" onclick="copyToClipboard(document.getElementById('universal-config-url').textContent)">复制链接</button>
-              <a href="https://${location.hostname}/config/universal?uuid=${uuid}" target="_blank" class="action-btn">打开</a>
+              <a href="https://${hostName}/config/universal?uuid=${uuid}" target="_blank" class="action-btn">打开</a>
             </div>
           </div>
         </div>
