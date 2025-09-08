@@ -166,7 +166,7 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
           align-items: center;
         }
         .container {
-          max-width: 600px;
+          max-width: 800px;
           width: 100%;
           background: rgba(255, 255, 255, 0.1);
           backdrop-filter: blur(10px);
@@ -175,12 +175,7 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
           border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        h1, h2 {
-          color: #333;
-          text-align: center;
-          margin-bottom: 20px;
-          text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
-        }
+        h1, h2 { color: #333; text-align: center; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5); }
         h1 { font-size: 2.5rem; color: #ff6b6b; }
         h2 { font-size: 1.5rem; margin-top: 30px; }
         .uuid-display {
@@ -199,7 +194,6 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
           background: #ff6b6b;
           color: white;
           border: none;
-
           padding: 5px 15px;
           border-radius: 5px;
           cursor: pointer;
@@ -288,6 +282,142 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
           }
           .btn-group { flex-direction: column; }
         }
+        
+        /* 标签页样式 */
+        .tabs {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+        }
+        .tab {
+          padding: 10px 20px;
+          background: rgba(255, 255, 255, 0.5);
+          border: none;
+          cursor: pointer;
+          border-radius: 5px 5px 0 0;
+          margin-right: 5px;
+          font-size: 16px;
+          transition: background 0.3s;
+        }
+        .tab.active {
+          background: rgba(255, 255, 255, 0.8);
+          font-weight: bold;
+        }
+        .tab-content {
+          background: rgba(255, 255, 255, 0.8);
+          padding: 20px;
+          border-radius: 0 10px 10px 10px;
+          display: none;
+        }
+        .tab-content.active {
+          display: block;
+        }
+        
+        /* 文件上传样式 */
+        .upload-area {
+          border: 2px dashed #ccc;
+          padding: 20px;
+          text-align: center;
+          border-radius: 10px;
+          margin: 20px 0;
+          cursor: pointer;
+          transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+          border-color: #ff6b6b;
+        }
+        .upload-area input[type="file"] {
+          display: none;
+        }
+        
+        /* 代理设置样式 */
+        .proxy-settings {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+        }
+        .proxy-setting {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .proxy-setting input[type="checkbox"] {
+          width: 20px;
+          height: 20px;
+        }
+        .proxy-setting select {
+          padding: 8px;
+          border-radius: 5px;
+          border: 1px solid #ddd;
+          flex: 1;
+        }
+        
+        /* 节点路径列表样式 */
+        .node-paths-list {
+          max-height: 300px;
+          overflow-y: auto;
+          margin: 20px 0;
+        }
+        .node-path-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px;
+          background: rgba(0, 0, 0, 0.05);
+          margin-bottom: 10px;
+          border-radius: 5px;
+        }
+        .node-path-item button {
+          background: #f44336;
+          color: white;
+          border: none;
+          padding: 5px 10px;
+          border-radius: 3px;
+          cursor: pointer;
+        }
+        .node-path-item button:hover {
+          background: #d32f2f;
+        }
+        
+        /* 添加节点路径输入框样式 */
+        .add-node-path {
+          display: flex;
+          gap: 10px;
+          margin-top: 20px;
+        }
+        .add-node-path input {
+          flex: 1;
+          padding: 10px;
+          border-radius: 5px;
+          border: 1px solid #ddd;
+        }
+        
+        /* 状态显示 */
+        .status-display {
+          background: rgba(0, 128, 0, 0.1);
+          padding: 15px;
+          border-radius: 5px;
+          margin: 20px 0;
+          text-align: center;
+          color: #006400;
+        }
+        
+        /* 加载状态 */
+        .loading {
+          display: inline-block;
+          width: 20px;
+          height: 20px;
+          border: 3px solid #f3f3f3;
+          border-top: 3px solid #ff6b6b;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
       </style>
     </head>
     <body id="subscription-page">
@@ -297,37 +427,102 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
         <h1>🌸樱花代理</h1>
         <h2>订阅管理中心</h2>
         
+        <!-- 标签页 -->
+        <div class="tabs">
+          <button class="tab active" data-tab="subscription">订阅配置</button>
+          <button class="tab" data-tab="proxy">代理设置</button>
+          <button class="tab" data-tab="nodes">节点管理</button>
+        </div>
+        
+        <!-- UUID显示 -->
         <div class="uuid-display">
           <span>当前UUID：${uuid}</span>
           <button class="copy-btn" onclick="copyToClipboard('${uuid}')">复制</button>
         </div>
         
-        <div class="config-section">
-          <h3>配置链接</h3>
-          
-          <div class="config-item">
-            <h3>🐱 猫咪配置</h3>
-            <div class="config-url" id="cat-config-url">https://${hostName}/config/cat?uuid=${uuid}</div>
-            <div class="btn-group">
-              <button class="action-btn" onclick="copyToClipboard(document.getElementById('cat-config-url').textContent)">复制链接</button>
-              <a href="https://${hostName}/config/cat?uuid=${uuid}" target="_blank" class="action-btn">打开</a>
+        <!-- 订阅配置标签页内容 -->
+        <div class="tab-content active" id="subscription">
+          <div class="config-section">
+            <h3>配置链接</h3>
+            
+            <div class="config-item">
+              <h3>🐱 猫咪配置</h3>
+              <div class="config-url" id="cat-config-url">https://${hostName}/config/cat?uuid=${uuid}</div>
+              <div class="btn-group">
+                <button class="action-btn" onclick="copyToClipboard(document.getElementById('cat-config-url').textContent)">复制链接</button>
+                <a href="https://${hostName}/config/cat?uuid=${uuid}" target="_blank" class="action-btn">打开</a>
+              </div>
+            </div>
+            
+            <div class="config-item">
+              <h3>🌐 通用配置</h3>
+              <div class="config-url" id="universal-config-url">https://${hostName}/config/universal?uuid=${uuid}</div>
+              <div class="btn-group">
+                <button class="action-btn" onclick="copyToClipboard(document.getElementById('universal-config-url').textContent)">复制链接</button>
+                <a href="https://${hostName}/config/universal?uuid=${uuid}" target="_blank" class="action-btn">打开</a>
+              </div>
             </div>
           </div>
           
-          <div class="config-item">
-            <h3>🌐 通用配置</h3>
-            <div class="config-url" id="universal-config-url">https://${hostName}/config/universal?uuid=${uuid}</div>
-            <div class="btn-group">
-              <button class="action-btn" onclick="copyToClipboard(document.getElementById('universal-config-url').textContent)">复制链接</button>
-              <a href="https://${hostName}/config/universal?uuid=${uuid}" target="_blank" class="action-btn">打开</a>
+          <div class="btn-group">
+            <button class="action-btn" onclick="changeUUID()">更换UUID</button>
+          </div>
+        </div>
+        
+        <!-- 代理设置标签页内容 -->
+        <div class="tab-content" id="proxy">
+          <form class="proxy-settings" id="proxyForm">
+            <div class="proxy-setting">
+              <input type="checkbox" id="proxyEnabled">
+              <label for="proxyEnabled">启用代理</label>
             </div>
+            
+            <div class="proxy-setting">
+              <input type="checkbox" id="forceProxy">
+              <label for="forceProxy">强制代理模式</label>
+            </div>
+            
+            <div class="proxy-setting">
+              <label for="proxyType">代理类型：</label>
+              <select id="proxyType">
+                <option value="reverse">反向代理</option>
+                <option value="socks5">SOCKS5</option>
+              </select>
+            </div>
+            
+            <div class="status-display" id="proxyStatus">
+              代理状态：加载中 <span class="loading"></span>
+            </div>
+            
+            <button type="button" class="action-btn" onclick="saveProxySettings()">保存设置</button>
+          </form>
+        </div>
+        
+        <!-- 节点管理标签页内容 -->
+        <div class="tab-content" id="nodes">
+          <div class="upload-area" onclick="document.getElementById('ipFiles').click()">
+            <input type="file" id="ipFiles" multiple accept=".txt">
+            <div class="upload-text">
+              <p>📁 点击或拖拽TXT文件到此区域上传IP节点</p>
+              <p id="selectedFiles">(未选择任何文件)</p>
+            </div>
+          </div>
+          
+          <button type="button" class="action-btn" onclick="uploadIpFiles()">上传节点</button>
+          
+          <h3>节点文件路径管理</h3>
+          <div class="node-paths-list" id="nodePathsList">
+            加载中 <span class="loading"></span>
+          </div>
+          
+          <div class="add-node-path">
+            <input type="text" id="newNodePath" placeholder="输入新的节点文件URL">
+            <button type="button" class="action-btn" onclick="addNodePath()">添加</button>
           </div>
         </div>
         
         <div class="btn-group">
-          <button class="action-btn" onclick="location.href='/update-uuid'">更换UUID</button>
-          <button class="action-btn" onclick="location.href='/proxy-settings'">代理设置</button>
-          <button class="action-btn danger-btn" onclick="location.href='/logout'">退出登录</button>
+          <button class="action-btn danger-btn" onclick="logout()">退出登录</button>
         </div>
       </div>
       
@@ -392,10 +587,283 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
           }
         }
         
+        // 标签页切换
+        function setupTabs() {
+          const tabs = document.querySelectorAll('.tab');
+          tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+              // 移除所有活动状态
+              tabs.forEach(t => t.classList.remove('active'));
+              document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+              
+              // 设置当前活动状态
+              tab.classList.add('active');
+              const tabId = tab.getAttribute('data-tab');
+              document.getElementById(tabId).classList.add('active');
+              
+              // 如果是节点管理标签页，重新加载节点路径
+              if (tabId === 'nodes') {
+                loadNodePaths();
+              }
+              // 如果是代理设置标签页，重新加载代理状态
+              if (tabId === 'proxy') {
+                loadProxyStatus();
+              }
+            });
+          });
+        }
+        
+        // 更换UUID
+        function changeUUID() {
+          if (confirm('确定要更换UUID吗？这将会影响您的所有配置。')) {
+            const button = event.target;
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.innerHTML = '更换中 <span class="loading"></span>';
+            
+            fetch('/config/change-uuid', {
+              method: 'POST',
+              credentials: 'same-origin'
+            })
+              .then(response => response.json())
+              .then(data => {
+                if (data.uuid) {
+                  document.querySelector('.uuid-display span').textContent = `当前UUID：${data.uuid}`;
+                  document.querySelector('.copy-btn').setAttribute('onclick', `copyToClipboard('${data.uuid}')`);
+                  document.getElementById('cat-config-url').textContent = `https://${hostName}/config/cat?uuid=${data.uuid}`;
+                  document.getElementById('universal-config-url').textContent = `https://${hostName}/config/universal?uuid=${data.uuid}`;
+                  alert('UUID已成功更换！');
+                }
+              })
+              .catch(err => {
+                console.error('更换UUID失败:', err);
+                alert('更换UUID失败，请重试。');
+              })
+              .finally(() => {
+                button.disabled = false;
+                button.textContent = originalText;
+              });
+          }
+        }
+        
+        // 退出登录
+        function logout() {
+          if (confirm('确定要退出登录吗？')) {
+            window.location.href = '/config/logout';
+          }
+        }
+        
+        // 上传IP文件
+        function uploadIpFiles() {
+          const ipFiles = document.getElementById('ipFiles').files;
+          if (ipFiles.length === 0) {
+            alert('请选择要上传的文件');
+            return;
+          }
+          
+          const formData = new FormData();
+          for (let i = 0; i < ipFiles.length; i++) {
+            formData.append('ipFiles', ipFiles[i]);
+          }
+          
+          const button = event.target;
+          const originalText = button.textContent;
+          button.disabled = true;
+          button.innerHTML = '上传中 <span class="loading"></span>';
+          
+          fetch('/config/upload', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.error) {
+                alert(`上传失败: ${data.error}`);
+              } else if (data.message) {
+                alert(data.message);
+                if (data.message.includes('成功')) {
+                  // 重置文件选择
+                  document.getElementById('ipFiles').value = '';
+                  document.getElementById('selectedFiles').textContent = '(未选择任何文件)';
+                }
+              }
+            })
+            .catch(err => {
+              console.error('上传失败:', err);
+              alert('上传失败，请重试。');
+            })
+            .finally(() => {
+              button.disabled = false;
+              button.textContent = originalText;
+            });
+        }
+        
+        // 监听文件选择
+        document.getElementById('ipFiles').addEventListener('change', function() {
+          const files = this.files;
+          if (files.length === 0) {
+            document.getElementById('selectedFiles').textContent = '(未选择任何文件)';
+          } else if (files.length === 1) {
+            document.getElementById('selectedFiles').textContent = `已选择: ${files[0].name}`;
+          } else {
+            document.getElementById('selectedFiles').textContent = `已选择: ${files.length} 个文件`;
+          }
+        });
+        
+        // 加载节点路径
+        function loadNodePaths() {
+          const nodePathsList = document.getElementById('nodePathsList');
+          nodePathsList.innerHTML = '加载中 <span class="loading"></span>';
+          
+          fetch('/config/get-node-paths', {
+            method: 'GET',
+            credentials: 'same-origin'
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.paths && Array.isArray(data.paths)) {
+                if (data.paths.length === 0) {
+                  nodePathsList.innerHTML = '<p>暂无节点文件路径</p>';
+                } else {
+                  nodePathsList.innerHTML = '';
+                  data.paths.forEach((path, index) => {
+                    const pathItem = document.createElement('div');
+                    pathItem.className = 'node-path-item';
+                    pathItem.innerHTML = `
+                      <span>${path}</span>
+                      <button onclick="removeNodePath(${index})">&times;</button>
+                    `;
+                    nodePathsList.appendChild(pathItem);
+                  });
+                }
+              }
+            })
+            .catch(err => {
+              console.error('加载节点路径失败:', err);
+              nodePathsList.innerHTML = '<p class="error-message">加载失败，请重试</p>';
+            });
+        }
+        
+        // 添加节点路径
+        function addNodePath() {
+          const newPathInput = document.getElementById('newNodePath');
+          const newPath = newPathInput.value.trim();
+          
+          if (!newPath) {
+            alert('请输入节点文件URL');
+            return;
+          }
+          
+          const button = event.target;
+          const originalText = button.textContent;
+          button.disabled = true;
+          button.innerHTML = '添加中 <span class="loading"></span>';
+          
+          fetch('/config/add-node-path', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ path: newPath }),
+            credentials: 'same-origin'
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.error) {
+                alert(`添加失败: ${data.error}`);
+              } else if (data.success) {
+                newPathInput.value = '';
+                loadNodePaths();
+              }
+            })
+            .catch(err => {
+              console.error('添加节点路径失败:', err);
+              alert('添加失败，请重试。');
+            })
+            .finally(() => {
+              button.disabled = false;
+              button.textContent = originalText;
+            });
+        }
+        
+        // 移除节点路径
+        function removeNodePath(index) {
+          if (confirm('确定要移除这个节点文件路径吗？')) {
+            fetch('/config/remove-node-path', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ index: index }),
+              credentials: 'same-origin'
+            })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  loadNodePaths();
+                } else if (data.error) {
+                  alert(`移除失败: ${data.error}`);
+                }
+              })
+              .catch(err => {
+                console.error('移除节点路径失败:', err);
+                alert('移除失败，请重试。');
+              });
+          }
+        }
+        
+        // 加载代理状态
+        function loadProxyStatus() {
+          const proxyStatus = document.getElementById('proxyStatus');
+          proxyStatus.innerHTML = '代理状态：加载中 <span class="loading"></span>';
+          
+          fetch('/get-proxy-status', {
+            method: 'GET'
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.status) {
+                proxyStatus.textContent = `代理状态：${data.status}`;
+              }
+            })
+            .catch(err => {
+              console.error('加载代理状态失败:', err);
+              proxyStatus.textContent = '代理状态：加载失败';
+            });
+        }
+        
+        // 保存代理设置
+        function saveProxySettings() {
+          const proxyEnabled = document.getElementById('proxyEnabled').checked;
+          const forceProxy = document.getElementById('forceProxy').checked;
+          const proxyType = document.getElementById('proxyType').value;
+          
+          const formData = new FormData();
+          formData.append('proxyEnabled', proxyEnabled ? 'true' : 'false');
+          formData.append('forceProxy', forceProxy ? 'true' : 'false');
+          formData.append('proxyType', proxyType);
+          
+          fetch('/set-proxy-state', {
+            method: 'POST',
+            body: formData
+          })
+            .then(() => {
+              alert('代理设置已保存！');
+              loadProxyStatus();
+            })
+            .catch(err => {
+              console.error('保存代理设置失败:', err);
+              alert('保存失败，请重试。');
+            });
+        }
+        
         // 页面加载时执行
         window.addEventListener('load', () => {
           initTheme();
           detectUserAgent();
+          setupTabs();
+          loadProxyStatus();
         });
         
         // 窗口大小变化时重新检测
