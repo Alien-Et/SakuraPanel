@@ -26,25 +26,7 @@ function generateUUID() {
   });
 }
 
-// 创建响应
-function createResponse(body, options = {}) {
-  const defaultHeaders = {
-    'Content-Type': 'text/html; charset=utf-8',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-  };
-  
-  const headers = {
-    ...defaultHeaders,
-    ...options.headers
-  };
-  
-  return new Response(body, {
-    status: options.status || 200,
-    headers
-  });
-}
+
 
 // 验证Websocket连接
 async function verifyWebsocketConnection(request, env, ctx) {
