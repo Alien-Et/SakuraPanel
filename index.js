@@ -3,6 +3,7 @@ import { checkLock, generateLoginRegisterPage, encryptPassword } from './utils/a
 import { loadNodesAndConfig, getConfig, getOrInitializeUUID } from './utils/nodes.js';
 import { generateSubscriptionPage, generateKvNotBoundPage, generateCatConfig, generateUniversalConfig } from './utils/generate.js';
 import { handleWebSocketUpgrade, handleSocks5Connection } from './utils/websocket.js';
+import { mockKvInstance } from './utils/mock-kv.js';
 
 // 基础配置
 const CONFIG_PATH = "config";
@@ -22,9 +23,17 @@ export default {
       // 从环境变量读取配置
       PROXY_ADDRESS = env.PROXYIP || PROXY_ADDRESS;
       SOCKS5_ACCOUNT = env.SOCKS5 || SOCKS5_ACCOUNT;
+      const isDevelopmentMode = env.DEVELOPMENT_MODE === 'true';
       
+      // 检查是否有KV数据库，如果没有且处于开发模式，则使用模拟KV
       if (!env.KV数据库) {
-        return createHTMLResponse(generateKvNotBoundPage(LIGHT_BG_IMAGE, DARK_BG_IMAGE));
+        if (isDevelopmentMode) {
+          // 开发模式下使用模拟KV数据库
+          env.KV数据库 = mockKvInstance;
+          console.log('开发模式：使用模拟KV数据库');
+        } else {
+          return createHTMLResponse(generateKvNotBoundPage(LIGHT_BG_IMAGE, DARK_BG_IMAGE));
+        }
       }
 
       const upgradeHeader = request.headers.get('Upgrade');
