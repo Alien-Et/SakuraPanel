@@ -1,0 +1,16 @@
+{
+  "name": "sakura-panel",
+  "compatibility_date": "2025-09-08",
+  "main": "index.js",
+  "compatibility_flags": ["nodejs_compat"],
+  "kv_namespaces": [
+    {
+      "binding": "KV数据库",
+      "id": "example-id-1234567890"
+    }
+  ],
+  "vars": {
+    "PROXYIP": "ts.hpc.tw",
+    "SOCKS5": ""
+  }
+}

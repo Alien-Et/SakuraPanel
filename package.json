@@ -7,7 +7,8 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "format": "prettier --write '**/*.{js,json,md}'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy:helper": "node deploy-helper.js"
   },
   "keywords": [
     "cloudflare",
