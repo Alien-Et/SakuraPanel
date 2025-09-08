@@ -2,6 +2,7 @@
   "name": "sakura-panel",
   "version": "1.0.0",
   "description": "Sakura Panel - Cloudflare Workers Proxy Panel",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "wrangler dev",
