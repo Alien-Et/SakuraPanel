@@ -619,13 +619,13 @@ async function handleProxyRequest(request, env) {
   }
 }
 
-// 注册fetch事件处理器
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request, event.env, event.ctx));
-});
-
-// 注册WebSocket连接事件处理器
-addEventListener('websocket', event => {
-  console.log('WebSocket连接已建立');
-  event.accept();
-});
+// 默认导出
+export default {
+  async fetch(request, env, ctx) {
+    return await handleRequest(request, env, ctx);
+  },
+  async websocket(websocket, event) {
+    console.log('WebSocket连接已建立');
+    websocket.accept();
+  }
+};

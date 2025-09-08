@@ -713,7 +713,7 @@ export function generateLoginRegisterPage(lightBgUrl, darkBgUrl) {
       // 启动倒计时
       function startCountdown(element, seconds) {
         element.style.display = 'block';
-        element.textContent = `请在 ${seconds} 秒后重试`;
+        ;element.textContent = '请在 ' + seconds + ' 秒后重试';
         
         const interval = setInterval(() => {
           seconds--;

@@ -634,7 +634,7 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
               .then(response => response.json())
               .then(data => {
                 if (data.uuid) {
-                  document.querySelector('.uuid-display span').textContent = `当前UUID：${data.uuid}`;
+                  ;document.querySelector('.uuid-display span').textContent = `当前UUID：${data.uuid}`;
                   document.querySelector('.copy-btn').setAttribute('onclick', `copyToClipboard('${data.uuid}')`);
                   document.getElementById('cat-config-url').textContent = `https://${hostName}/config/cat?uuid=${data.uuid}`;
                   document.getElementById('universal-config-url').textContent = `https://${hostName}/config/universal?uuid=${data.uuid}`;
