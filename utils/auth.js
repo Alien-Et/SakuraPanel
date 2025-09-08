@@ -718,7 +718,7 @@ export function generateLoginRegisterPage(lightBgUrl, darkBgUrl) {
         const interval = setInterval(() => {
           seconds--;
           if (seconds > 0) {
-            element.textContent = `请在 ${seconds} 秒后重试`;
+            element.textContent = '请在 ' + seconds + ' 秒后重试';
           } else {
             clearInterval(interval);
             element.style.display = 'none';

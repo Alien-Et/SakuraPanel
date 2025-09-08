@@ -634,10 +634,10 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
               .then(response => response.json())
               .then(data => {
                 if (data.uuid) {
-                  ;document.querySelector('.uuid-display span').textContent = `当前UUID：${data.uuid}`;
-                  document.querySelector('.copy-btn').setAttribute('onclick', `copyToClipboard('${data.uuid}')`);
-                  document.getElementById('cat-config-url').textContent = `https://${hostName}/config/cat?uuid=${data.uuid}`;
-                  document.getElementById('universal-config-url').textContent = `https://${hostName}/config/universal?uuid=${data.uuid}`;
+                  ;document.querySelector('.uuid-display span').textContent = '当前UUID：' + data.uuid;
+                  document.querySelector('.copy-btn').setAttribute('onclick', 'copyToClipboard(\'' + data.uuid + '\')');
+                  document.getElementById('cat-config-url').textContent = 'https://' + hostName + '/config/cat?uuid=' + data.uuid;
+                  document.getElementById('universal-config-url').textContent = 'https://' + hostName + '/config/universal?uuid=' + data.uuid;
                   alert('UUID已成功更换！');
                 }
               })
@@ -685,7 +685,7 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
             .then(response => response.json())
             .then(data => {
               if (data.error) {
-                alert(`上传失败: ${data.error}`);
+                alert('上传失败: ' + data.error);
               } else if (data.message) {
                 alert(data.message);
                 if (data.message.includes('成功')) {
@@ -711,9 +711,9 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
           if (files.length === 0) {
             document.getElementById('selectedFiles').textContent = '(未选择任何文件)';
           } else if (files.length === 1) {
-            document.getElementById('selectedFiles').textContent = `已选择: ${files[0].name}`;
+            document.getElementById('selectedFiles').textContent = '已选择: ' + files[0].name;
           } else {
-            document.getElementById('selectedFiles').textContent = `已选择: ${files.length} 个文件`;
+            document.getElementById('selectedFiles').textContent = '已选择: ' + files.length + ' 个文件';
           }
         });
         
@@ -736,10 +736,9 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
                   data.paths.forEach((path, index) => {
                     const pathItem = document.createElement('div');
                     pathItem.className = 'node-path-item';
-                    pathItem.innerHTML = `
-                      <span>${path}</span>
-                      <button onclick="removeNodePath(${index})">&times;</button>
-                    `;
+                    pathItem.innerHTML =
+                      '<span>' + path + '</span>' +
+                      '<button onclick="removeNodePath(' + index + ')">&times;</button>';
                     nodePathsList.appendChild(pathItem);
                   });
                 }
@@ -777,7 +776,7 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
             .then(response => response.json())
             .then(data => {
               if (data.error) {
-                alert(`添加失败: ${data.error}`);
+                alert('添加失败: ' + data.error);
               } else if (data.success) {
                 newPathInput.value = '';
                 loadNodePaths();
@@ -809,7 +808,7 @@ export function generateSubscriptionPage(uuid, hostName, lightBgImage, darkBgIma
                 if (data.success) {
                   loadNodePaths();
                 } else if (data.error) {
-                  alert(`移除失败: ${data.error}`);
+                  alert('移除失败: ' + data.error);
                 }
               })
               .catch(err => {
