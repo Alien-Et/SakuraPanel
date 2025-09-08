@@ -1,0 +1,25 @@
+{
+  "name": "sakura-panel",
+  "version": "1.0.0",
+  "description": "Sakura Panel - Cloudflare Workers Proxy Panel",
+  "main": "index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "format": "prettier --write '**/*.{js,json,md}'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "proxy",
+    "panel"
+  ],
+  "author": "Sakura Panel",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250825.0",
+    "prettier": "^3.3.3",
+    "wrangler": "^4.34.0"
+  }
+}
