@@ -7,6 +7,7 @@
 - 流量统计
 - KV数据库支持
 - 环境变量配置
+- 本地开发支持（模拟KV数据库）
 
 ## 安装和配置
 
@@ -44,11 +45,33 @@ wrangler kv:namespace create "KV数据库"
 
 ## 本地开发
 
+### 方法1：使用真实Cloudflare KV（推荐生产环境）
+确保已正确配置KV命名空间ID，然后运行：
 ```bash
 npm run dev
 # 或
 wrangler dev
 ```
+
+### 方法2：使用模拟KV数据库（推荐开发环境）
+1. 复制.env.example文件为.env
+```bash
+cp .env.example .env
+```
+
+2. 在.env文件中设置开发模式
+```
+DEVELOPMENT_MODE=true
+```
+
+3. 运行本地开发服务器
+```bash
+npm run dev
+# 或
+wrangler dev --env .env
+```
+
+**注意**：模拟KV数据库仅用于开发和测试，数据存储在内存中，重启服务器后会丢失。生产环境请使用真实的Cloudflare KV命名空间。
 
 ## 部署指南
 
@@ -82,6 +105,7 @@ wrangler deploy dist/index.js
 
 - `PROXYIP`：代理IP地址，默认为"ts.hpc.tw"
 - `SOCKS5`：SOCKS5代理配置（可选）
+- `DEVELOPMENT_MODE`：设置为"true"启用开发模式，使用模拟KV数据库
 
 ## 常见问题解决
 
@@ -102,6 +126,7 @@ wrangler deploy dist/index.js
 1. 更新Wrangler到最新版本：`npm install wrangler@latest -D`
 2. 使用WSL(Windows Subsystem for Linux)进行开发
 3. 直接部署到Cloudflare进行测试
+4. 使用模拟KV数据库进行本地开发
 
 ### KV数据库未绑定错误
 
@@ -111,6 +136,7 @@ wrangler deploy dist/index.js
 1. 确认在Cloudflare中创建了KV命名空间
 2. 使用正确的KV命名空间ID更新配置文件
 3. 检查KV命名空间的绑定名称是否为"KV数据库"
+4. 本地开发时可启用模拟KV数据库
 
 ## 开发说明
 

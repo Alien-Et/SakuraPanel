@@ -123,11 +123,20 @@ function provideDeploymentCommands() {
     console.log('   c) 部署构建后的文件:');
     console.log('      wrangler deploy dist/index.js');
     
-    console.log('\n5. 常见问题解决:');
+    console.log('\n5. 开发环境配置指南:');
+    console.log('   本地开发时，您可以使用模拟KV数据库进行测试:');
+    console.log('   - 复制.env.example文件为.env');
+    console.log('   - 在.env文件中设置DEVELOPMENT_MODE=true');
+    console.log('   - 运行本地开发服务器: wrangler dev');
+    console.log('   注意: 模拟KV数据库仅用于开发和测试，生产环境请使用真实的Cloudflare KV命名空间。');
+    
+    console.log('\n6. 常见问题解决:');
     console.log('   - 部署错误: Missing entry-point to Worker script or to assets directory');
     console.log('     解决方案: 使用命令 wrangler deploy index.js');
     console.log('   - Windows环境下开发服务器启动失败');
     console.log('     解决方案: 使用WSL或直接部署到Cloudflare进行测试');
+    console.log('   - KV未绑定错误: 如果遇到KV命名空间绑定错误');
+    console.log('     解决方案: 确保在Cloudflare控制台正确绑定了KV命名空间，检查配置文件中的ID是否正确，本地开发时可启用模拟KV数据库');
 }
 
 // 执行检查
