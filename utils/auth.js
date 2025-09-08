@@ -1,659 +1,747 @@
 // 认证工具模块
 
 /**
- * 检查设备锁定状态
- * @param {Object} env - Cloudflare Workers 环境对象
- * @param {string} 设备标识 - 唯一标识设备的字符串
- * @param {number} 锁定时间 - 锁定时长（毫秒）
- * @returns {Object} 锁定状态信息
+ * 创建HTML响应
+ * @param {string} html - HTML内容
+ * @param {number} status - HTTP状态码
+ * @returns {Response} HTML响应对象
  */
-export async function checkLock(env, 设备标识, 锁定时间) {
-  const 锁定时间戳 = await env.KV数据库.get(`lock_${设备标识}`);
-  const 当前时间 = Date.now();
-  const 被锁定 = 锁定时间戳 && 当前时间 < Number(锁定时间戳);
-  return {
-    被锁定,
-    剩余时间: 被锁定 ? Math.ceil((Number(锁定时间戳) - 当前时间) / 1000) : 0
-  };
+export function createHtmlResponse(html, status = 200) {
+  return new Response(html, {
+    status,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+    },
+  });
 }
 
 /**
- * 生成登录注册界面
- * @param {string} 类型 - '登录' 或 '注册'
- * @param {Object} 额外参数 - 额外的界面参数
- * @param {string} 白天背景图 - 白天模式背景图URL
- * @param {string} 暗黑背景图 - 暗黑模式背景图URL
+ * 创建重定向响应
+ * @param {string} url - 重定向URL
+ * @param {number} status - HTTP状态码
+ * @returns {Response} 重定向响应对象
+ */
+export function createRedirectResponse(url, status = 302) {
+  return new Response(null, {
+    status,
+    headers: {
+      'Location': url,
+    },
+  });
+}
+
+/**
+ * 创建JSON响应
+ * @param {Object} data - JSON数据
+ * @param {number} status - HTTP状态码
+ * @returns {Response} JSON响应对象
+ */
+export function createJsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+/**
+ * 生成UUID
+ * @returns {string} UUID字符串
+ */
+export function generateUUID() {
+  return crypto.randomUUID();
+}
+
+/**
+ * 验证用户会话
+ * @param {Object} env - Cloudflare Workers 环境对象
+ * @param {string} uuid - 用户UUID
+ * @returns {Promise<boolean>} 是否有效
+ */
+export async function validateUserSession(env, uuid) {
+  try {
+    // 从KV数据库获取用户会话信息
+    const session = await env.KV数据库.get(`session_${uuid}`);
+    
+    if (!session) {
+      return false;
+    }
+    
+    const sessionData = JSON.parse(session);
+    
+    // 检查会话是否过期
+    const now = Date.now();
+    if (sessionData.expiresAt < now) {
+      // 会话已过期，删除
+      await env.KV数据库.delete(`session_${uuid}`);
+      return false;
+    }
+    
+    // 更新会话过期时间
+    sessionData.expiresAt = now + (24 * 60 * 60 * 1000); // 24小时
+    await env.KV数据库.put(`session_${uuid}`, JSON.stringify(sessionData));
+    
+    return true;
+  } catch (error) {
+    console.error('验证用户会话失败:', error);
+    return false;
+  }
+}
+
+/**
+ * 创建用户会话
+ * @param {Object} env - Cloudflare Workers 环境对象
+ * @param {string} uuid - 用户UUID
+ * @returns {Promise<boolean>} 是否成功创建
+ */
+export async function createUserSession(env, uuid) {
+  try {
+    const now = Date.now();
+    const sessionData = {
+      uuid,
+      createdAt: now,
+      expiresAt: now + (24 * 60 * 60 * 1000), // 24小时
+      lastActivity: now
+    };
+    
+    await env.KV数据库.put(`session_${uuid}`, JSON.stringify(sessionData));
+    return true;
+  } catch (error) {
+    console.error('创建用户会话失败:', error);
+    return false;
+  }
+}
+
+/**
+ * 删除用户会话
+ * @param {Object} env - Cloudflare Workers 环境对象
+ * @param {string} uuid - 用户UUID
+ * @returns {Promise<boolean>} 是否成功删除
+ */
+export async function deleteUserSession(env, uuid) {
+  try {
+    await env.KV数据库.delete(`session_${uuid}`);
+    return true;
+  } catch (error) {
+    console.error('删除用户会话失败:', error);
+    return false;
+  }
+}
+
+/**
+ * 更新用户会话活动时间
+ * @param {Object} env - Cloudflare Workers 环境对象
+ * @param {string} uuid - 用户UUID
+ * @returns {Promise<boolean>} 是否成功更新
+ */
+export async function updateUserSessionActivity(env, uuid) {
+  try {
+    const session = await env.KV数据库.get(`session_${uuid}`);
+    
+    if (!session) {
+      return false;
+    }
+    
+    const sessionData = JSON.parse(session);
+    const now = Date.now();
+    
+    // 更新活动时间和过期时间
+    sessionData.lastActivity = now;
+    sessionData.expiresAt = now + (24 * 60 * 60 * 1000); // 24小时
+    
+    await env.KV数据库.put(`session_${uuid}`, JSON.stringify(sessionData));
+    return true;
+  } catch (error) {
+    console.error('更新用户会话活动时间失败:', error);
+    return false;
+  }
+}
+
+/**
+ * 获取用户会话信息
+ * @param {Object} env - Cloudflare Workers 环境对象
+ * @param {string} uuid - 用户UUID
+ * @returns {Promise<Object>} 会话信息
+ */
+export async function getUserSessionInfo(env, uuid) {
+  try {
+    const session = await env.KV数据库.get(`session_${uuid}`);
+    
+    if (!session) {
+      return null;
+    }
+    
+    const sessionData = JSON.parse(session);
+    
+    // 检查会话是否过期
+    const now = Date.now();
+    if (sessionData.expiresAt < now) {
+      // 会话已过期，删除
+      await env.KV数据库.delete(`session_${uuid}`);
+      return null;
+    }
+    
+    return sessionData;
+  } catch (error) {
+    console.error('获取用户会话信息失败:', error);
+    return null;
+  }
+}
+
+/**
+ * 检查锁定状态
+ * @param {Object} env - Cloudflare Workers 环境对象
+ * @param {string} ip - IP地址
+ * @returns {Promise<Object>} 锁定状态对象
+ */
+export async function checkLock(env, ip) {
+  try {
+    // 获取锁定信息
+    const lockInfo = await env.KV数据库.get(`lock:${ip}`);
+    
+    if (!lockInfo) {
+      return { locked: false, attempts: 0 };
+    }
+    
+    const lockData = JSON.parse(lockInfo);
+    const now = Date.now();
+    
+    // 检查锁定是否已过期（默认5分钟）
+    if (lockData.locked && lockData.lockUntil && now > lockData.lockUntil) {
+      // 锁定已过期，重置
+      await env.KV数据库.delete(`lock:${ip}`);
+      return { locked: false, attempts: 0 };
+    }
+    
+    return lockData;
+  } catch (error) {
+    console.error('检查锁定状态失败:', error);
+    return { locked: false, attempts: 0 };
+  }
+}
+
+/**
+ * 记录失败尝试
+ * @param {Object} env - Cloudflare Workers 环境对象
+ * @param {string} ip - IP地址
+ * @param {number} maxAttempts - 最大尝试次数
+ * @param {number} lockDuration - 锁定持续时间（毫秒）
+ * @returns {Promise<Object>} 更新后的锁定状态
+ */
+export async function recordFailedAttempt(env, ip, maxAttempts = 5, lockDuration = 5 * 60 * 1000) {
+  try {
+    // 获取当前锁定信息
+    const lockInfo = await env.KV数据库.get(`lock:${ip}`);
+    let lockData = lockInfo ? JSON.parse(lockInfo) : { attempts: 0, locked: false };
+    
+    // 增加尝试次数
+    lockData.attempts += 1;
+    
+    // 检查是否需要锁定
+    if (lockData.attempts >= maxAttempts) {
+      lockData.locked = true;
+      lockData.lockUntil = Date.now() + lockDuration;
+    }
+    
+    // 保存更新后的锁定信息
+    await env.KV数据库.put(`lock:${ip}`, JSON.stringify(lockData));
+    
+    return lockData;
+  } catch (error) {
+    console.error('记录失败尝试失败:', error);
+    return { locked: false, attempts: 0 };
+  }
+}
+
+/**
+ * 重置锁定状态
+ * @param {Object} env - Cloudflare Workers 环境对象
+ * @param {string} ip - IP地址
+ * @returns {Promise<boolean>} 是否成功重置
+ */
+export async function resetLock(env, ip) {
+  try {
+    await env.KV数据库.delete(`lock:${ip}`);
+    return true;
+  } catch (error) {
+    console.error('重置锁定状态失败:', error);
+    return false;
+  }
+}
+
+/**
+ * 生成登录注册页面
+ * @param {string} lightBgUrl - 浅色主题背景图片URL
+ * @param {string} darkBgUrl - 深色主题背景图片URL
  * @returns {string} HTML 内容
  */
-export function generateLoginRegisterPage(类型, 额外参数 = {}, 白天背景图, 暗黑背景图) {
-  const 界面数据 = {
-    注册: {
-      title: '🌸首次使用注册🌸',
-      表单: `
-        <form class="auth-form" action="/register/submit" method="POST" enctype="application/x-www-form-urlencoded">
-          <div class="input-group">
-            <input type="text" name="username" placeholder="设置账号" required pattern="^[a-zA-Z0-9]{4,20}$" title="4-20位字母数字">
-            <span class="input-icon">👤</span>
-          </div>
-          <div class="input-group">
-            <input type="password" name="password" placeholder="设置密码" required minlength="6">
-            <span class="input-icon">🔒</span>
-            <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">👁️</button>
-          </div>
-          <div class="input-group">
-            <input type="password" name="confirm" placeholder="确认密码" required>
-            <span class="input-icon">🔒</span>
-            <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">👁️</button>
-          </div>
-          <button type="submit">立即注册</button>
-          <div class="auth-links">
-            <span>已有账号？</span>
-            <a href="/login">前往登录</a>
-          </div>
-        </form>
-        ${额外参数.错误信息 ? `<div class="error-message">${额外参数.错误信息}</div>` : ''}
-        ${额外参数.注册成功 ? `<div class="success-message">${额外参数.注册成功}</div>` : ''}
-      `
-    },
-    登录: {
-      title: '🌸欢迎回来🌸',
-      表单: `
-        <form class="auth-form" action="/login/submit" method="POST" enctype="application/x-www-form-urlencoded">
-          <div class="input-group">
-            <input type="text" name="username" placeholder="登录账号" required>
-            <span class="input-icon">👤</span>
-          </div>
-          <div class="input-group">
-            <input type="password" name="password" placeholder="登录密码" required>
-            <span class="input-icon">🔒</span>
-            <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">👁️</button>
-          </div>
-          <div class="remember-me">
-            <input type="checkbox" id="rememberMe" name="rememberMe">
-            <label for="rememberMe">记住我</label>
-          </div>
-          <button type="submit" id="loginButton" ${额外参数.锁定状态 ? 'disabled' : ''}>立即登录</button>
-          <div class="auth-links">
-            <span>还没有账号？</span>
-            <a href="/register">立即注册</a>
-          </div>
-        </form>
-        ${额外参数.输错密码 ? `<div class="error-message">密码错误，剩余尝试次数：${额外参数.剩余次数}</div>` : ''}
-        ${额外参数.锁定状态 ? `
-          <div class="lock-message">
-            账户锁定，请<span id="countdown">${额外参数.剩余时间}</span>秒后重试
-          </div>` : ''}
-        ${额外参数.错误信息 ? `<div class="error-message">${额外参数.错误信息}</div>` : ''}
-      `
-    }
-  };
-
+export function generateLoginRegisterPage(lightBgUrl, darkBgUrl) {
   return `
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌸樱花代理 - ${类型}</title>
-  <style>
-    /* 基础样式 */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    }
-    
-    body {
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      overflow: hidden;
-      transition: background-image 0.5s ease;
-    }
-    
-    /* 背景图片 */
-    .background-media {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: -1;
-      transition: opacity 0.5s ease;
-    }
-    
-    /* 主题切换按钮 */
-    .toggle-theme {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(10px);
-      border: none;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 24px;
-      transition: background 0.3s, transform 0.3s;
-      z-index: 1000;
-    }
-    
-    .toggle-theme:hover {
-      background: rgba(255, 255, 255, 0.5);
-      transform: scale(1.1);
-    }
-    
-    /* 认证容器 */
-    .auth-container {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 25px;
-      padding: 40px;
-      max-width: 450px;
-      width: 90%;
-      text-align: center;
-      position: relative;
-      z-index: 1;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      transition: transform 0.3s ease;
-    }
-    
-    .auth-container:hover {
-      transform: translateY(-5px);
-    }
-    
-    /* 标题样式 */
-    h1 {
-      font-size: 2em;
-      color: #ff69b4;
-      margin-bottom: 30px;
-      text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
-    }
-    
-    /* 表单样式 */
-    .auth-form {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      width: 100%;
-    }
-    
-    .input-group {
-      position: relative;
-      width: 100%;
-    }
-    
-    .auth-form input {
-      width: 100%;
-      padding: 15px 20px 15px 45px;
-      border-radius: 15px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      background: rgba(255, 255, 255, 0.8);
-      font-size: 16px;
-      transition: all 0.3s ease;
-      outline: none;
-    }
-    
-    .auth-form input:focus {
-      border-color: #ff69b4;
-      box-shadow: 0 0 15px rgba(255, 105, 180, 0.2);
-      transform: translateY(-2px);
-    }
-    
-    .input-icon {
-      position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 18px;
-      color: #666;
-      pointer-events: none;
-    }
-    
-    .toggle-password {
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      transition: transform 0.3s ease;
-    }
-    
-    .toggle-password:hover {
-      transform: translateY(-50%) scale(1.1);
-    }
-    
-    /* 记住我选项 */
-    .remember-me {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-left: 5px;
-    }
-    
-    .remember-me input[type="checkbox"] {
-      width: auto;
-      margin: 0;
-      cursor: pointer;
-    }
-    
-    .remember-me label {
-      cursor: pointer;
-      color: #333;
-      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
-    }
-    
-    /* 按钮样式 */
-    .auth-form button[type="submit"] {
-      padding: 15px;
-      background: linear-gradient(135deg, #ff6b6b, #ff69b4);
-      color: white;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: bold;
-      transition: all 0.3s ease;
-      outline: none;
-    }
-    
-    .auth-form button[type="submit"]:hover:not(:disabled) {
-      transform: scale(1.03);
-      box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
-    }
-    
-    .auth-form button[type="submit"]:active:not(:disabled) {
-      transform: scale(0.98);
-    }
-    
-    .auth-form button[type="submit"]:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    
-    /* 链接样式 */
-    .auth-links {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      margin-top: 20px;
-      font-size: 14px;
-    }
-    
-    .auth-links a {
-      color: #ff69b4;
-      text-decoration: none;
-      font-weight: bold;
-      transition: all 0.3s ease;
-    }
-    
-    .auth-links a:hover {
-      text-decoration: underline;
-      color: #ff1493;
-    }
-    
-    /* 消息提示样式 */
-    .error-message {
-      color: #ff6666;
-      background: rgba(255, 102, 102, 0.1);
-      padding: 12px;
-      border-radius: 10px;
-      margin-top: 15px;
-      font-size: 14px;
-      border-left: 4px solid #ff6666;
-    }
-    
-    .success-message {
-      color: #4CAF50;
-      background: rgba(76, 175, 80, 0.1);
-      padding: 12px;
-      border-radius: 10px;
-      margin-top: 15px;
-      font-size: 14px;
-      border-left: 4px solid #4CAF50;
-    }
-    
-    .lock-message {
-      color: #ff6666;
-      background: rgba(255, 102, 102, 0.1);
-      padding: 15px;
-      border-radius: 10px;
-      margin-top: 20px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      border-left: 4px solid #ff6666;
-    }
-    
-    #countdown {
-      color: #ff1493;
-      font-weight: bold;
-      min-width: 50px;
-      text-align: center;
-      font-size: 16px;
-    }
-    
-    /* 加载动画 */
-    .loading {
-      display: inline-block;
-      width: 18px;
-      height: 18px;
-      border: 2px solid #f3f3f3;
-      border-top: 2px solid #ff69b4;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    /* 响应式设计 */
-    @media (max-width: 600px) {
+  <!DOCTYPE html>
+  <html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录/注册 - Sakura Panel</title>
+    <style>
+      /* 基础样式 */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: background 0.5s ease;
+      }
+      
+      .dark body {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      }
+      
+      /* 主容器 */
       .auth-container {
-        padding: 25px;
-        margin: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        transition: all 0.3s ease;
       }
       
-      h1 {
-        font-size: 1.6em;
-        margin-bottom: 25px;
+      .dark .auth-container {
+        background: rgba(30, 30, 30, 0.95);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       }
       
-      .auth-form input,
-      .auth-form button {
-        padding: 12px;
-        font-size: 14px;
+      /* 标题 */
+      .auth-title {
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2rem;
+        font-weight: 600;
       }
       
-      .toggle-theme {
+      .dark .auth-title {
+        color: #fff;
+      }
+      
+      /* 表单 */
+      .auth-form {
+        display: none;
+      }
+      
+      .auth-form.active {
+        display: block;
+      }
+      
+      /* 输入组 */
+      .input-group {
+        margin-bottom: 20px;
+        position: relative;
+      }
+      
+      .input-group input {
+        width: 100%;
+        padding: 15px 45px 15px 15px;
+        border: 2px solid #e1e1e1;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.8);
+      }
+      
+      .dark .input-group input {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #555;
+        color: #fff;
+      }
+      
+      .input-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+      
+      .dark .input-group input:focus {
+        border-color: #764ba2;
+        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+      }
+      
+      /* 图标 */
+      .input-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+        cursor: pointer;
+        user-select: none;
+      }
+      
+      /* 按钮 */
+      .auth-button {
+        width: 100%;
+        padding: 15px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      }
+      
+      .dark .auth-button {
+        box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+      }
+      
+      .auth-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      }
+      
+      .dark .auth-button:hover {
+        box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+      }
+      
+      .auth-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+      }
+      
+      /* 切换链接 */
+      .switch-link {
+        display: block;
+        margin-top: 20px;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+      
+      .dark .switch-link {
+        color: #764ba2;
+      }
+      
+      .switch-link:hover {
+        color: #5a6fd8;
+        text-decoration: underline;
+      }
+      
+      .dark .switch-link:hover {
+        color: #6a4190;
+      }
+      
+      /* 倒计时 */
+      .countdown {
+        color: #e74c3c;
+        font-weight: 600;
+        margin-top: 10px;
+        display: none;
+      }
+      
+      /* 主题切换 */
+      .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
         width: 40px;
         height: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+      }
+      
+      .dark .theme-toggle {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(15deg);
+      }
+      
+      .dark .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .theme-toggle i {
         font-size: 20px;
-        top: 10px;
-        right: 10px;
-      }
-    }
-    
-    /* 动画效果 */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .auth-container {
-      animation: fadeIn 0.8s ease-out;
-    }
-    
-    /* 输入框焦点状态 */
-    .input-group:focus-within .input-icon {
-      color: #ff69b4;
-      transform: translateY(-50%) scale(1.1);
-    }
-  </style>
-</head>
-<body id="auth-page">
-  <img id="backgroundImage" class="background-media">
-  <button class="toggle-theme" id="theme-toggle">🌙</button>
-  <div class="auth-container">
-    <h1>${界面数据[类型].title}</h1>
-    ${界面数据[类型].表单}
-  </div>
-  <script>
-    const lightBg = '${白天背景图}';
-    const darkBg = '${暗黑背景图}';
-    const bgImage = document.getElementById('backgroundImage');
-    const themeToggle = document.getElementById('theme-toggle');
-    const authPage = document.getElementById('auth-page');
-
-    // 初始化主题
-    function initTheme() {
-      // 检查是否有保存的主题设置
-      const savedTheme = localStorage.getItem('authTheme');
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const currentTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-      
-      // 应用主题
-      applyTheme(currentTheme);
-    }
-    
-    // 应用主题
-    function applyTheme(theme) {
-      if (theme === 'dark') {
-        authPage.style.backgroundImage = 'url(' + darkBg + ')';
-        themeToggle.textContent = '☀️';
-      } else {
-        authPage.style.backgroundImage = 'url(' + lightBg + ')';
-        themeToggle.textContent = '🌙';
+        color: #fff;
       }
       
-      // 处理图片加载失败
-      bgImage.onerror = () => {
-        // 如果背景图加载失败，使用渐变背景
-        if (theme === 'dark') {
-          authPage.style.backgroundImage = 'linear-gradient(135deg, #1e1e2f, #2a2a3b)';
+      /* 响应式设计 */
+      @media (max-width: 480px) {
+        .auth-container {
+          margin: 20px;
+          padding: 30px 20px;
+        }
+        
+        .auth-title {
+          font-size: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 主题切换按钮 -->
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i>🌙</i>
+    </button>
+    
+    <div class="auth-container">
+      <h1 class="auth-title">🌸 Sakura Panel</h1>
+      
+      <!-- 登录表单 -->
+      <form class="auth-form active" id="loginForm" onsubmit="handleLogin(event)">
+        <div class="input-group">
+          <input type="text" id="loginUsername" placeholder="用户名" required minlength="3" maxlength="20">
+          <span class="input-icon">👤</span>
+        </div>
+        
+        <div class="input-group">
+          <input type="password" id="loginPassword" placeholder="密码" required minlength="6" maxlength="50">
+          <span class="input-icon" onclick="togglePasswordVisibility('loginPassword')">👁️</span>
+        </div>
+        
+        <button type="submit" class="auth-button">登录</button>
+        
+        <div class="countdown" id="loginCountdown"></div>
+        
+        <a href="#" class="switch-link" onclick="switchToRegister()">没有账户？立即注册</a>
+      </form>
+      
+      <!-- 注册表单 -->
+      <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+        <div class="input-group">
+          <input type="text" id="registerUsername" placeholder="用户名" required minlength="3" maxlength="20">
+          <span class="input-icon">👤</span>
+        </div>
+        
+        <div class="input-group">
+          <input type="password" id="registerPassword" placeholder="密码" required minlength="6" maxlength="50">
+          <span class="input-icon" onclick="togglePasswordVisibility('registerPassword')">👁️</span>
+        </div>
+        
+        <div class="input-group">
+          <input type="password" id="confirmPassword" placeholder="确认密码" required minlength="6" maxlength="50">
+          <span class="input-icon" onclick="togglePasswordVisibility('confirmPassword')">👁️</span>
+        </div>
+        
+        <button type="submit" class="auth-button">注册</button>
+        
+        <div class="countdown" id="registerCountdown"></div>
+        
+        <a href="#" class="switch-link" onclick="switchToLogin()">已有账户？立即登录</a>
+      </form>
+    </div>
+    
+    <script>
+      // 主题切换功能
+      function toggleTheme() {
+        document.documentElement.classList.toggle('dark');
+        const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        localStorage.setItem('theme', theme);
+        
+        // 更新主题切换按钮图标
+        const themeToggle = document.querySelector('.theme-toggle i');
+        themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+      }
+      
+      // 切换到注册表单
+      function switchToRegister() {
+        document.getElementById('loginForm').classList.remove('active');
+        document.getElementById('registerForm').classList.add('active');
+      }
+      
+      // 切换到登录表单
+      function switchToLogin() {
+        document.getElementById('registerForm').classList.remove('active');
+        document.getElementById('loginForm').classList.add('active');
+      }
+      
+      // 切换密码可见性
+      function togglePasswordVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling;
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.textContent = '🙈';
         } else {
-          authPage.style.backgroundImage = 'linear-gradient(135deg, #ffe6f0, #fff0f5)';
+          input.type = 'password';
+          icon.textContent = '👁️';
         }
-      };
-      
-      // 保存主题设置
-      localStorage.setItem('authTheme', theme);
-    }
-    
-    // 切换主题事件
-    themeToggle.addEventListener('click', () => {
-      const currentTheme = localStorage.getItem('authTheme') || 'light';
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      applyTheme(newTheme);
-    });
-    
-    // 密码可见性切换
-    function togglePasswordVisibility(button) {
-      const input = button.previousElementSibling.previousElementSibling;
-      const icon = button;
-      
-      if (input.type === 'password') {
-        input.type = 'text';
-        icon.textContent = '👁️‍🗨️';
-      } else {
-        input.type = 'password';
-        icon.textContent = '👁️';
       }
-    }
-    
-    // 倒计时逻辑
-    let remainingTime = ${额外参数.锁定状态 ? 额外参数.剩余时间 : 0};
-    const countdownElement = document.getElementById('countdown');
-    const loginButton = document.getElementById('loginButton');
-
-    function startCountdown() {
-      if (!countdownElement) return;
-
-      const interval = setInterval(() => {
-        if (remainingTime <= 0) {
-          clearInterval(interval);
-          countdownElement.textContent = '0';
-          if (loginButton) {
-            loginButton.disabled = false;
-            loginButton.innerHTML = '立即登录';
-          }
-          const lockMessage = document.querySelector('.lock-message');
-          if (lockMessage) {
-            lockMessage.innerHTML = '锁定已解除，请重新尝试登录';
-            lockMessage.classList.add('success-message');
-            lockMessage.classList.remove('error-message');
-          }
-          fetch('/reset-login-failures', { method: 'POST' });
+      
+      // 处理登录
+      async function handleLogin(event) {
+        event.preventDefault();
+        
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        const button = document.querySelector('#loginForm .auth-button');
+        const countdown = document.getElementById('loginCountdown');
+        
+        // 简单验证
+        if (username.length < 3 || password.length < 6) {
+          alert('用户名至少3位，密码至少6位');
           return;
         }
-        countdownElement.textContent = remainingTime;
-        remainingTime--;
-      }, 1000);
-    }
-
-    // 与服务器同步锁定状态
-    function syncWithServer() {
-      fetch('/check-lock')
-        .then(response => response.json())
-        .then(data => {
-          if (data.locked) {
-            remainingTime = data.remainingTime;
-            if (countdownElement) countdownElement.textContent = remainingTime;
-            if (loginButton) loginButton.disabled = true;
+        
+        // 禁用按钮并显示加载状态
+        button.disabled = true;
+        button.textContent = '登录中...';
+        
+        try {
+          const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            // 登录成功，跳转到配置页面
+            window.location.href = '/config';
           } else {
-            remainingTime = 0;
-            if (countdownElement) countdownElement.textContent = '0';
-            if (loginButton) loginButton.disabled = false;
-            const lockMessage = document.querySelector('.lock-message');
-            if (lockMessage) {
-              lockMessage.innerHTML = '锁定已解除，请重新尝试登录';
-              lockMessage.classList.add('success-message');
-              lockMessage.classList.remove('error-message');
+            // 登录失败，显示错误信息
+            alert(data.message || '登录失败');
+            
+            // 如果有倒计时，启动倒计时
+            if (data.countdown) {
+              startCountdown(countdown, data.countdown);
+              button.disabled = true;
             }
           }
-        })
-        .catch(error => {
-          console.error('同步锁定状态失败:', error);
-        });
-    }
-
-    // 表单提交前的客户端验证
-    function setupFormValidation() {
-      const form = document.querySelector('.auth-form');
-      if (!form) return;
-      
-      form.addEventListener('submit', function(event) {
-        // 阻止非用户触发的表单提交
-        if (!event.isTrusted) {
-          event.preventDefault();
-          console.log('阻止非用户触发的表单提交');
-          return;
-        }
-        
-        // 获取密码字段
-        const password = form.querySelector('input[name="password"]');
-        const confirm = form.querySelector('input[name="confirm"]');
-        
-        // 密码验证
-        if (password && password.value.length < 6) {
-          event.preventDefault();
-          showError('密码长度至少为6位');
-          return;
-        }
-        
-        // 确认密码验证
-        if (confirm && password.value !== confirm.value) {
-          event.preventDefault();
-          showError('两次输入的密码不一致');
-          return;
-        }
-        
-        // 禁用提交按钮防止重复提交
-        const submitButton = form.querySelector('button[type="submit"]');
-        if (submitButton) {
-          submitButton.disabled = true;
-          submitButton.innerHTML = '<span class="loading"></span> 处理中...';
-        }
-      });
-    }
-    
-    // 显示错误信息
-    function showError(message) {
-      let errorElement = document.querySelector('.error-message');
-      if (!errorElement) {
-        errorElement = document.createElement('div');
-        errorElement.className = 'error-message';
-        const form = document.querySelector('.auth-form');
-        if (form) {
-          form.parentNode.insertBefore(errorElement, form.nextSibling);
+        } catch (error) {
+          console.error('登录请求失败:', error);
+          alert('登录请求失败，请稍后再试');
+        } finally {
+          // 恢复按钮状态
+          if (!button.disabled) {
+            button.disabled = false;
+            button.textContent = '登录';
+          }
         }
       }
-      errorElement.textContent = message;
       
-      // 3秒后自动消失
-      setTimeout(() => {
-        if (errorElement) {
-          errorElement.style.opacity = '0';
-          errorElement.style.transition = 'opacity 0.5s ease';
-          setTimeout(() => {
-            if (errorElement.parentNode) errorElement.parentNode.removeChild(errorElement);
-          }, 500);
+      // 处理注册
+      async function handleRegister(event) {
+        event.preventDefault();
+        
+        const username = document.getElementById('registerUsername').value;
+        const password = document.getElementById('registerPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const button = document.querySelector('#registerForm .auth-button');
+        const countdown = document.getElementById('registerCountdown');
+        
+        // 简单验证
+        if (username.length < 3) {
+          alert('用户名至少3位');
+          return;
         }
-      }, 3000);
-    }
-    
-    // 监听 UA 变化并平滑处理
-    let lastUA = navigator.userAgent;
-    function checkUAChange() {
-      const currentUA = navigator.userAgent;
-      if (currentUA !== lastUA) {
-        console.log('UA 已切换，从', lastUA, '到', currentUA);
-        lastUA = currentUA;
-        // 可以在这里添加额外的安全处理逻辑
-      }
-    }
-    
-    // 键盘事件处理
-    function setupKeyboardEvents() {
-      document.addEventListener('keydown', function(event) {
-        // 按Enter键提交表单
-        if (event.key === 'Enter') {
-          const activeElement = document.activeElement;
-          if (activeElement && activeElement.tagName !== 'BUTTON' && activeElement.tagName !== 'TEXTAREA') {
-            const submitButton = document.querySelector('button[type="submit"]');
-            if (submitButton && !submitButton.disabled) {
-              submitButton.click();
+        
+        if (password.length < 6) {
+          alert('密码至少6位');
+          return;
+        }
+        
+        if (password !== confirmPassword) {
+          alert('两次输入的密码不一致');
+          return;
+        }
+        
+        // 禁用按钮并显示加载状态
+        button.disabled = true;
+        button.textContent = '注册中...';
+        
+        try {
+          const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            // 注册成功，跳转到配置页面
+            window.location.href = '/config';
+          } else {
+            // 注册失败，显示错误信息
+            alert(data.message || '注册失败');
+            
+            // 如果有倒计时，启动倒计时
+            if (data.countdown) {
+              startCountdown(countdown, data.countdown);
+              button.disabled = true;
             }
           }
+        } catch (error) {
+          console.error('注册请求失败:', error);
+          alert('注册请求失败，请稍后再试');
+        } finally {
+          // 恢复按钮状态
+          if (!button.disabled) {
+            button.disabled = false;
+            button.textContent = '注册';
+          }
+        }
+      }
+      
+      // 启动倒计时
+      function startCountdown(element, seconds) {
+        element.style.display = 'block';
+        element.textContent = `请在 ${seconds} 秒后重试`;
+        
+        const interval = setInterval(() => {
+          seconds--;
+          if (seconds > 0) {
+            element.textContent = `请在 ${seconds} 秒后重试`;
+          } else {
+            clearInterval(interval);
+            element.style.display = 'none';
+            // 启用所有表单按钮
+            document.querySelectorAll('.auth-button').forEach(btn => {
+              btn.disabled = false;
+              btn.textContent = btn.id === 'loginForm' ? '登录' : '注册';
+            });
+          }
+        }, 1000);
+      }
+      
+      // 页面加载时初始化主题
+      document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+          document.querySelector('.theme-toggle i').textContent = '☀️';
         }
       });
-    }
-    
-    // 页面加载完成后初始化
-    window.addEventListener('load', () => {
-      initTheme();
-      setupFormValidation();
-      setupKeyboardEvents();
-      
-      // 设置定期检查UA变化
-      setInterval(checkUAChange, 500);
-      
-      // 如果有锁定状态，启动倒计时
-      if (${额外参数.锁定状态}) {
-        startCountdown();
-        // 定期同步锁定状态
-        setInterval(syncWithServer, 10000);
-        // 页面可见性变化时同步状态
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') {
-            syncWithServer();
-          }
-        });
-      }
-    });
-  </script>
-</body>
-</html>
-  `;
+    </script>
+  </body>
+  </html>`;
 }
 
 /**
