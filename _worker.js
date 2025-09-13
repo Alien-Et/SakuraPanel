@@ -610,7 +610,8 @@ export default {
                 // 2. 不带端口：[地址]#节点名称@tls/notls
                 // 3. 不带tls/notls：[地址]:端口#节点名称
                 // 4. 最简格式：[地址]#节点名称
-                const nodePattern = /^(\[[0-9a-fA-F:]+\]|[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})(?::([0-9]{1,5}))?(?:#(.+?))?(?:@(tls|notls))?$/;
+                // 现在支持IP地址（IPv4/IPv6）和域名
+                const nodePattern = /^(\[[0-9a-fA-F:]+\]|[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*)(?::([0-9]{1,5}))?(?:#(.+?))?(?:@(tls|notls))?$/;
                 const match = nodePattern.exec(line);
                 if (!match) {
                   console.warn(`文件 ${ipFile.name} 中的行格式不正确，将被忽略: ${line}`);
@@ -1285,9 +1286,9 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       </div>
     </div>
     <div class="card">
-      <h2 class="upload-title">🌟 上传你的优选IP</h2>
+      <h2 class="upload-title">🌟 上传你的优选节点</h2>
       <div class="upload-notice force-proxy-note">
-        <p>请上传包含优选IP的.txt文件，每行一个节点</p>
+        <p>请上传包含优选IP或域名的.txt文件，每行一个节点</p>
       </div>
       <form id="uploadForm" action="/${配置路径}/upload" method="POST" enctype="multipart/form-data">
         <label for="ipFiles" class="upload-label">选择文件</label>
