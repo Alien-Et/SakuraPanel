@@ -1140,7 +1140,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .proxy-option[data-type="socks5"].active { background: linear-gradient(to right, #ffd1dc, #ff85a2); }
     .proxy-option::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: rgba(255, 255, 255, 0.2); transform: rotate(30deg); transition: all 0.5s ease; pointer-events: none; }
     .proxy-option:hover::before { top: 100%; left: 100%; }
-    .proxy-status, .uuid-box, .force-proxy-note { margin-top: 20px; padding: 15px; border-radius: 15px; font-size: 0.95em; word-break: break-all; transition: background 0.3s ease, color 0.3s ease; width: 100%; box-sizing: border-box; }
+    .proxy-status, .uuid-box, .force-proxy-note { margin-top: 20px; padding: 8px 15px; border-radius: 15px; font-size: 0.95em; word-break: break-all; transition: background 0.3s ease, color 0.3s ease; width: 100%; box-sizing: border-box; }
     .proxy-status.success { background: rgba(212, 237, 218, 0.9); color: #155724; }
     .proxy-status.direct { background: rgba(233, 236, 239, 0.9); color: #495057; }
     .force-proxy-note { font-size: 0.9em; color: #ff85a2; }
@@ -1200,7 +1200,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       .switch-container { gap: 10px; }
       .toggle-row { gap: 10px; }
       .proxy-option { width: 70px; padding: 8px 0; font-size: 0.9em; }
-      .proxy-status, .uuid-box, .force-proxy-note { font-size: 0.9em; padding: 12px; }
+      .proxy-status, .uuid-box, .force-proxy-note { font-size: 0.9em; padding: 8px 15px; }
       .link-box { font-size: 0.9em; padding: 12px; }
       .cute-button, .upload-label { padding: 10px 20px; font-size: 0.9em; }
       .card::after { font-size: 50px; top: -15px; right: -15px; }
