@@ -581,13 +581,89 @@ export default {
           try {
             for (const ipFile of ipFiles) {
               if (!ipFile || !ipFile.text) throw new Error(`文件 ${ipFile.name} 无效`);
+              
+              // 验证文件格式
+              if (!ipFile.name.toLowerCase().endsWith('.txt')) {
+                throw new Error(`文件 ${ipFile.name} 不是txt格式，仅允许上传txt格式文件`);
+              }
+              
+              // 验证文件大小（限制为1MB）
+              if (ipFile.size > 1024 * 1024) {
+                throw new Error(`文件 ${ipFile.name} 超过大小限制（1MB）`);
+              }
+              
               const ipText = await ipFile.text();
-              const ipList = ipText.split('\n').map(line => line.trim()).filter(Boolean);
-              if (ipList.length === 0) console.warn(`文件 ${ipFile.name} 内容为空`);
-              allIpList = allIpList.concat(ipList);
+              
+              // 验证文件内容格式
+              const lines = ipText.split('\n').map(line => line.trim()).filter(Boolean);
+              if (lines.length === 0) {
+                console.warn(`文件 ${ipFile.name} 内容为空`);
+                continue;
+              }
+              
+              // 验证每行是否符合节点格式：[地址]:端口#节点名称@tls 或 [地址]:端口#节点名称@notls
+              const validLines = [];
+              for (const line of lines) {
+                // 基本格式验证
+                // 更灵活的节点格式验证，允许以下格式：
+                // 1. 完整格式：[地址]:端口#节点名称@tls/notls
+                // 2. 不带端口：[地址]#节点名称@tls/notls
+                // 3. 不带tls/notls：[地址]:端口#节点名称
+                // 4. 最简格式：[地址]#节点名称
+                const nodePattern = /^(\[[0-9a-fA-F:]+\]|[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})(?::([0-9]{1,5}))?(?:#(.+?))?(?:@(tls|notls))?$/;
+                const match = nodePattern.exec(line);
+                if (!match) {
+                  console.warn(`文件 ${ipFile.name} 中的行格式不正确，将被忽略: ${line}`);
+                  continue;
+                }
+                
+                const address = match[1];
+                const port = match[2];
+                const nodeName = match[3] || 节点名称; // 使用全局变量节点名称作为默认值
+                const protocol = match[4] || 'tls'; // 默认使用tls
+                
+                // 如果有端口，验证端口范围
+                if (port) {
+                  const portNum = parseInt(port);
+                  if (portNum < 1 || portNum > 65535) {
+                    console.warn(`文件 ${ipFile.name} 中的端口无效，将被忽略: ${line}`);
+                    continue;
+                  }
+                }
+                
+                // 验证IP地址格式（如果是IPv4）
+                const ipv4Pattern = /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/;
+                if (ipv4Pattern.test(address)) {
+                  const ipParts = address.split('.');
+                  let isValidIPv4 = true;
+                  for (const part of ipParts) {
+                    const num = parseInt(part);
+                    if (num < 0 || num > 255) {
+                      isValidIPv4 = false;
+                      break;
+                    }
+                  }
+                  if (!isValidIPv4) {
+                    console.warn(`文件 ${ipFile.name} 中的IPv4地址无效，将被忽略: ${line}`);
+                    continue;
+                  }
+                }
+                
+                // 标准化节点格式
+                const standardPort = port || '443'; // 默认端口443
+                const standardizedLine = `${address}:${standardPort}#${nodeName}@${protocol}`;
+                validLines.push(standardizedLine);
+              }
+              
+              if (validLines.length === 0) {
+                throw new Error(`文件 ${ipFile.name} 中没有符合格式要求的节点`);
+              }
+              
+              console.log(`文件 ${ipFile.name} 验证通过，有效节点数: ${validLines.length}`);
+              allIpList = allIpList.concat(validLines);
             }
             if (allIpList.length === 0) {
-              return 创建JSON响应({ error: '所有上传文件内容为空' }, 400);
+              return 创建JSON响应({ error: '所有上传文件中没有符合格式要求的节点' }, 400);
             }
             const uniqueIpList = [...new Set(allIpList)];
 
@@ -961,7 +1037,10 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       .link-box, .proxy-status, .uuid-box, .force-proxy-note { background: rgba(40, 40, 40, 0.9); border: 2px dashed #ff85a2; color: #ffd1dc; }
       .link-box a, .uuid-box span { color: #ff85a2; }
       .link-box a:hover { color: #ff1493; }
-      .file-item, .url-item { background: rgba(50, 50, 50, 0.9); color: #ffd1dc; }
+.file-item, .url-item { background: rgba(50, 50, 50, 0.9); color: #ffd1dc; }
+.file-requirements { background: rgba(40, 40, 40, 0.9); border: 2px dashed #ff85a2; color: #ffd1dc; }
+.file-requirements h3 { color: #ff85a2; }
+.file-requirements .example { background: rgba(0, 0, 0, 0.3); }
     }
     .background-media {
       position: fixed;
@@ -1065,6 +1144,11 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .proxy-status.success { background: rgba(212, 237, 218, 0.9); color: #155724; }
     .proxy-status.direct { background: rgba(233, 236, 239, 0.9); color: #495057; }
     .force-proxy-note { font-size: 0.9em; color: #ff85a2; }
+.file-requirements { margin-top: 20px; padding: 15px; border-radius: 15px; background: rgba(255, 240, 245, 0.9); border: 2px dashed #ffb6c1; font-size: 0.9em; color: #d63384; transition: background 0.3s ease, color 0.3s ease; }
+.file-requirements h3 { margin-top: 0; margin-bottom: 10px; color: #ff1493; font-size: 1.1em; }
+.file-requirements ul { margin-bottom: 0; padding-left: 20px; }
+.file-requirements li { margin-bottom: 5px; }
+.file-requirements .example { font-family: monospace; background: rgba(255, 255, 255, 0.7); padding: 2px 5px; border-radius: 3px; }
     .link-box { border-radius: 15px; padding: 15px; margin: 10px 0; font-size: 0.95em; word-break: break-all; }
     .link-box a { color: #ff69b4; text-decoration: none; transition: color 0.3s ease; }
     .link-box a:hover { color: #ff1493; }
@@ -1195,6 +1279,30 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     </div>
     <div class="card">
       <h2 class="upload-title">🌟 上传你的优选IP</h2>
+      <div class="upload-notice">
+        <p><strong>文件格式要求：</strong></p>
+        <ul>
+          <li>仅允许上传.txt格式文件</li>
+          <li>文件大小不超过1MB</li>
+          <li>每行一个节点，支持多种格式：</li>
+          <ul>
+            <li>完整格式：[地址]:端口#节点名称@tls 或 [地址]:端口#节点名称@notls</li>
+            <li>不带端口：[地址]#节点名称@tls 或 [地址]#节点名称@notls（将使用默认端口443）</li>
+            <li>不带协议：[地址]:端口#节点名称（将默认使用tls协议）</li>
+            <li>最简格式：[地址]#节点名称（将使用默认端口443和tls协议）</li>
+          </ul>
+          <li>地址可以是IPv4或IPv6格式</li>
+          <li>端口范围：1-65535</li>
+          <li>示例：
+            <ul>
+              <li class="example">1.2.3.4:443#美国-01@tls</li>
+              <li class="example">[2001:db8::1]:443#日本-01@notls</li>
+              <li class="example">1.2.3.4#香港节点@tls</li>
+              <li class="example">[2001:db8::1]#新加坡节点</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
       <form id="uploadForm" action="/${配置路径}/upload" method="POST" enctype="multipart/form-data">
         <label for="ipFiles" class="upload-label">选择文件</label>
         <input type="file" id="ipFiles" name="ipFiles" accept=".txt" multiple required onchange="显示文件()" style="display: none;">
