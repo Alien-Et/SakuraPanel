@@ -1,154 +1,344 @@
-# SakuraPanel
+# 🌸 樱花面板 (SakuraPanel) 🌸
 
-一个基于Cloudflare Workers的Sakura订阅管理面板。
+## 项目简介
 
-## 功能特点
-- 订阅管理
-- 流量统计
-- KV数据库支持
-- 环境变量配置
-- 本地开发支持（模拟KV数据库）
+樱花面板是一个基于Cloudflare Workers的代理管理面板，提供简洁美观的用户界面，支持多种代理协议和灵活的节点管理。该面板使用中文界面，操作简单直观，适合各类用户使用。
 
-## 安装和配置
+## 主要功能
 
-### 1. 前提条件
-- 安装Node.js 18+ 
-- 安装Wrangler CLI：`npm install -g wrangler`
-- 拥有Cloudflare账号
+- **用户认证系统**：支持注册和登录功能，带有账户锁定机制
+- **节点管理**：支持手动上传节点、添加节点路径、移除节点路径
+- **代理配置**：支持VLESS协议，可生成Clash和通用客户端配置
+- **代理模式**：支持直连、反代、SOCKS5等多种连接方式
+- **UUID管理**：支持更换UUID，方便用户管理订阅
+- **响应式设计**：适配各种设备屏幕，支持明暗主题切换
 
-### 2. 克隆仓库
-```bash
-git clone <仓库地址>
-cd SakuraPanel
+## 系统要求
+
+- Cloudflare Workers账户
+- Cloudflare KV存储空间（用于数据持久化）
+- 支持WebSocket的现代浏览器
+
+## 安装与部署
+
+### 1. 准备工作
+
+1. 注册并登录[Cloudflare账户](https://dash.cloudflare.com/profile/api-tokens)
+2. 创建一个KV命名空间，用于存储用户数据：
+   - 访问[Cloudflare KV存储页面](https://dash.cloudflare.com/workers/kv/namespaces)
+   - 点击"创建命名空间"
+   - 输入命名空间名称（例如：`SakuraPanel-KV`）
+   - 点击"添加"
+3. 记录创建的KV命名空间ID，后续绑定需要使用
+
+### 2. KV存储绑定
+
+1. 在Cloudflare控制台中，进入[Workers & Pages](https://dash.cloudflare.com/)
+2. 选择你的Worker或Pages项目
+3. 点击"设置" -> "变量"
+4. 在"KV命名空间绑定"部分，添加以下绑定：
+   - **变量名称**：`KV数据库`
+   - **KV命名空间**：选择你创建的KV命名空间
+5. 点击"保存"
+
+### 3. 部署代码
+
+#### 方法一：直接部署到Workers
+
+1. 访问[Cloudflare Workers控制台](https://dash.cloudflare.com/workers)
+2. 点击"创建服务"
+3. 输入服务名称（例如：`SakuraPanel`）
+4. 选择"HTTP处理程序"作为启动器
+5. 点击"创建服务"
+6. 在"快速编辑"选项卡中，删除默认代码，将`_worker.js`文件的全部内容复制粘贴进去
+7. 点击"保存并部署"
+8. 部署成功后，你将获得一个`*.workers.dev`域名，可以通过该域名访问樱花面板
+
+#### 方法二：通过Pages部署
+
+1. 访问[Cloudflare Pages控制台](https://dash.cloudflare.com/pages)
+2. 点击"创建项目"
+3. 选择"上传资产"选项
+4. 输入项目名称（例如：`SakuraPanel`）
+5. 点击"创建项目"
+6. 在"构建设置"部分，选择"无框架"
+7. 在"构建输出目录"中，输入`public`
+8. 点击"保存并部署"
+9. 部署完成后，点击"函数"选项卡
+10. 点击"创建函数"，函数名称为`_worker`，点击"创建"
+11. 在函数编辑器中，删除默认代码，将`_worker.js`文件的全部内容复制粘贴进去
+12. 点击"保存并部署"
+
+### 4. Pages设置说明
+
+#### 函数设置
+
+1. 在[Cloudflare Pages控制台](https://dash.cloudflare.com/pages)中，选择你的项目
+2. 点击"函数"选项卡
+3. 确保已创建名为`_worker`的函数
+4. 点击函数名称进入编辑器
+5. 确保代码已正确粘贴并保存
+
+#### KV命名空间绑定
+
+1. 在[Cloudflare Pages控制台](https://dash.cloudflare.com/pages)中，选择你的项目
+2. 点击"设置" -> "函数"
+3. 在"KV命名空间绑定"部分，添加以下绑定：
+   - **变量名称**：`KV数据库`
+   - **KV命名空间**：选择你之前创建的KV命名空间
+4. 点击"保存"
+
+#### 环境变量配置
+
+1. 在[Cloudflare Pages控制台](https://dash.cloudflare.com/pages)中，选择你的项目
+2. 点击"设置" -> "环境变量"
+3. 添加以下环境变量（可选）：
+   - `PASSWORD_HASH_SALT`：密码加密盐值（默认为`default_salt`）
+   - `MAX_LOGIN_ATTEMPTS`：最大登录尝试次数（默认为`5`）
+   - `LOCKOUT_DURATION`：账户锁定时间（分钟，默认为`30`）
+4. 点击"保存"
+
+### 5. 自定义域名设置
+
+#### Workers自定义域名设置
+
+1. 访问[Cloudflare Workers控制台](https://dash.cloudflare.com/workers)
+2. 选择你的Worker服务
+3. 点击"触发器"选项卡
+4. 在"自定义域"部分，点击"添加自定义域"
+5. 输入你的自定义域名（例如：`panel.yourdomain.com`）
+6. 点击"添加自定义域"
+7. 按照提示在你的DNS提供商处添加CNAME记录，指向你的Worker域名（例如：`your-worker.your-subdomain.workers.dev`）
+8. 等待DNS生效和SSL证书颁发（通常需要几分钟到几小时）
+
+#### Pages自定义域名设置
+
+1. 访问[Cloudflare Pages控制台](https://dash.cloudflare.com/pages)
+2. 选择你的Pages项目
+3. 点击"自定义域"选项卡
+4. 点击"设置自定义域"
+5. 输入你的自定义域名（例如：`panel.yourdomain.com`）
+6. 点击"继续"
+7. 按照提示在你的DNS提供商处添加CNAME记录，指向你的Pages项目域名（例如：`your-project.pages.dev`）
+8. 等待DNS生效和SSL证书颁发（通常需要几分钟到几小时）
+
+**注意**：自定义域名必须已经添加到你的Cloudflare账户中，并且使用Cloudflare的DNS服务。如果使用其他DNS提供商，请确保正确配置CNAME记录。
+
+### 6. 可选环境变量设置
+
+#### Workers环境变量设置
+
+1. 访问[Cloudflare Workers控制台](https://dash.cloudflare.com/workers)
+2. 选择你的Worker服务
+3. 点击"设置" -> "变量" -> "环境变量"
+4. 点击"添加变量"
+5. 添加以下环境变量（可选）：
+   - `PASSWORD_HASH_SALT`：密码加密盐值（默认为`default_salt`）
+   - `MAX_LOGIN_ATTEMPTS`：最大登录尝试次数（默认为`5`）
+   - `LOCKOUT_DURATION`：账户锁定时间（分钟，默认为`30`）
+   - `PROXYIP`：反代地址（默认值：`ts.hpc.tw`）
+   - `SOCKS5`：SOCKS5账号（格式：`用户名:密码@主机:端口`）
+6. 点击"保存"
+
+#### Pages环境变量设置
+
+1. 访问[Cloudflare Pages控制台](https://dash.cloudflare.com/pages)
+2. 选择你的Pages项目
+3. 点击"设置" -> "环境变量"
+4. 点击"添加变量"
+5. 添加以下环境变量（可选）：
+   - `PASSWORD_HASH_SALT`：密码加密盐值（默认为`default_salt`）
+   - `MAX_LOGIN_ATTEMPTS`：最大登录尝试次数（默认为`5`）
+   - `LOCKOUT_DURATION`：账户锁定时间（分钟，默认为`30`）
+   - `PROXYIP`：反代地址（默认值：`ts.hpc.tw`）
+   - `SOCKS5`：SOCKS5账号（格式：`用户名:密码@主机:端口`）
+6. 点击"保存"
+
+## 使用指南
+
+### 首次使用
+
+1. 访问部署后的Worker URL
+2. 系统会自动跳转到注册页面
+3. 设置用户名（4-20位字母数字）和密码（至少6位）
+4. 完成注册后，系统会自动登录并进入主面板
+
+### 登录与安全
+
+- 登录失败5次后，账户将被锁定5分钟
+- 系统会记录登录失败次数，并在锁定后显示倒计时
+- 支持通过Cookie保持登录状态（有效期5分钟）
+
+### 节点管理
+
+#### 上传节点文件
+
+1. 在主面板中，找到"上传你的优选IP"部分
+2. 点击"选择文件"，选择包含节点列表的文本文件（每行一个节点）
+3. 点击"上传"按钮，系统会自动处理并更新节点列表
+
+#### 添加节点路径
+
+1. 在"优选IP网络路径"部分，输入节点文件的URL（如：`https://example.com/ips.txt`）
+2. 点击"添加路径"按钮
+3. 系统会定期从这些路径获取最新的节点列表
+
+#### 移除节点路径
+
+1. 在节点路径列表中，找到要移除的路径
+2. 点击对应的"移除"按钮
+
+### 代理设置
+
+#### 代理开关
+
+1. 在"代理设置"部分，使用开关启用或禁用代理功能
+2. 禁用时，系统将使用直连模式
+
+#### 代理类型选择
+
+1. 启用代理后，可以选择"反代"或"SOCKS5"两种类型
+2. 反代模式：使用Cloudflare的反向代理功能
+3. SOCKS5模式：使用配置的SOCKS5代理服务器
+
+#### 强制代理
+
+1. 启用"强制代理"后，所有连接都将通过代理服务器
+2. 禁用时，系统会优先尝试直连，失败时自动切换到代理
+
+### 订阅配置
+
+#### 获取订阅链接
+
+1. 在主面板中，找到"猫咪订阅"或"通用订阅"部分
+2. 复制显示的订阅链接
+3. 在支持的客户端中导入该链接
+
+#### 更换UUID
+
+1. 在"当前UUID"部分，点击"更换UUID"按钮
+2. 系统会生成一个新的UUID
+3. 更换后，需要重新获取订阅链接
+
+### 退出登录
+
+1. 在主面板底部，点击"退出登录"按钮
+2. 系统会清除登录状态并返回登录页面
+
+## 配置说明
+
+### 节点格式
+
+节点文件应包含每行一个节点，格式如下：
+
+```
+[地址]:端口#节点名称@tls
+[地址]:端口#节点名称@notls
 ```
 
-### 3. 安装依赖
-```bash
-npm install
+例如：
+```
+1.2.3.4:443#美国-01@tls
+[2001:db8::1]:443#日本-01@notls
 ```
 
-### 4. 配置Cloudflare Workers
+### 环境变量
 
-#### 4.1 登录Wrangler
-```bash
-wrangler login
+#### PROXYIP
+
+设置反代地址，格式为`主机:端口`，例如：
+```
+ts.hpc.tw:8080
 ```
 
-#### 4.2 创建KV命名空间
-```bash
-wrangler kv:namespace create "KV数据库"
+#### SOCKS5
+
+设置SOCKS5代理账号，格式为`用户名:密码@主机:端口`，例如：
+```
+username:password@socks.example.com:1080
 ```
 
-#### 4.3 配置wrangler.toml或wrangler.jsonc
+## 技术细节
 
-使用生成的KV命名空间ID替换配置文件中的`example-id-1234567890`。
+### 协议支持
 
-## 本地开发
+- **VLESS**：支持VLESS协议，使用WebSocket传输
+- **TLS**：支持TLS加密，可通过`@tls`或`@notls`指定
+- **WebSocket路径**：默认使用`/?ed=2560`作为WebSocket路径
 
-### 方法1：使用真实Cloudflare KV（推荐生产环境）
-确保已正确配置KV命名空间ID，然后运行：
-```bash
-npm run dev
-# 或
-wrangler dev
-```
+### 连接模式
 
-### 方法2：使用模拟KV数据库（推荐开发环境）
-1. 复制.env.example文件为.env
-```bash
-cp .env.example .env
-```
+1. **直连模式**：直接连接目标服务器
+2. **反代模式**：通过Cloudflare的反向代理连接
+3. **SOCKS5模式**：通过配置的SOCKS5代理服务器连接
 
-2. 在.env文件中设置开发模式
-```
-DEVELOPMENT_MODE=true
-```
+### 智能连接逻辑
 
-3. 运行本地开发服务器
-```bash
-npm run dev
-# 或
-wrangler dev --env .env
-```
+系统会根据以下优先级尝试连接：
+1. 如果代理未启用，使用直连
+2. 如果强制代理启用，直接使用配置的代理类型连接
+3. 如果代理启用但未强制，先尝试直连，失败后切换到代理
 
-**注意**：模拟KV数据库仅用于开发和测试，数据存储在内存中，重启服务器后会丢失。生产环境请使用真实的Cloudflare KV命名空间。
+### 错误处理
 
-## 部署指南
+- 系统会记录连接失败日志
+- 节点拉取失败时会使用缓存的节点列表
+- 所有路径拉取失败时会显示错误提示
 
-### 方法1：使用npm脚本
-```bash
-npm run deploy
-```
+## 常见问题
 
-### 方法2：直接使用wrangler命令
-```bash
-# 指定入口文件部署
-wrangler deploy index.js
+### Q: 如何绑定KV存储空间？
 
-# 或使用构建后的文件
-wrangler deploy dist/index.js
-```
+A: 在Cloudflare Workers设置中，进入"变量"页面，在"KV命名空间绑定"部分添加变量名为`KV数据库`的绑定，并选择你创建的KV命名空间。
 
-### 方法3：通过Cloudflare Dashboard上传
-1. 构建项目：`npm run build`
-2. 登录Cloudflare Dashboard
-3. 导航到Workers & Pages
-4. 创建新的Worker
-5. 上传dist/index.js文件内容
-6. 配置KV命名空间绑定
-7. 配置环境变量
-8. 部署
+### Q: 为什么无法登录？
 
-## 环境变量配置
+A: 请检查以下几点：
+1. 确保已经正确绑定了KV存储空间
+2. 检查用户名和密码是否正确
+3. 如果多次登录失败，账户可能被锁定，请等待5分钟后重试
 
-在wrangler.toml或Cloudflare Dashboard中设置以下环境变量：
+### Q: 如何添加自己的节点？
 
-- `PROXYIP`：代理IP地址，默认为"ts.hpc.tw"
-- `SOCKS5`：SOCKS5代理配置（可选）
-- `DEVELOPMENT_MODE`：设置为"true"启用开发模式，使用模拟KV数据库
+A: 你可以通过以下两种方式添加节点：
+1. 上传包含节点列表的文本文件
+2. 添加节点文件的URL，系统会定期从该URL获取节点列表
 
-## 常见问题解决
+### Q: 订阅链接无法使用怎么办？
 
-### 部署错误：Missing entry-point to Worker script or to assets directory
+A: 请尝试以下步骤：
+1. 确认节点列表是否正确配置
+2. 尝试更换UUID
+3. 检查客户端是否支持VLESS协议
 
-**问题原因**：Wrangler无法找到Worker的入口文件。
+### Q: 如何提高连接速度？
 
-**解决方案**：
-1. 确保`wrangler.toml`或`wrangler.jsonc`文件中正确配置了`main`字段，指向`index.js`
-2. 使用完整命令部署：`wrangler deploy index.js`
-3. 检查项目根目录是否存在`index.js`文件
+A: 可以尝试以下方法：
+1. 添加更多优质节点
+2. 启用代理功能并选择合适的代理类型
+3. 使用"强制代理"模式确保所有连接都通过代理服务器
 
-### Windows环境下wrangler dev启动失败
+## 更新日志
 
-**问题原因**：Windows环境与Wrangler某些版本存在兼容性问题。
+### v1.0.0
+- 初始版本发布
+- 支持用户注册和登录
+- 支持节点管理和订阅生成
+- 支持多种代理模式和智能连接
 
-**解决方案**：
-1. 更新Wrangler到最新版本：`npm install wrangler@latest -D`
-2. 使用WSL(Windows Subsystem for Linux)进行开发
-3. 直接部署到Cloudflare进行测试
-4. 使用模拟KV数据库进行本地开发
+## 贡献
 
-### KV数据库未绑定错误
-
-**问题原因**：KV命名空间ID配置错误或未在Cloudflare中创建。
-
-**解决方案**：
-1. 确认在Cloudflare中创建了KV命名空间
-2. 使用正确的KV命名空间ID更新配置文件
-3. 检查KV命名空间的绑定名称是否为"KV数据库"
-4. 本地开发时可启用模拟KV数据库
-
-## 开发说明
-
-- 项目使用ES Modules语法
-- 主要逻辑位于`index.js`文件
-- 辅助函数位于`utils/`目录
-- 构建输出在`dist/`目录
-
-## 注意事项
-- 本项目的默认KV命名空间ID为示例值，请务必替换为您自己的实际ID
-- 在生产环境中，请确保所有敏感信息都配置为环境变量
-- 定期备份KV数据库中的数据
+欢迎提交Issue和Pull Request来改进这个项目。
 
 ## 许可证
-MIT
+
+本项目采用MIT许可证，详情请参阅LICENSE文件。
+
+## 联系方式
+
+如有问题或建议，请通过以下方式联系：
+- 提交Issue：[GitHub Issues](https://github.com/Alien-Et/SakuraPanel/issues)
+
+---
+
+**注意**：本项目仅用于学习和研究目的，请遵守当地法律法规，不要用于非法用途。
