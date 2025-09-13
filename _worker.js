@@ -685,12 +685,6 @@ export default {
           await env.KV数据库.put('forceProxy', forceProxy);
           return new Response(null, { status: 200 });
 
-        case '/set-fragment-state':
-          formData = await 请求.formData();
-          const fragmentEnabled = formData.get('fragmentEnabled');
-          await env.KV数据库.put('fragmentEnabled', fragmentEnabled);
-          return new Response(null, { status: 200 });
-
         case '/get-proxy-status':
           const 代理启用 = await env.KV数据库.get('proxyEnabled') === 'true';
           const 代理类型 = await env.KV数据库.get('proxyType') || 'reverse';
@@ -730,7 +724,7 @@ async function 升级请求(请求, env) {
   const 结果 = await 解析头(解密(请求.headers.get('sec-websocket-protocol')), env, uuid);
   if (!结果) return new Response('Invalid request', { status: 400 });
   const { TCP接口, 初始数据 } = 结果;
-  建立管道(服务端, TCP接口, 初始数据, env);
+  建立管道(服务端, TCP接口, 初始数据);
   return new Response(null, { status: 101, webSocket: 客户端 });
 }
 
@@ -858,7 +852,7 @@ function 验证密钥(arr) {
   return Array.from(arr.slice(0, 16), b => b.toString(16).padStart(2, '0')).join('').match(/(.{8})(.{4})(.{4})(.{4})(.{12})/).slice(1).join('-').toLowerCase();
 }
 
-async function 建立管道(服务端, TCP接口, 初始数据, env) {
+async function 建立管道(服务端, TCP接口, 初始数据) {
   await 服务端.send(new Uint8Array([0, 0]).buffer);
   const 数据流 = new ReadableStream({
     async start(控制器) {
@@ -868,52 +862,13 @@ async function 建立管道(服务端, TCP接口, 初始数据, env) {
       服务端.addEventListener('error', () => { 控制器.close(); TCP接口.close(); setTimeout(() => 服务端.close(1001), 2); });
     }
   });
-  
-  // 检查是否启用了分片功能
-  const fragmentEnabled = await env.KV数据库.get('fragmentEnabled') === 'true';
-  
-  if (fragmentEnabled) {
-    console.log('网络分片已启用，数据将被分割传输');
-    数据流.pipeTo(new WritableStream({
-      async write(数据) {
-        const 写入器 = TCP接口.writable.getWriter();
-        // 将数据分割成多个小片段
-        const 分片大小 = 1024; // 每个片段1KB
-        const 总长度 = 数据.byteLength;
-        
-        for (let i = 0; i < 总长度; i += 分片大小) {
-          const 结束位置 = Math.min(i + 分片大小, 总长度);
-          const 分片数据 = 数据.slice(i, 结束位置);
-          
-          // 添加分片头部信息：总长度、当前偏移量、分片长度
-          const 头部 = new ArrayBuffer(12);
-          const 头部视图 = new DataView(头部);
-          头部视图.setUint32(0, 总长度, false); // 总长度
-          头部视图.setUint32(4, i, false); // 当前偏移量
-          头部视图.setUint32(8, 结束位置 - i, false); // 分片长度
-          
-          // 发送头部和分片数据
-          await 写入器.write(new Uint8Array(头部));
-          await 写入器.write(new Uint8Array(分片数据));
-          
-          // 添加小延迟以避免流量突发
-          await new Promise(resolve => setTimeout(resolve, 5));
-        }
-        
-        写入器.releaseLock();
-      }
-    }));
-  } else {
-    // 未启用分片，直接传输数据
-    数据流.pipeTo(new WritableStream({
-      async write(数据) {
-        const 写入器 = TCP接口.writable.getWriter();
-        await 写入器.write(数据);
-        写入器.releaseLock();
-      }
-    }));
-  }
-  
+  数据流.pipeTo(new WritableStream({
+    async write(数据) {
+      const 写入器 = TCP接口.writable.getWriter();
+      await 写入器.write(数据);
+      写入器.releaseLock();
+    }
+  }));
   TCP接口.readable.pipeTo(new WritableStream({
     async write(数据) {
       await 服务端.send(数据);
@@ -1106,13 +1061,10 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .proxy-option[data-type="socks5"].active { background: linear-gradient(to right, #ffd1dc, #ff85a2); }
     .proxy-option::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: rgba(255, 255, 255, 0.2); transform: rotate(30deg); transition: all 0.5s ease; pointer-events: none; }
     .proxy-option:hover::before { top: 100%; left: 100%; }
-    .proxy-status, .uuid-box, .force-proxy-note, .fragment-note { margin-top: 20px; padding: 15px; border-radius: 15px; font-size: 0.95em; word-break: break-all; transition: background 0.3s ease, color 0.3s ease; width: 100%; box-sizing: border-box; }
+    .proxy-status, .uuid-box, .force-proxy-note { margin-top: 20px; padding: 15px; border-radius: 15px; font-size: 0.95em; word-break: break-all; transition: background 0.3s ease, color 0.3s ease; width: 100%; box-sizing: border-box; }
     .proxy-status.success { background: rgba(212, 237, 218, 0.9); color: #155724; }
     .proxy-status.direct { background: rgba(233, 236, 239, 0.9); color: #495057; }
     .force-proxy-note { font-size: 0.9em; color: #ff85a2; }
-    .fragment-note { background: rgba(255, 236, 244, 0.9); color: #ff6f91; }
-    .fragment-note p { margin: 0 0 10px 0; }
-    .fragment-note ul { margin: 0; padding-left: 20px; }
     .link-box { border-radius: 15px; padding: 15px; margin: 10px 0; font-size: 0.95em; word-break: break-all; }
     .link-box a { color: #ff69b4; text-decoration: none; transition: color 0.3s ease; }
     .link-box a:hover { color: #ff1493; }
@@ -1164,12 +1116,11 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       .switch-container { gap: 10px; }
       .toggle-row { gap: 10px; }
       .proxy-option { width: 70px; padding: 8px 0; font-size: 0.9em; }
-      .proxy-status, .uuid-box, .force-proxy-note, .fragment-note { font-size: 0.9em; padding: 12px; }
+      .proxy-status, .uuid-box, .force-proxy-note { font-size: 0.9em; padding: 12px; }
       .link-box { font-size: 0.9em; padding: 12px; }
       .cute-button, .upload-label { padding: 10px 20px; font-size: 0.9em; }
       .card::after { font-size: 50px; top: -15px; right: -15px; }
       .url-input { font-size: 0.9em; }
-      .fragment-note ul { padding-left: 15px; }
     }
   </style>
 </head>
@@ -1214,27 +1165,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       <div class="proxy-status" id="proxyStatus">直连</div>
       <div class="force-proxy-note" id="forceProxyNote" style="display: none;">
         <span id="forceProxyText"></span>
-      </div>
-    </div>
-    <div class="card">
-      <h2 class="card-title">🔀 网络分片</h2>
-      <div class="switch-container">
-        <div class="toggle-row">
-          <label>分片开关</label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="fragmentToggle" onchange="toggleFragment()">
-            <span class="slider"></span>
-          </label>
-        </div>
-      </div>
-      <div class="fragment-note">
-        <p>网络分片功能可以将大数据包分割成小片段传输，有助于：</p>
-        <ul>
-          <li>绕过网络限制和防火墙</li>
-          <li>提高传输稳定性</li>
-          <li>增强隐私和安全性</li>
-          <li>优化网络性能</li>
-        </ul>
       </div>
     </div>
     <div class="card">
@@ -1300,10 +1230,8 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     let proxyEnabled = localStorage.getItem('proxyEnabled') === 'true';
     let proxyType = localStorage.getItem('proxyType') || 'reverse';
     let forceProxy = localStorage.getItem('forceProxy') === 'true';
-    let fragmentEnabled = localStorage.getItem('fragmentEnabled') === 'true';
     document.getElementById('proxyToggle').checked = proxyEnabled;
     document.getElementById('forceProxyToggle').checked = forceProxy;
-    document.getElementById('fragmentToggle').checked = fragmentEnabled;
     updateProxyUI();
     updateProxyStatus();
 
@@ -1443,25 +1371,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       formData.append('forceProxy', forceProxy);
       fetch('/set-proxy-state', { method: 'POST', body: formData })
         .then(() => updateProxyStatus());
-    }
-
-    function toggleFragment() {
-      fragmentEnabled = document.getElementById('fragmentToggle').checked;
-      localStorage.setItem('fragmentEnabled', fragmentEnabled);
-      saveFragmentState();
-    }
-
-    function saveFragmentState() {
-      const formData = new FormData();
-      formData.append('fragmentEnabled', fragmentEnabled);
-      fetch('/set-fragment-state', { method: 'POST', body: formData })
-        .then(() => {
-          if (fragmentEnabled) {
-            alert('网络分片已开启！数据将被分割成小片段传输，有助于绕过网络限制和提高稳定性。');
-          } else {
-            alert('网络分片已关闭！');
-          }
-        });
     }
 
     function 导入Config(配置路径, hostName, type) {
