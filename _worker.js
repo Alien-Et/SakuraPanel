@@ -1028,6 +1028,8 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       .card:hover { box-shadow: 0 10px 25px rgba(255, 182, 193, 0.5); }
       .link-box, .proxy-status, .uuid-box, .force-proxy-note { background: rgba(255, 240, 245, 0.9); border: 2px dashed #ffb6c1; }
       .file-item, .url-item { background: rgba(255, 245, 247, 0.9); }
+      .upload-btn, .add-url-btn { background: linear-gradient(to right, #ffb6c1, #ff69b4); }
+      .upload-label { background: linear-gradient(to right, #ffb6c1, #ff69b4); }
     }
     @media (prefers-color-scheme: dark) {
       body { background: linear-gradient(135deg, #1e1e2f, #2a2a3b); }
@@ -1041,6 +1043,8 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 .file-requirements { background: rgba(40, 40, 40, 0.9); border: 2px dashed #ff85a2; color: #ffd1dc; }
 .file-requirements h3 { color: #ff85a2; }
 .file-requirements .example { background: rgba(0, 0, 0, 0.3); }
+.upload-btn, .add-url-btn { background: linear-gradient(to right, #ff85a2, #ff1493); }
+.upload-label { background: linear-gradient(to right, #ff85a2, #ff1493); }
     }
     .background-media {
       position: fixed;
@@ -1152,7 +1156,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .link-box { border-radius: 15px; padding: 15px; margin: 10px 0; font-size: 0.95em; word-break: break-all; }
     .link-box a { color: #ff69b4; text-decoration: none; transition: color 0.3s ease; }
     .link-box a:hover { color: #ff1493; }
-    .button-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
+    .button-group { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
     .cute-button {
       padding: 12px 25px;
       border-radius: 20px;
@@ -1173,9 +1177,10 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .uuid-btn { background: linear-gradient(to right, #ffdead, #ff85a2); }
     .upload-btn, .add-url-btn {
       background: linear-gradient(to right, #ffdead, #ff85a2);
+      margin-top: 10px;
     }
     .upload-title { font-size: 1.4em; color: #ff85a2; margin-bottom: 15px; }
-    .upload-label { padding: 10px 20px; background: linear-gradient(to right, #ffb6c1, #ff69b4); color: white; border-radius: 20px; cursor: pointer; display: inline-block; transition: all 0.3s ease; }
+    .upload-label { padding: 10px 20px; background: linear-gradient(to right, #ffb6c1, #ff69b4); color: white; border-radius: 20px; cursor: pointer; display: inline-block; transition: all 0.3s ease; margin-top: 15px; }
     .upload-label:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4); }
     .file-list, .url-list { margin: 15px 0; max-height: 120px; overflow-y: auto; text-align: left; }
     .file-item, .url-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 10px; margin: 5px 0; font-size: 0.9em; }
@@ -1205,6 +1210,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       .cute-button, .upload-label { padding: 10px 20px; font-size: 0.9em; }
       .card::after { font-size: 50px; top: -15px; right: -15px; }
       .url-input { font-size: 0.9em; }
+      .button-group { gap: 8px; }
     }
   </style>
 </head>
