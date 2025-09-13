@@ -1279,7 +1279,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     </div>
     <div class="card">
       <h2 class="upload-title">🌟 上传你的优选IP</h2>
-      <div class="upload-notice file-requirements">
+      <div class="upload-notice force-proxy-note">
         <p>请上传包含优选IP的.txt文件，每行一个节点</p>
       </div>
       <form id="uploadForm" action="/${配置路径}/upload" method="POST" enctype="multipart/form-data">
