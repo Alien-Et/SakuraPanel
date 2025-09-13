@@ -610,7 +610,8 @@ export default {
                 // 2. 不带端口：[地址]#节点名称@tls/notls
                 // 3. 不带tls/notls：[地址]:端口#节点名称
                 // 4. 最简格式：[地址]#节点名称
-                const nodePattern = /^(\[[0-9a-fA-F:]+\]|[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})(?::([0-9]{1,5}))?(?:#(.+?))?(?:@(tls|notls))?$/;
+                // 现在支持IP地址（IPv4/IPv6）和域名
+                const nodePattern = /^(\[[0-9a-fA-F:]+\]|[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*)(?::([0-9]{1,5}))?(?:#(.+?))?(?:@(tls|notls))?$/;
                 const match = nodePattern.exec(line);
                 if (!match) {
                   console.warn(`文件 ${ipFile.name} 中的行格式不正确，将被忽略: ${line}`);
@@ -1028,6 +1029,8 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       .card:hover { box-shadow: 0 10px 25px rgba(255, 182, 193, 0.5); }
       .link-box, .proxy-status, .uuid-box, .force-proxy-note { background: rgba(255, 240, 245, 0.9); border: 2px dashed #ffb6c1; }
       .file-item, .url-item { background: rgba(255, 245, 247, 0.9); }
+      .upload-btn, .add-url-btn { background: linear-gradient(to right, #ffb6c1, #ff69b4); }
+      .upload-label { background: linear-gradient(to right, #ffb6c1, #ff69b4); }
     }
     @media (prefers-color-scheme: dark) {
       body { background: linear-gradient(135deg, #1e1e2f, #2a2a3b); }
@@ -1041,6 +1044,9 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 .file-requirements { background: rgba(40, 40, 40, 0.9); border: 2px dashed #ff85a2; color: #ffd1dc; }
 .file-requirements h3 { color: #ff85a2; }
 .file-requirements .example { background: rgba(0, 0, 0, 0.3); }
+.upload-btn, .add-url-btn { background: linear-gradient(to right, #ff85a2, #ff1493); }
+.upload-label { background: linear-gradient(to right, #ff85a2, #ff1493); }
+.force-proxy-note { background: rgba(40, 40, 40, 0.9) !important; border: 2px dashed #ff85a2 !important; color: #ffd1dc !important; }
     }
     .background-media {
       position: fixed;
@@ -1143,7 +1149,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .proxy-status, .uuid-box, .force-proxy-note { margin-top: 20px; padding: 8px 15px; border-radius: 15px; font-size: 0.95em; word-break: break-all; transition: background 0.3s ease, color 0.3s ease; width: 100%; box-sizing: border-box; }
     .proxy-status.success { background: rgba(212, 237, 218, 0.9); color: #155724; }
     .proxy-status.direct { background: rgba(233, 236, 239, 0.9); color: #495057; }
-    .force-proxy-note { font-size: 0.9em; color: #ff85a2; border: 2px dashed #ffb6c1; background: rgba(255, 240, 245, 0.9); }
+    .force-proxy-note { font-size: 0.9em; color: #ff85a2; border: 2px dashed #ffb6c1; }
 .file-requirements { margin-top: 20px; padding: 15px; border-radius: 15px; background: rgba(255, 240, 245, 0.9); border: 2px dashed #ffb6c1; font-size: 0.9em; color: #d63384; transition: background 0.3s ease, color 0.3s ease; }
 .file-requirements h3 { margin-top: 0; margin-bottom: 10px; color: #ff1493; font-size: 1.1em; }
 .file-requirements ul { margin-bottom: 0; padding-left: 20px; }
@@ -1152,7 +1158,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .link-box { border-radius: 15px; padding: 15px; margin: 10px 0; font-size: 0.95em; word-break: break-all; }
     .link-box a { color: #ff69b4; text-decoration: none; transition: color 0.3s ease; }
     .link-box a:hover { color: #ff1493; }
-    .button-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
+    .button-group { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
     .cute-button {
       padding: 12px 25px;
       border-radius: 20px;
@@ -1173,9 +1179,10 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .uuid-btn { background: linear-gradient(to right, #ffdead, #ff85a2); }
     .upload-btn, .add-url-btn {
       background: linear-gradient(to right, #ffdead, #ff85a2);
+      margin-top: 5px;
     }
     .upload-title { font-size: 1.4em; color: #ff85a2; margin-bottom: 15px; }
-    .upload-label { padding: 10px 20px; background: linear-gradient(to right, #ffb6c1, #ff69b4); color: white; border-radius: 20px; cursor: pointer; display: inline-block; transition: all 0.3s ease; }
+    .upload-label { padding: 10px 20px; background: linear-gradient(to right, #ffb6c1, #ff69b4); color: white; border-radius: 20px; cursor: pointer; display: inline-block; transition: all 0.3s ease; margin-top: 10px; }
     .upload-label:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4); }
     .file-list, .url-list { margin: 15px 0; max-height: 120px; overflow-y: auto; text-align: left; }
     .file-item, .url-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 10px; margin: 5px 0; font-size: 0.9em; }
@@ -1205,6 +1212,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       .cute-button, .upload-label { padding: 10px 20px; font-size: 0.9em; }
       .card::after { font-size: 50px; top: -15px; right: -15px; }
       .url-input { font-size: 0.9em; }
+      .button-group { gap: 8px; }
     }
   </style>
 </head>
@@ -1278,12 +1286,12 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       </div>
     </div>
     <div class="card">
-      <h2 class="upload-title">🌟 上传你的优选IP</h2>
+      <h2 class="upload-title">🌟 上传你的优选节点</h2>
       <div class="upload-notice force-proxy-note">
-        <p>请上传包含优选IP的.txt文件，每行一个节点</p>
+        <p>请上传包含优选IP或域名的.txt文件，每行一个节点</p>
       </div>
       <form id="uploadForm" action="/${配置路径}/upload" method="POST" enctype="multipart/form-data">
-        <label for="ipFiles" class="upload-label" onclick="触发文件选择()">选择文件</label>
+        <label for="ipFiles" class="upload-label">选择文件</label>
         <input type="file" id="ipFiles" name="ipFiles" accept=".txt" multiple required onchange="显示文件()" style="display: none;">
         <div class="file-list" id="fileList"></div>
         <button type="submit" class="cute-button upload-btn" onclick="开始上传(event)">上传</button>
@@ -1476,12 +1484,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
           }
         })
         .catch(() => alert('更换 UUID 失败，网络出错啦~'));
-    }
-
-    function 触发文件选择() {
-      const fileInput = document.getElementById('ipFiles');
-      // 直接触发文件选择对话框，增强浏览器兼容性
-      fileInput.click();
     }
 
     function 显示文件() {
