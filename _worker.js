@@ -1143,7 +1143,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .proxy-status, .uuid-box, .force-proxy-note { margin-top: 20px; padding: 8px 15px; border-radius: 15px; font-size: 0.95em; word-break: break-all; transition: background 0.3s ease, color 0.3s ease; width: 100%; box-sizing: border-box; }
     .proxy-status.success { background: rgba(212, 237, 218, 0.9); color: #155724; }
     .proxy-status.direct { background: rgba(233, 236, 239, 0.9); color: #495057; }
-    .force-proxy-note { font-size: 0.9em; color: #ff85a2; }
+    .force-proxy-note { font-size: 0.9em; color: #ff85a2; border: 2px dashed #ffb6c1; background: rgba(255, 240, 245, 0.9); }
 .file-requirements { margin-top: 20px; padding: 15px; border-radius: 15px; background: rgba(255, 240, 245, 0.9); border: 2px dashed #ffb6c1; font-size: 0.9em; color: #d63384; transition: background 0.3s ease, color 0.3s ease; }
 .file-requirements h3 { margin-top: 0; margin-bottom: 10px; color: #ff1493; font-size: 1.1em; }
 .file-requirements ul { margin-bottom: 0; padding-left: 20px; }
