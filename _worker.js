@@ -1280,28 +1280,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     <div class="card">
       <h2 class="upload-title">🌟 上传你的优选IP</h2>
       <div class="upload-notice">
-        <p><strong>文件格式要求：</strong></p>
-        <ul>
-          <li>仅允许上传.txt格式文件</li>
-          <li>文件大小不超过1MB</li>
-          <li>每行一个节点，支持多种格式：</li>
-          <ul>
-            <li>完整格式：[地址]:端口#节点名称@tls 或 [地址]:端口#节点名称@notls</li>
-            <li>不带端口：[地址]#节点名称@tls 或 [地址]#节点名称@notls（将使用默认端口443）</li>
-            <li>不带协议：[地址]:端口#节点名称（将默认使用tls协议）</li>
-            <li>最简格式：[地址]#节点名称（将使用默认端口443和tls协议）</li>
-          </ul>
-          <li>地址可以是IPv4或IPv6格式</li>
-          <li>端口范围：1-65535</li>
-          <li>示例：
-            <ul>
-              <li class="example">1.2.3.4:443#美国-01@tls</li>
-              <li class="example">[2001:db8::1]:443#日本-01@notls</li>
-              <li class="example">1.2.3.4#香港节点@tls</li>
-              <li class="example">[2001:db8::1]#新加坡节点</li>
-            </ul>
-          </li>
-        </ul>
+        <p>请上传包含优选IP的.txt文件，每行一个节点</p>
       </div>
       <form id="uploadForm" action="/${配置路径}/upload" method="POST" enctype="multipart/form-data">
         <label for="ipFiles" class="upload-label">选择文件</label>
