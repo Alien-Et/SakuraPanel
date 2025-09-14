@@ -424,10 +424,10 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
       const duration = Math.random() * 10 + 10;
       
       petal.style.backgroundColor = color;
-      petal.style.width = `${size}px`;
-      petal.style.height = `${size}px`;
-      petal.style.left = `${left}%`;
-      petal.style.animationDuration = `${duration}s`;
+      petal.style.width = size + 'px';
+      petal.style.height = size + 'px';
+      petal.style.left = left + '%';
+      petal.style.animationDuration = duration + 's';
       
       petalsContainer.appendChild(petal);
       
@@ -446,7 +446,7 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
     }
 
     // 倒计时逻辑
-    let remainingTime = ${额外参数.锁定状态 ? 额外参数.剩余时间 : 0};
+    let remainingTime = ${(额外参数.锁定状态 ? 额外参数.剩余时间 : 0)};
     const countdownElement = document.getElementById('countdown');
     const loginButton = document.getElementById('loginButton');
 
@@ -487,7 +487,7 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
         });
     }
 
-    if (${额外参数.锁定状态}) {
+    if (${额外参数.锁定状态 ? 'true' : 'false'}) {
       startCountdown();
       setInterval(syncWithServer, 10000);
       document.addEventListener('visibilitychange', () => {
@@ -1558,7 +1558,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
           data.paths.forEach((path, index) => {
             const div = document.createElement('div');
             div.className = 'url-item';
-            div.innerHTML = \`<span>\${path}</span><button onclick="移除节点路径(\${index})">移除</button>\`;
+            div.innerHTML = '<span>' + path + '</span><button onclick="移除节点路径(' + index + ')">移除</button>';
             urlList.appendChild(div);
           });
         })
@@ -1712,7 +1712,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       Array.from(fileInput.files).forEach((file, index) => {
         const div = document.createElement('div');
         div.className = 'file-item';
-        div.innerHTML = \`<span>\${file.name} (\${(file.size / 1024).toFixed(2)} KB)</span><button onclick="移除文件(\${index})">移除</button>\`;
+        div.innerHTML = '<span>' + file.name + ' (' + (file.size / 1024).toFixed(2) + ' KB)</span><button onclick="移除文件(' + index + ')">移除</button>';
         fileList.appendChild(div);
       });
     }
@@ -1772,7 +1772,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
           }
         } catch (err) {
           progressContainer.style.display = 'none';
-          alert(\`上传失败啦，状态码: \${xhr.status}，原因: \${err.message}\`);
+          alert('上传失败啦，状态码: ' + xhr.status + '，原因: ' + err.message);
         }
       };
 
@@ -2060,5 +2060,5 @@ async function 生成通用(env, hostName) {
   }).filter(Boolean);
 
   return `# Generated at: ${new Date().toISOString()}
-${配置列表.length ? 配置列表.join("\n") : `${atob('dmxlc3M=')}://${uuid}@${hostName}:443?encryption=none&security=tls&type=ws&host=${hostName}&path=${encodeURIComponent('/?ed=2560')}&sni=${hostName}#默认节点`}`;
+${配置列表.length ? 配置列表.join("\n") : (atob('dmxlc3M=') + '://' + uuid + '@' + hostName + ':443?encryption=none&security=tls&type=ws&host=' + hostName + '&path=' + encodeURIComponent('/?ed=2560') + '&sni=' + hostName + '#默认节点')}`;
 }
