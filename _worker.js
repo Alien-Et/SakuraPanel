@@ -719,37 +719,37 @@ async function 获取配置(env, 类型, hostName) {
 
 // ====================== 主逻辑 ======================
 export default {
-  async fetch(请求, env) {
+  async fetch(request, env, ctx) {
     try {
       if (!env.KV数据库) {
         return 创建HTML响应(生成KV未绑定提示页面());
       }
 
-      const 请求头 = 请求.headers.get('Upgrade');
-      const url = new URL(请求.url);
-      const hostName = 请求.headers.get('Host');
-      const UA = 请求.headers.get('User-Agent') || 'unknown';
-      const IP = 请求.headers.get('CF-Connecting-IP') || 'unknown';
+      const 请求头 = request.headers.get('Upgrade');
+      const url = new URL(request.url);
+      const hostName = request.headers.get('Host');
+      const UA = request.headers.get('User-Agent') || 'unknown';
+      const IP = request.headers.get('CF-Connecting-IP') || 'unknown';
       const 设备标识 = `${UA}_${IP}`;
       let formData;
 
       if (请求头 && 请求头 === 'websocket') {
         反代地址 = env.PROXYIP || 反代地址;
         SOCKS5账号 = env.SOCKS5 || SOCKS5账号;
-        return await 升级请求(请求, env);
+        return await 升级请求(request, env);
       }
 
       if (url.pathname === '/login/submit' || url.pathname === '/register/submit') {
-        const contentType = 请求.headers.get('Content-Type') || '';
+        const contentType = request.headers.get('Content-Type') || '';
         if (!contentType.includes('application/x-www-form-urlencoded') && !contentType.includes('multipart/form-data')) {
-          console.log(`无效请求: UA=${UA}, IP=${IP}, Path=${url.pathname}, Headers=${JSON.stringify([...请求.headers])}`);
+          console.log(`无效请求: UA=${UA}, IP=${IP}, Path=${url.pathname}, Headers=${JSON.stringify([...request.headers])}`);
           return 创建HTML响应(生成登录注册界面(url.pathname === '/login/submit' ? '登录' : '注册', {
             错误信息: '请通过正常表单提交'
           }), 400);
         }
 
         try {
-          formData = await 请求.formData();
+          formData = await request.formData();
         } catch (错误) {
           return 创建HTML响应(生成登录注册界面(url.pathname === '/login/submit' ? '登录' : '注册', {
             错误信息: '提交数据格式错误，请重试'
@@ -847,7 +847,7 @@ export default {
           if (锁定状态.被锁定) {
             return 创建HTML响应(生成登录注册界面('登录', { 锁定状态: true, 剩余时间: 锁定状态.剩余时间 }));
           }
-          if (请求.headers.get('Cookie')?.split('=')[1] === await env.KV数据库.get('current_token')) {
+          if (request.headers.get('Cookie')?.split('=')[1] === await env.KV数据库.get('current_token')) {
             return 创建重定向响应(`/${配置路径}`);
           }
           const 失败次数 = Number(await env.KV数据库.get(`fail_${设备标识}`) || 0);
@@ -866,7 +866,7 @@ export default {
           });
 
         case `/${配置路径}`:
-          const Token = 请求.headers.get('Cookie')?.split('=')[1];
+          const Token = request.headers.get('Cookie')?.split('=')[1];
           const 有效Token = await env.KV数据库.get('current_token');
           if (!Token || Token !== 有效Token) return 创建重定向响应('/login');
           const uuid = await 获取或初始化UUID(env);
@@ -887,12 +887,12 @@ export default {
           return new Response(vConfig, { status: 200, headers: { "Content-Type": "text/plain;charset=utf-8" } });
 
         case `/${配置路径}/upload`:
-          const uploadToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const uploadToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效UploadToken = await env.KV数据库.get('current_token');
           if (!uploadToken || uploadToken !== 有效UploadToken) {
             return 创建JSON响应({ error: '未登录或Token无效，请重新登录' }, 401);
           }
-          formData = await 请求.formData();
+          formData = await request.formData();
           const ipFiles = formData.getAll('ipFiles');
           if (!ipFiles || ipFiles.length === 0) {
             return 创建JSON响应({ error: '未选择任何文件' }, 400);
@@ -1009,7 +1009,7 @@ export default {
           }
 
         case `/${配置路径}/change-uuid`:
-          const changeToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const changeToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效ChangeToken = await env.KV数据库.get('current_token');
           if (!changeToken || changeToken !== 有效ChangeToken) {
             return 创建JSON响应({ error: '未登录或Token无效' }, 401);
@@ -1024,12 +1024,12 @@ export default {
           return 创建JSON响应({ uuid: 新UUID }, 200);
 
         case `/${配置路径}/add-node-path`:
-          const addToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const addToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效AddToken = await env.KV数据库.get('current_token');
           if (!addToken || addToken !== 有效AddToken) {
             return 创建JSON响应({ error: '未登录或Token无效' }, 401);
           }
-          const addData = await 请求.json();
+          const addData = await request.json();
           const newPath = addData.path;
           if (!newPath || !newPath.match(/^https?:\/\//)) {
             return 创建JSON响应({ error: '无效的URL格式' }, 400);
@@ -1045,12 +1045,12 @@ export default {
           return 创建JSON响应({ success: true }, 200);
 
         case `/${配置路径}/remove-node-path`:
-          const removeToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const removeToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效RemoveToken = await env.KV数据库.get('current_token');
           if (!removeToken || removeToken !== 有效RemoveToken) {
             return 创建JSON响应({ error: '未登录或Token无效' }, 401);
           }
-          const removeData = await 请求.json();
+          const removeData = await request.json();
           const index = removeData.index;
           let paths = await env.KV数据库.get('node_file_paths');
           paths = paths ? JSON.parse(paths) : [];
@@ -1063,7 +1063,7 @@ export default {
           return 创建JSON响应({ success: true }, 200);
 
         case `/${配置路径}/get-node-paths`:
-          const getToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const getToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效GetToken = await env.KV数据库.get('current_token');
           if (!getToken || getToken !== 有效GetToken) {
             return 创建JSON响应({ error: '未登录或Token无效' }, 401);
@@ -1073,7 +1073,7 @@ export default {
           return 创建JSON响应({ paths: nodePaths }, 200);
 
         case `/${配置路径}/get-online-routing-rules`:
-          const routingToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const routingToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效RoutingToken = await env.KV数据库.get('current_token');
           if (!routingToken || routingToken !== 有效RoutingToken) {
             return 创建JSON响应({ error: '未登录或Token无效' }, 401);
@@ -1082,23 +1082,23 @@ export default {
           return 创建JSON响应({ rules: 规则配置 }, 200);
 
         case `/${配置路径}/toggle-routing-rule`:
-          const toggleToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const toggleToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效ToggleToken = await env.KV数据库.get('current_token');
           if (!toggleToken || toggleToken !== 有效ToggleToken) {
             return 创建JSON响应({ error: '未登录或Token无效' }, 401);
           }
-          const toggleData = await 请求.json();
+          const toggleData = await request.json();
           const 规则索引 = toggleData.index;
           const 切换结果 = await 切换在线分流规则状态(env, 规则索引);
           return 创建JSON响应(切换结果, 切换结果.success ? 200 : 400);
 
         case `/${配置路径}/add-routing-rule`:
-          const addRuleToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const addRuleToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效AddRuleToken = await env.KV数据库.get('current_token');
           if (!addRuleToken || addRuleToken !== 有效AddRuleToken) {
             return 创建JSON响应({ error: '未登录或Token无效' }, 401);
           }
-          const addRuleData = await 请求.json();
+          const addRuleData = await request.json();
           const 新规则 = {
             name: addRuleData.name,
             url: addRuleData.url,
@@ -1114,12 +1114,12 @@ export default {
           return 创建JSON响应({ success: true }, 200);
 
         case `/${配置路径}/remove-routing-rule`:
-          const removeRuleToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const removeRuleToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效RemoveRuleToken = await env.KV数据库.get('current_token');
           if (!removeRuleToken || removeRuleToken !== 有效RemoveRuleToken) {
             return 创建JSON响应({ error: '未登录或Token无效' }, 401);
           }
-          const removeRuleData = await 请求.json();
+          const removeRuleData = await request.json();
           const 移除索引 = removeRuleData.index;
           const 移除前规则配置 = await 加载在线分流规则配置(env);
           if (移除索引 >= 0 && 移除索引 < 移除前规则配置.length) {
@@ -1130,7 +1130,7 @@ export default {
           return 创建JSON响应({ error: '无效的规则索引' }, 400);
 
         case '/set-proxy-state':
-          formData = await 请求.formData();
+          formData = await request.formData();
           const proxyEnabled = formData.get('proxyEnabled');
           const proxyType = formData.get('proxyType');
           const forceProxy = formData.get('forceProxy');
@@ -1160,7 +1160,7 @@ export default {
         default:
           url.hostname = 伪装域名;
           url.protocol = 'https:';
-          return fetch(new Request(url, 请求));
+          return fetch(new Request(url, request));
       }
     } catch (error) {
       console.error(`全局错误: ${error.message}`);
@@ -1170,12 +1170,12 @@ export default {
 };
 
 // ====================== WebSocket处理 ======================
-async function 升级请求(请求, env) {
+async function 升级请求(request, env) {
   const 创建接口 = new WebSocketPair();
   const [客户端, 服务端] = Object.values(创建接口);
   服务端.accept();
   const uuid = await 获取或初始化UUID(env);
-  const 结果 = await 解析头(解密(请求.headers.get('sec-websocket-protocol')), env, uuid);
+  const 结果 = await 解析头(解密(request.headers.get('sec-websocket-protocol')), env, uuid);
   if (!结果) return new Response('Invalid request', { status: 400 });
   const { TCP接口, 初始数据 } = 结果;
   建立管道(服务端, TCP接口, 初始数据);
