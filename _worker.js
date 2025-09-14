@@ -82,7 +82,7 @@ async function 加密密码(密码) {
 }
 
 async function 检查锁定(env, 设备标识) {
-  const 锁定时间戳 = await env.KV数据库.get(`lock_${设备标识}`);
+  const 锁定时间戳 = await env.KV数据库.get('lock_' + 设备标识);
   const 当前时间 = Date.now();
   const 被锁定 = 锁定时间戳 && 当前时间 < Number(锁定时间戳);
   return {
@@ -103,7 +103,7 @@ async function 加载在线分流规则配置(env) {
     }
     return 在线分流规则仓库;
   } catch (错误) {
-    console.error(`加载在线分流规则配置失败: ${错误.message}`);
+    console.error('加载在线分流规则配置失败: ' + 错误.message);
     return 在线分流规则仓库;
   }
 }
@@ -114,7 +114,7 @@ async function 保存在线分流规则配置(env, 规则配置) {
     在线分流规则仓库 = 规则配置;
     return true;
   } catch (错误) {
-    console.error(`保存在线分流规则配置失败: ${错误.message}`);
+    console.error('保存在线分流规则配置失败: ' + 错误.message);
     return false;
   }
 }
@@ -123,12 +123,12 @@ async function 获取在线分流规则(env, 规则URL) {
   try {
     const 响应 = await fetch(规则URL);
     if (!响应.ok) {
-      throw new Error(`获取规则失败，状态码: ${响应.status}`);
+      throw new Error('获取规则失败，状态码: ' + 响应.status);
     }
     const 规则内容 = await 响应.text();
     return 规则内容;
   } catch (错误) {
-    console.error(`获取在线分流规则失败: ${错误.message}`);
+    console.error('获取在线分流规则失败: ' + 错误.message);
     return null;
   }
 }
@@ -143,7 +143,7 @@ async function 切换在线分流规则状态(env, 规则索引) {
     }
     return { success: false, error: '无效的规则索引' };
   } catch (错误) {
-    console.error(`切换在线分流规则状态失败: ${错误.message}`);
+    console.error('切换在线分流规则状态失败: ' + 错误.message);
     return { success: false, error: 错误.message };
   }
 }
@@ -166,7 +166,7 @@ async function 获取启用的在线分流规则(env) {
     
     return 规则内容列表;
   } catch (错误) {
-    console.error(`获取启用的在线分流规则失败: ${错误.message}`);
+    console.error('获取启用的在线分流规则失败: ' + 错误.message);
     return [];
   }
 }
@@ -485,14 +485,14 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
       <div class="auth-container">
     <div class="cute-icon">🌸</div>
         <div class="cute-icon">🌺</div>
-    <h1>${界面数据[类型].title}</h1>
-    ${界面数据[类型].表单}
+    '<h1>' + 界面数据[类型].title + '</h1>'
+    + 界面数据[类型].表单
   </div>
   
   <script>
     // 背景图片切换
-    const lightBg = '${白天背景图}';
-    const darkBg = '${暗黑背景图}';
+    const lightBg = "'" + 白天背景图 + "'";
+    const darkBg = "'" + 暗黑背景图 + "'";
     const bgImage = document.getElementById('backgroundImage');
 
     function updateBackground() {
@@ -545,7 +545,7 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
     }
 
     // 倒计时逻辑
-    let remainingTime = ${(额外参数.锁定状态 ? 额外参数.剩余时间 : 0)};
+    let remainingTime = (额外参数.锁定状态 ? 额外参数.剩余时间 : 0);
     const countdownElement = document.getElementById('countdown');
     const loginButton = document.getElementById('loginButton');
 
@@ -586,7 +586,7 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
         });
     }
 
-    if (${额外参数.锁定状态 ? 'true' : 'false'}) {
+    if ((额外参数.锁定状态 ? 'true' : 'false')) {
       startCountdown();
       setInterval(syncWithServer, 10000);
       document.addEventListener('visibilitychange', () => {
@@ -659,11 +659,11 @@ async function 加载节点和配置(env, hostName) {
       节点文件路径.map(async (路径) => {
         try {
           const 响应 = await fetch(路径);
-          if (!响应.ok) throw new Error(`请求 ${路径} 失败，状态码: ${响应.status}`);
+          if (!响应.ok) throw new Error('请求 ' + 路径 + ' 失败，状态码: ' + 响应.status);
           const 文本 = await 响应.text();
           return 文本.split('\n').map(line => line.trim()).filter(Boolean);
         } catch (错误) {
-          console.error(`拉取 ${路径} 失败: ${错误.message}`);
+          console.error('拉取 ' + 路径 + ' 失败: ' + 错误.message);
           return [];
         }
       })
@@ -687,20 +687,20 @@ async function 加载节点和配置(env, hostName) {
         await env.KV数据库.put('config_' + atob('djJyYXk=') + '_version', 新版本);
       }
     } else {
-      优选节点 = 当前节点列表.length > 0 ? 当前节点列表 : [`${hostName}:443`];
+      优选节点 = 当前节点列表.length > 0 ? 当前节点列表 : [hostName + ':443'];
     }
 
     await env.KV数据库.put('node_file_paths', JSON.stringify(节点文件路径));
   } catch (错误) {
     const 缓存节点 = await env.KV数据库.get('ip_preferred_ips');
-    优选节点 = 缓存节点 ? JSON.parse(缓存节点) : [`${hostName}:443`];
+    优选节点 = 缓存节点 ? JSON.parse(缓存节点) : [hostName + ':443'];
     await env.KV数据库.put('ip_error_log', JSON.stringify({ time: Date.now(), error: '所有路径拉取失败或手动上传为空' }), { expirationTtl: 86400 });
   }
 }
 
 async function 获取配置(env, 类型, hostName) {
   const 缓存键 = 类型 === atob('Y2xhc2g=') ? 'config_' + atob('Y2xhc2g=') : 'config_' + atob('djJyYXk=');
-  const 版本键 = `${缓存键}_version`;
+  const 版本键 = 缓存键 + '_version';
   const 缓存配置 = await env.KV数据库.get(缓存键);
   const 配置版本 = await env.KV数据库.get(版本键) || '0';
   const 节点版本 = await env.KV数据库.get('ip_preferred_ips_version') || '0';
@@ -728,7 +728,7 @@ export default {
       const hostName = request.headers.get('Host');
       const UA = request.headers.get('User-Agent') || 'unknown';
       const IP = request.headers.get('CF-Connecting-IP') || 'unknown';
-      const 设备标识 = `${UA}_${IP}`;
+      const 设备标识 = UA + '_' + IP;
       let formData;
 
       if (请求头 && 请求头 === 'websocket') {
@@ -740,7 +740,7 @@ export default {
       if (url.pathname === '/login/submit' || url.pathname === '/register/submit') {
         const contentType = request.headers.get('Content-Type') || '';
         if (!contentType.includes('application/x-www-form-urlencoded') && !contentType.includes('multipart/form-data')) {
-          console.log(`无效请求: UA=${UA}, IP=${IP}, Path=${url.pathname}, Headers=${JSON.stringify([...request.headers])}`);
+          console.log('无效请求: UA=' + UA + ', IP=' + IP + ', Path=' + url.pathname + ', Headers=' + JSON.stringify([...request.headers]));
           return 创建HTML响应(生成登录注册界面(url.pathname === '/login/submit' ? '登录' : '注册', {
             错误信息: '请通过正常表单提交'
           }), 400);
@@ -778,8 +778,8 @@ export default {
 
         const 新Token = Math.random().toString(36).substring(2);
         await env.KV数据库.put('current_token', 新Token, { expirationTtl: 300 });
-        return 创建重定向响应(`/${配置路径}`, { 
-          'Set-Cookie': `token=${新Token}; Path=/; HttpOnly; SameSite=Strict` 
+        return 创建重定向响应('/' + 配置路径, { 
+          'Set-Cookie': 'token=' + 新Token + '; Path=/; HttpOnly; SameSite=Strict' 
         });
       }
 
@@ -805,17 +805,17 @@ export default {
         if (输入用户名 === 凭据对象.用户名 && 密码匹配) {
           const 新Token = Math.random().toString(36).substring(2);
           await env.KV数据库.put('current_token', 新Token, { expirationTtl: 300 });
-          await env.KV数据库.put(`fail_${设备标识}`, '0');
-          return 创建重定向响应(`/${配置路径}`, { 
-            'Set-Cookie': `token=${新Token}; Path=/; HttpOnly; SameSite=Strict` 
+          await env.KV数据库.put('fail_' + 设备标识, '0');
+          return 创建重定向响应('/' + 配置路径, { 
+            'Set-Cookie': 'token=' + 新Token + '; Path=/; HttpOnly; SameSite=Strict' 
           });
         }
 
-        let 失败次数 = Number(await env.KV数据库.get(`fail_${设备标识}`) || 0) + 1;
-        await env.KV数据库.put(`fail_${设备标识}`, String(失败次数));
+        let 失败次数 = Number(await env.KV数据库.get('fail_' + 设备标识) || 0) + 1;
+        await env.KV数据库.put('fail_' + 设备标识, String(失败次数));
 
         if (失败次数 >= 最大失败次数) {
-          await env.KV数据库.put(`lock_${设备标识}`, String(Date.now() + 锁定时间), { expirationTtl: 300 });
+          await env.KV数据库.put('lock_' + 设备标识, String(Date.now() + 锁定时间), { expirationTtl: 300 });
           const 新锁定状态 = await 检查锁定(env, 设备标识);
           return 创建HTML响应(生成登录注册界面('登录', {
             锁定状态: true,
@@ -846,14 +846,14 @@ export default {
             return 创建HTML响应(生成登录注册界面('登录', { 锁定状态: true, 剩余时间: 锁定状态.剩余时间 }));
           }
           if (request.headers.get('Cookie')?.split('=')[1] === await env.KV数据库.get('current_token')) {
-            return 创建重定向响应(`/${配置路径}`);
+            return 创建重定向响应('/' + 配置路径);
           }
-          const 失败次数 = Number(await env.KV数据库.get(`fail_${设备标识}`) || 0);
+          const 失败次数 = Number(await env.KV数据库.get('fail_' + 设备标识) || 0);
           return 创建HTML响应(生成登录注册界面('登录', { 输错密码: 失败次数 > 0, 剩余次数: 最大失败次数 - 失败次数 }));
 
         case '/reset-login-failures':
-          await env.KV数据库.put(`fail_${设备标识}`, '0');
-          await env.KV数据库.delete(`lock_${设备标识}`);
+          await env.KV数据库.put('fail_' + 设备标识, '0');
+          await env.KV数据库.delete('lock_' + 设备标识);
           return new Response(null, { status: 200 });
 
         case '/check-lock':
@@ -863,28 +863,28 @@ export default {
             remainingTime: 锁定检查.剩余时间
           });
 
-        case `/${配置路径}`:
+        case '/' + 配置路径:
           const Token = request.headers.get('Cookie')?.split('=')[1];
           const 有效Token = await env.KV数据库.get('current_token');
           if (!Token || Token !== 有效Token) return 创建重定向响应('/login');
           const uuid = await 获取或初始化UUID(env);
           return 创建HTML响应(生成订阅页面(配置路径, hostName, uuid));
 
-        case `/${配置路径}/logout`:
+        case '/' + 配置路径 + '/logout':
           await env.KV数据库.delete('current_token');
           return 创建重定向响应('/login', { 'Set-Cookie': 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict' });
 
-        case `/${配置路径}/` + atob('Y2xhc2g='):
+        case '/' + 配置路径 + '/' + atob('Y2xhc2g='):
           await 加载节点和配置(env, hostName);
           const config = await 获取配置(env, atob('Y2xhc2g='), hostName);
           return new Response(config, { status: 200, headers: { "Content-Type": "text/plain;charset=utf-8" } });
 
-        case `/${配置路径}/` + atob('djJyYXluZw=='):
+        case '/' + 配置路径 + '/' + atob('djJyYXluZw=='):
           await 加载节点和配置(env, hostName);
           const vConfig = await 获取配置(env, atob('djJyYXk='), hostName);
           return new Response(vConfig, { status: 200, headers: { "Content-Type": "text/plain;charset=utf-8" } });
 
-        case `/${配置路径}/upload`:
+        case '/' + 配置路径 + '/upload':
           const uploadToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效UploadToken = await env.KV数据库.get('current_token');
           if (!uploadToken || uploadToken !== 有效UploadToken) {
@@ -898,16 +898,16 @@ export default {
           let allIpList = [];
           try {
             for (const ipFile of ipFiles) {
-              if (!ipFile || !ipFile.text) throw new Error(`文件 ${ipFile.name} 无效`);
+              if (!ipFile || !ipFile.text) throw new Error('文件 ' + ipFile.name + ' 无效');
               
               // 验证文件格式
               if (!ipFile.name.toLowerCase().endsWith('.txt')) {
-                throw new Error(`文件 ${ipFile.name} 不是txt格式，仅允许上传txt格式文件`);
+                throw new Error('文件 ' + ipFile.name + ' 不是txt格式，仅允许上传txt格式文件');
               }
               
               // 验证文件大小（限制为1MB）
               if (ipFile.size > 1024 * 1024) {
-                throw new Error(`文件 ${ipFile.name} 超过大小限制（1MB）`);
+                throw new Error('文件 ' + ipFile.name + ' 超过大小限制（1MB）');
               }
               
               const ipText = await ipFile.text();
@@ -915,7 +915,7 @@ export default {
               // 验证文件内容格式
               const lines = ipText.split('\n').map(line => line.trim()).filter(Boolean);
               if (lines.length === 0) {
-                console.warn(`文件 ${ipFile.name} 内容为空`);
+                console.warn('文件 ' + ipFile.name + ' 内容为空');
                 continue;
               }
               
@@ -932,7 +932,7 @@ export default {
                 const nodePattern = /^(\[[0-9a-fA-F:]+\]|[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*)(?::([0-9]{1,5}))?(?:#(.+?))?(?:@(tls|notls))?$/;
                 const match = nodePattern.exec(line);
                 if (!match) {
-                  console.warn(`文件 ${ipFile.name} 中的行格式不正确，将被忽略: ${line}`);
+                  console.warn('文件 ' + ipFile.name + ' 中的行格式不正确，将被忽略: ' + line);
                   continue;
                 }
                 
@@ -945,7 +945,7 @@ export default {
                 if (port) {
                   const portNum = parseInt(port);
                   if (portNum < 1 || portNum > 65535) {
-                    console.warn(`文件 ${ipFile.name} 中的端口无效，将被忽略: ${line}`);
+                    console.warn('文件 ' + ipFile.name + ' 中的端口无效，将被忽略: ' + line);
                     continue;
                   }
                 }
@@ -963,22 +963,22 @@ export default {
                     }
                   }
                   if (!isValidIPv4) {
-                    console.warn(`文件 ${ipFile.name} 中的IPv4地址无效，将被忽略: ${line}`);
+                    console.warn('文件 ' + ipFile.name + ' 中的IPv4地址无效，将被忽略: ' + line);
                     continue;
                   }
                 }
                 
                 // 标准化节点格式
                 const standardPort = port || '443'; // 默认端口443
-                const standardizedLine = `${address}:${standardPort}#${nodeName}@${protocol}`;
+                const standardizedLine = address + ':' + standardPort + '#' + nodeName + '@' + protocol;
                 validLines.push(standardizedLine);
               }
               
               if (validLines.length === 0) {
-                throw new Error(`文件 ${ipFile.name} 中没有符合格式要求的节点`);
+                throw new Error('文件 ' + ipFile.name + ' 中没有符合格式要求的节点');
               }
               
-              console.log(`文件 ${ipFile.name} 验证通过，有效节点数: ${validLines.length}`);
+              console.log('文件 ' + ipFile.name + ' 验证通过，有效节点数: ' + validLines.length);
               allIpList = allIpList.concat(validLines);
             }
             if (allIpList.length === 0) {
@@ -1000,13 +1000,13 @@ export default {
             await env.KV数据库.put('config_' + atob('Y2xhc2g=') + '_version', 新版本);
             await env.KV数据库.put('config_' + atob('djJyYXk='), await 生成通用(env, hostName));
             await env.KV数据库.put('config_' + atob('djJyYXk=') + '_version', 新版本);
-            return 创建JSON响应({ message: '上传成功，即将跳转' }, 200, { 'Location': `/${配置路径}` });
+            return 创建JSON响应({ message: '上传成功，即将跳转' }, 200, { 'Location': '/' + 配置路径 });
           } catch (错误) {
-            console.error(`上传处理失败: ${错误.message}`);
-            return 创建JSON响应({ error: `上传处理失败: ${错误.message}` }, 500);
+            console.error('上传处理失败: ' + 错误.message);
+            return 创建JSON响应({ error: '上传处理失败: ' + 错误.message }, 500);
           }
 
-        case `/${配置路径}/change-uuid`:
+        case '/' + 配置路径 + '/change-uuid':
           const changeToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效ChangeToken = await env.KV数据库.get('current_token');
           if (!changeToken || changeToken !== 有效ChangeToken) {
@@ -1021,7 +1021,7 @@ export default {
           await env.KV数据库.put('config_' + atob('djJyYXk=') + '_version', 新版本);
           return 创建JSON响应({ uuid: 新UUID }, 200);
 
-        case `/${配置路径}/add-node-path`:
+        case '/' + 配置路径 + '/add-node-path':
           const addToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效AddToken = await env.KV数据库.get('current_token');
           if (!addToken || addToken !== 有效AddToken) {
@@ -1042,7 +1042,7 @@ export default {
           await 加载节点和配置(env, hostName);
           return 创建JSON响应({ success: true }, 200);
 
-        case `/${配置路径}/remove-node-path`:
+        case '/' + 配置路径 + '/remove-node-path':
           const removeToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效RemoveToken = await env.KV数据库.get('current_token');
           if (!removeToken || removeToken !== 有效RemoveToken) {
@@ -1060,7 +1060,7 @@ export default {
           await 加载节点和配置(env, hostName);
           return 创建JSON响应({ success: true }, 200);
 
-        case `/${配置路径}/get-node-paths`:
+        case '/' + 配置路径 + '/get-node-paths':
           const getToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效GetToken = await env.KV数据库.get('current_token');
           if (!getToken || getToken !== 有效GetToken) {
@@ -1070,7 +1070,7 @@ export default {
           nodePaths = nodePaths ? JSON.parse(nodePaths) : ['https://v2.i-sweet.us.kg/ips.txt', 'https://v2.i-sweet.us.kg/url.txt'];
           return 创建JSON响应({ paths: nodePaths }, 200);
 
-        case `/${配置路径}/get-online-routing-rules`:
+        case '/' + 配置路径 + '/get-online-routing-rules':
           const routingToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效RoutingToken = await env.KV数据库.get('current_token');
           if (!routingToken || routingToken !== 有效RoutingToken) {
@@ -1079,7 +1079,7 @@ export default {
           const 规则配置 = await 加载在线分流规则配置(env);
           return 创建JSON响应({ rules: 规则配置 }, 200);
 
-        case `/${配置路径}/toggle-routing-rule`:
+        case '/' + 配置路径 + '/toggle-routing-rule':
           const toggleToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效ToggleToken = await env.KV数据库.get('current_token');
           if (!toggleToken || toggleToken !== 有效ToggleToken) {
@@ -1090,7 +1090,7 @@ export default {
           const 切换结果 = await 切换在线分流规则状态(env, 规则索引);
           return 创建JSON响应(切换结果, 切换结果.success ? 200 : 400);
 
-        case `/${配置路径}/add-routing-rule`:
+        case '/' + 配置路径 + '/add-routing-rule':
           const addRuleToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效AddRuleToken = await env.KV数据库.get('current_token');
           if (!addRuleToken || addRuleToken !== 有效AddRuleToken) {
@@ -1111,7 +1111,7 @@ export default {
           await 保存在线分流规则配置(env, 当前规则配置);
           return 创建JSON响应({ success: true }, 200);
 
-        case `/${配置路径}/remove-routing-rule`:
+        case '/' + 配置路径 + '/remove-routing-rule':
           const removeRuleToken = request.headers.get('Cookie')?.split('=')[1];
           const 有效RemoveRuleToken = await env.KV数据库.get('current_token');
           if (!removeRuleToken || removeRuleToken !== 有效RemoveRuleToken) {
@@ -1161,8 +1161,8 @@ export default {
           return fetch(new Request(url, request));
       }
     } catch (error) {
-      console.error(`全局错误: ${error.message}`);
-      return 创建JSON响应({ error: `服务器内部错误: ${error.message}` }, 500);
+      console.error('全局错误: ' + error.message);
+      return 创建JSON响应({ error: '服务器内部错误: ' + error.message }, 500);
     }
   }
 };
@@ -1239,20 +1239,20 @@ async function 智能连接(地址, 端口, 地址类型, env) {
           const [反代主机, 反代端口] = 反代地址.split(':');
           const 连接 = connect({ hostname: 反代主机, port: 反代端口 || 端口 });
           await 连接.opened;
-          console.log(`强制通过反代连接: ${反代地址}`);
+          console.log('强制通过反代连接: ' + 反代地址);
           return 连接;
         } catch (错误) {
-          console.error(`强制反代连接失败: ${错误.message}`);
-          throw new Error(`强制反代失败: ${错误.message}`);
+          console.error('强制反代连接失败: ' + 错误.message);
+          throw new Error('强制反代失败: ' + 错误.message);
         }
       } else if (代理类型 === 'socks5' && SOCKS5账号) {
         try {
           const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口);
-          console.log(`强制通过 SOCKS5 连接: ${地址}:${端口}`);
+          console.log('强制通过 SOCKS5 连接: ' + 地址 + ':' + 端口);
           return SOCKS5连接;
         } catch (错误) {
-          console.error(`强制 SOCKS5 连接失败: ${错误.message}`);
-          throw new Error(`强制 SOCKS5 失败: ${错误.message}`);
+          console.error('强制 SOCKS5 连接失败: ' + 错误.message);
+          throw new Error('强制 SOCKS5 失败: ' + 错误.message);
         }
       }
     } else {
@@ -1260,27 +1260,27 @@ async function 智能连接(地址, 端口, 地址类型, env) {
         const 连接 = await 尝试直连(地址, 端口);
         return 连接;
       } catch (错误) {
-        console.log(`直连失败，动态切换到代理: ${错误.message}`);
+        console.log('直连失败，动态切换到代理: ' + 错误.message);
         if (代理类型 === 'reverse' && 反代地址) {
           try {
             const [反代主机, 反代端口] = 反代地址.split(':');
             const 连接 = connect({ hostname: 反代主机, port: 反代端口 || 端口 });
             await 连接.opened;
-            console.log(`动态通过反代连接: ${反代地址}`);
+            console.log('动态通过反代连接: ' + 反代地址);
             return 连接;
           } catch (错误) {
-            console.error(`动态反代连接失败: ${错误.message}`);
+            console.error('动态反代连接失败: ' + 错误.message);
           }
         } else if (代理类型 === 'socks5' && SOCKS5账号) {
           try {
             const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口);
-            console.log(`动态通过 SOCKS5 连接: ${地址}:${端口}`);
+            console.log('动态通过 SOCKS5 连接: ' + 地址 + ':' + 端口);
             return SOCKS5连接;
           } catch (错误) {
-            console.error(`动态 SOCKS5 连接失败: ${错误.message}`);
+            console.error('动态 SOCKS5 连接失败: ' + 错误.message);
           }
         }
-        throw new Error(`所有连接尝试失败: ${错误.message}`);
+        throw new Error('所有连接尝试失败: ' + 错误.message);
       }
     }
   }
@@ -1292,11 +1292,11 @@ async function 尝试直连(地址, 端口) {
   try {
     const 连接 = connect({ hostname: 地址, port: 端口 });
     await 连接.opened;
-    console.log(`回退到直连: ${地址}:${端口}`);
+    console.log('回退到直连: ' + 地址 + ':' + 端口);
     return 连接;
   } catch (错误) {
-    console.error(`直连失败: ${错误.message}`);
-    throw new Error(`无法连接: ${错误.message}`);
+    console.error('直连失败: ' + 错误.message);
+    throw new Error('无法连接: ' + 错误.message);
   }
 }
 
@@ -1704,12 +1704,12 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 <div class="container">
     <div class="card">
         <h1 class="card-title">🌸樱花面板🌸</h1>
-      <p style="font-size: 1em;">支持 <span style="color: #ff69b4;">${atob('Y2xhc2g=')}</span> 和 <span style="color: #ff85a2;">${atob('djJyYXluZw==')}</span> 哦~</p>
+      '<p style="font-size: 1em;">支持 <span style="color: #ff69b4;">' + atob('Y2xhc2g=') + '</span> 和 <span style="color: #ff85a2;">' + atob('djJyYXluZw==') + '</span> 哦~</p>'
     </div>
     <div class="card">
       <h2 class="card-title">🔑 当前 UUID</h2>
       <div class="uuid-box">
-        <span id="currentUUID">${uuid}</span>
+        '<span id="currentUUID">' + uuid + '</span>'
       </div>
       <div class="button-group">
         <button class="cute-button uuid-btn" onclick="更换UUID()">更换 UUID</button>
@@ -1765,19 +1765,19 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     <div class="card">
       <h2 class="card-title">🐾 猫咪订阅</h2>
       <div class="link-box">
-        <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}">https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}</a></p>
+        '<p>订阅链接：<br><a href="https://' + hostName + '/' + 配置路径 + '/' + atob('Y2xhc2g=') + '">https://' + hostName + '/' + 配置路径 + '/' + atob('Y2xhc2g=') + '</a></p>'
       </div>
       <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('Y2xhc2g=')}')">一键导入</button>
+        '<button class="cute-button config2-btn" onclick="导入Config(\'' + 配置路径 + '\', \'' + hostName + '\', \'' + atob('Y2xhc2g=') + '\')">一键导入</button>'
       </div>
     </div>
     <div class="card">
       <h2 class="card-title">🐰 通用订阅</h2>
       <div class="link-box">
-        <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}">https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}</a></p>
+        '<p>订阅链接：<br><a href="https://' + hostName + '/' + 配置路径 + '/' + atob('djJyYXluZw==') + '">https://' + hostName + '/' + 配置路径 + '/' + atob('djJyYXluZw==') + '</a></p>'
       </div>
       <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">一键导入</button>
+        '<button class="cute-button config2-btn" onclick="导入Config(\'' + 配置路径 + '\', \'' + hostName + '\', \'' + atob('djJyYXluZw==') + '\')">一键导入</button>'
       </div>
     </div>
     <div class="card">
@@ -1785,7 +1785,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       <div class="upload-notice force-proxy-note">
         <p>请上传包含优选IP或域名的.txt文件，每行一个节点</p>
       </div>
-      <form id="uploadForm" action="/${配置路径}/upload" method="POST" enctype="multipart/form-data">
+      '<form id="uploadForm" action="/' + 配置路径 + '/upload" method="POST" enctype="multipart/form-data">'
         <label for="ipFiles" class="upload-label">选择文件</label>
         <input type="file" id="ipFiles" name="ipFiles" accept=".txt" multiple required onchange="显示文件()" style="display: none;">
         <div class="file-list" id="fileList"></div>
@@ -1800,13 +1800,13 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     </div>
     <div class="card">
       <div class="button-group">
-        <a href="/${配置路径}/logout" class="cute-button logout-btn">退出登录</a>
+        '<a href="/' + 配置路径 + '/logout" class="cute-button logout-btn">退出登录</a>'
       </div>
     </div>
   </div>
   <script>
-    const lightBg = '${白天背景图}';
-    const darkBg = '${暗黑背景图}';
+    const lightBg = "'" + 白天背景图 + "'";
+    const darkBg = "'" + 暗黑背景图 + "'";
     const bgImage = document.getElementById('backgroundImage');
 
     function updateBackground() {
@@ -1826,7 +1826,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     updateProxyStatus();
 
     function 加载节点路径() {
-      fetch('/${配置路径}/get-node-paths')
+      fetch('/' + 配置路径 + '/get-node-paths')
         .then(response => response.json())
         .then(data => {
           const urlList = document.getElementById('urlList');
@@ -1852,7 +1852,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         alert('URL 必须以 http:// 或 https:// 开头哦~');
         return;
       }
-      fetch('/${配置路径}/add-node-path', {
+      fetch('/' + 配置路径 + '/add-node-path', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path: url })
@@ -1871,7 +1871,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     }
 
     function 加载分流规则() {
-      fetch('/${配置路径}/get-online-routing-rules')
+      fetch('/' + 配置路径 + '/get-online-routing-rules')
         .then(response => response.json())
         .then(data => {
           const rulesList = document.getElementById('routingRulesList');
@@ -1920,7 +1920,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         return;
       }
       
-      fetch('/${配置路径}/add-routing-rule', {
+      fetch('/' + 配置路径 + '/add-routing-rule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, url, description })
@@ -1943,7 +1943,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     function 移除分流规则(index) {
       if (!confirm('确定要移除这个分流规则吗？')) return;
       
-      fetch('/${配置路径}/remove-routing-rule', {
+      fetch('/' + 配置路径 + '/remove-routing-rule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ index })
@@ -1961,7 +1961,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     }
 
     function 切换分流规则(index) {
-      fetch('/${配置路径}/toggle-routing-rule', {
+      fetch('/' + 配置路径 + '/toggle-routing-rule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ index })
@@ -1973,14 +1973,14 @@ function 生成订阅页面(配置路径, hostName, uuid) {
           } else {
             alert(data.error || '切换失败，请稍后再试~');
             // 恢复开关状态
-            const checkbox = document.querySelector(`#routingRulesList .routing-rule-item:nth-child(${index + 1}) .rule-switch input`);
+            const checkbox = document.querySelector('#routingRulesList .routing-rule-item:nth-child(' + (index + 1) + ') .rule-switch input');
             if (checkbox) checkbox.checked = !checkbox.checked;
           }
         })
         .catch(() => {
           alert('切换失败，网络出错啦~');
           // 恢复开关状态
-          const checkbox = document.querySelector(`#routingRulesList .routing-rule-item:nth-child(${index + 1}) .rule-switch input`);
+          const checkbox = document.querySelector('#routingRulesList .routing-rule-item:nth-child(' + (index + 1) + ') .rule-switch input');
           if (checkbox) checkbox.checked = !checkbox.checked;
         });
     }
@@ -1989,7 +1989,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     加载分流规则();
 
     function 移除节点路径(index) {
-      fetch('/${配置路径}/remove-node-path', {
+      fetch('/' + 配置路径 + '/remove-node-path', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ index })
@@ -2082,11 +2082,11 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     }
 
     function 导入Config(配置路径, hostName, type) {
-      window.location.href = type + '://install-config?url=https://' + hostName + '/${配置路径}/' + type;
+      window.location.href = type + '://install-config?url=https://' + hostName + '/' + 配置路径 + '/' + type;
     }
 
     function 更换UUID() {
-      fetch('/${配置路径}/change-uuid', { method: 'POST' })
+      fetch('/' + 配置路径 + '/change-uuid', { method: 'POST' })
         .then(response => response.json())
         .then(data => {
           if (data.uuid) {
@@ -2156,7 +2156,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
             if (response.message) {
               setTimeout(() => {
                 alert(response.message);
-                window.location.href = response.Location || '/${配置路径}';
+                window.location.href = response.Location || '/' + 配置路径;
               }, 500);
             } else {
               throw new Error('响应格式错误');
@@ -2299,8 +2299,8 @@ function 生成KV未绑定提示页面() {
 <div class="instruction">绑定好后 <span class="highlight">刷新界面</span> 就可以进入注册啦~</div>
   </div>
   <script>
-    const lightBg = '${白天背景图}';
-    const darkBg = '${暗黑背景图}';
+    const lightBg = "'" + 白天背景图 + "'";
+    const darkBg = "'" + 暗黑背景图 + "'";
     const bgImage = document.getElementById('backgroundImage');
 
     function updateBackground() {
@@ -2331,7 +2331,7 @@ async function 生成猫咪(env, hostName) {
   await 加载在线分流规则配置(env);
   
   const uuid = await 获取或初始化UUID(env);
-  const 节点列表 = 优选节点.length ? 优选节点 : [`${hostName}:443`];
+  const 节点列表 = 优选节点.length ? 优选节点 : [hostName + ':443'];
   const 国家分组 = {};
 
   节点列表.forEach((节点, 索引) => {
@@ -2345,34 +2345,34 @@ async function 生成猫咪(env, hostName) {
 
     国家分组[国家] = 国家分组[国家] || { IPv4: [], IPv6: [] };
     国家分组[国家][地址类型].push({
-      name: `${节点名字}-${国家分组[国家][地址类型].length + 1}`,
-      config: `- name: "${节点名字}-${国家分组[国家][地址类型].length + 1}"
-  type: ${atob('dmxlc3M=')}
-  server: ${修正地址}
-  port: ${端口}
-  uuid: ${uuid}
-  udp: false
-  tls: ${TLS开关}
-  sni: ${hostName}
-  network: ws
-  ws-opts:
-    path: "/?ed=2560"
-    headers:
-      Host: ${hostName}`
+      name: 节点名字 + '-' + (国家分组[国家][地址类型].length + 1),
+      config: "- name: " + 节点名字 + "-" + (国家分组[国家][地址类型].length + 1) + "\n" +
+  'type: ' + atob('dmxlc3M=') + '\n' +
+  'server: ' + 修正地址 + '\n' +
+  'port: ' + 端口 + '\n' +
+  'uuid: ' + uuid + '\n' +
+    'udp: false\n' +
+  'tls: ' + TLS开关 + '\n' +
+  'sni: ' + hostName + '\n' +
+    'network: ws\n' +
+    'ws-opts:\n' +
+    '  path: "/?ed=2560"\n' +
+    '  headers:\n' +
+      'Host: ' + hostName + '"'
     });
   });
 
   const 国家列表 = Object.keys(国家分组).sort();
   const 节点配置 = 国家列表.flatMap(国家 => [...国家分组[国家].IPv4, ...国家分组[国家].IPv6].map(n => n.config)).join("\n");
-  const 国家分组配置 = 国家列表.map(国家 => `
-  - name: "${国家}"
-    type: url-test
-    url: "http://www.gstatic.com/generate_204"
-    interval: 120
-    tolerance: 50
-    proxies:
-${[...国家分组[国家].IPv4, ...国家分组[国家].IPv6].map(n => `      - "${n.name}"`).join("\n")}
-`).join("");
+  const 国家分组配置 = 国家列表.map(国家 => 
+  '  - name: "' + 国家 + '"\n' +
+  '    type: url-test\n' +
+  '    url: "http://www.gstatic.com/generate_204"\n' +
+  '    interval: 120\n' +
+  '    tolerance: 50\n' +
+  '    proxies:\n' +
+[...国家分组[国家].IPv4, ...国家分组[国家].IPv6].map(n => '      - "' + n.name + '"').join("\n") + '\n'
+).join("");
 
   // 获取在线分流规则
   let 分流规则 = '';
@@ -2382,76 +2382,75 @@ ${[...国家分组[国家].IPv4, ...国家分组[国家].IPv6].map(n => `      -
       分流规则 = 启用规则列表.map(规则 => 规则.content).join("\n");
     }
   } catch (错误) {
-    console.error(`获取在线分流规则失败: ${错误.message}`);
+    console.error('获取在线分流规则失败: ' + 错误.message);
   }
 
   // 如果没有获取到在线分流规则，使用默认规则
   if (!分流规则) {
-    分流规则 = `  - GEOIP,LAN,DIRECT
-  - DOMAIN-SUFFIX,cn,DIRECT
-  - GEOIP,CN,DIRECT
-  - MATCH,🚀节点选择`;
+    分流规则 = '  - GEOIP,LAN,DIRECT\n' +
+'  - DOMAIN-SUFFIX,cn,DIRECT\n' +
+'  - GEOIP,CN,DIRECT\n' +
+'  - MATCH,🚀节点选择';
   }
 
-  return `# Generated at: ${new Date().toISOString()}
-mixed-port: 7890
-allow-lan: true
-mode: Rule
-log-level: info
-external-controller: :9090
-dns:
-  enable: true
-  listen: 0.0.0.0:53
-  default-nameserver:
-    - 8.8.8.8
-    - 1.1.1.1
-  enhanced-mode: fake-ip
-  nameserver:
-    - tls://8.8.8.8
-    - tls://1.1.1.1
-  fallback:
-    - tls://9.9.9.9
-    - tls://1.0.0.1
-  fallback-filter:
-    geoip: true
-    ipcidr:
-      - 240.0.0.0/4
+  return "# Generated at: " + new Date().toISOString() + "\n" +
+"mixed-port: 7890\n" +
+"allow-lan: true\n" +
+"mode: Rule\n" +
+"log-level: info\n" +
+"external-controller: :9090\n" +
+"dns:\n" +
+"  enable: true\n" +
+"  listen: 0.0.0.0:53\n" +
+"  default-nameserver:\n" +
+"    - 8.8.8.8\n" +
+"    - 1.1.1.1\n" +
+"  enhanced-mode: fake-ip\n" +
+"  nameserver:\n" +
+"    - tls://8.8.8.8\n" +
+"    - tls://1.1.1.1\n" +
+"  fallback:\n" +
+"    - tls://9.9.9.9\n" +
+"    - tls://1.0.0.1\n" +
+"  fallback-filter:\n" +
+"    geoip: true\n" +
+"    ipcidr:\n" +
+"      - 240.0.0.0/4\n" +
+"\n" +
+"proxies:\n" +
+节点配置 + "\n" +
 
-proxies:
-${节点配置}
+"proxy-groups:\n" +
+"  - name: \"🚀节点选择\"\n" +
+"    type: select\n" +
+"    proxies:\n" +
+"      - \"🤪自动选择\"\n" +
+"      - \"🥰负载均衡\"\n" +
+国家列表.map(国家 => "      - \"" + 国家 + "\"").join("\n") + "\n" +
+"\n" +
+"  - name: \"🤪自动选择\"\n" +
+"    type: url-test\n" +
+"    url: \"http://www.gstatic.com/generate_204\"\n" +
+"    interval: 120\n" +
+"    tolerance: 50\n" +
+"    proxies:\n" +
+国家列表.map(国家 => "      - \"" + 国家 + "\"").join("\n") + "\n" +
+"\n" +
+"  - name: \"🥰负载均衡\"\n" +
+"    type: load-balance\n" +
+"    strategy: round-robin\n" +
+"    proxies:\n" +
+国家列表.map(国家 => "      - \"" + 国家 + "\"").join("\n") + "\n" +
+"\n" +
+国家分组配置 + "\n" +
 
-proxy-groups:
-  - name: "🚀节点选择"
-    type: select
-    proxies:
-      - "🤪自动选择"
-      - "🥰负载均衡"
-${国家列表.map(国家 => `      - "${国家}"`).join("\n")}
-
-  - name: "🤪自动选择"
-    type: url-test
-    url: "http://www.gstatic.com/generate_204"
-    interval: 120
-    tolerance: 50
-    proxies:
-${国家列表.map(国家 => `      - "${国家}"`).join("\n")}
-
-  - name: "🥰负载均衡"
-    type: load-balance
-    strategy: round-robin
-    proxies:
-${国家列表.map(国家 => `      - "${国家}"`).join("\n")}
-
-${国家分组配置}
-
-rules:
-${分流规则}
-`;
+"rules:\n" +
+分流规则 + "\n";
 }
 
 async function 生成通用(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
-  const 节点列表 = 优选节点.length ? 优选节点 : [`${hostName}:443`];
+  const 节点列表 = 优选节点.length ? 优选节点 : [hostName + ':443'];
   const 配置列表 = 节点列表.map(节点 => {
     try {
       const [主内容, tls = 'tls'] = 节点.split("@");
@@ -2461,16 +2460,16 @@ async function 生成通用(env, hostName) {
       const 地址 = match[1] || match[2];
       const 端口 = match[3] || "443";
       if (!地址) return null;
-      const 修正地址 = 地址.includes(":") ? `[${地址}]` : 地址;
+      const 修正地址 = 地址.includes(":") ? '[' + 地址 + ']' : 地址;
       const TLS开关 = tls === 'notls' ? 'none' : 'tls';
       const encodedPath = encodeURIComponent('/?ed=2560');
-      return `${atob('dmxlc3M=')}://${uuid}@${修正地址}:${端口}?encryption=none&security=${TLS开关}&type=ws&host=${hostName}&path=${encodedPath}&sni=${hostName}#${节点名字}`;
+      return atob('dmxlc3M=') + '://' + uuid + '@' + 修正地址 + ':' + 端口 + '?encryption=none&security=' + TLS开关 + '&type=ws&host=' + hostName + '&path=' + encodedPath + '&sni=' + hostName + '#' + 节点名字;
     } catch (error) {
-      console.error(`生成通用节点失败: ${节点}, 错误: ${error.message}`);
+      console.error('生成通用节点失败: ' + 节点 + ', 错误: ' + error.message);
       return null;
     }
   }).filter(Boolean);
 
-  return `# Generated at: ${new Date().toISOString()}
-${配置列表.length ? 配置列表.join("\n") : (atob('dmxlc3M=') + '://' + uuid + '@' + hostName + ':443?encryption=none&security=tls&type=ws&host=' + hostName + '&path=' + encodeURIComponent('/?ed=2560') + '&sni=' + hostName + '#默认节点')}`;
+  return "# Generated at: " + new Date().toISOString() + "\n" +
+(配置列表.length ? 配置列表.join('\n') : (atob('dmxlc3M=') + '://' + uuid + '@' + hostName + ':443?encryption=none&security=tls&type=ws&host=' + hostName + '&path=' + encodeURIComponent('/?ed=2560') + '&sni=' + hostName + '#默认节点'));
 }
