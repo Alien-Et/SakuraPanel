@@ -176,29 +176,29 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
     注册: {
       title: '🌸首次使用注册🌸',
       表单: `
-        <form class="auth-form" action="/register/submit" method="POST" enctype="application/x-www-form-urlencoded">
+        <form className="auth-form" action="/register/submit" method="POST" enctype="application/x-www-form-urlencoded">
           <input type="text" name="username" placeholder="设置账号" required pattern="^[a-zA-Z0-9]{4,20}$" title="4-20位字母数字">
           <input type="password" name="password" placeholder="设置密码" required minlength="6">
           <input type="password" name="confirm" placeholder="确认密码" required>
           <button type="submit">立即注册</button>
         </form>
-        ${额外参数.错误信息 ? `<div class="error-message">${额外参数.错误信息}</div>` : ''}
+        ${额外参数.错误信息 ? `<div className="error-message">${额外参数.错误信息}</div>` : ''}
       `
     },
     登录: {
       title: '🌸欢迎回来🌸',
       表单: `
-        <form class="auth-form" action="/login/submit" method="POST" enctype="application/x-www-form-urlencoded">
+        <form className="auth-form" action="/login/submit" method="POST" enctype="application/x-www-form-urlencoded">
           <input type="text" name="username" placeholder="登录账号" required>
           <input type="password" name="password" placeholder="登录密码" required>
           <button type="submit" id="loginButton" ${额外参数.锁定状态 ? 'disabled' : ''}>立即登录</button>
         </form>
-        ${额外参数.输错密码 ? `<div class="error-message">密码错误，剩余尝试次数：${额外参数.剩余次数}</div>` : ''}
+        ${额外参数.输错密码 ? `<div className="error-message">密码错误，剩余尝试次数：${额外参数.剩余次数}</div>` : ''}
         ${额外参数.锁定状态 ? `
-          <div class="lock-message">
+          <div className="lock-message">
             账户锁定，请<span id="countdown">${额外参数.剩余时间}</span>秒后重试
           </div>` : ''}
-        ${额外参数.错误信息 ? `<div class="error-message">${额外参数.错误信息}</div>` : ''}
+        ${额外参数.错误信息 ? `<div className="error-message">${额外参数.错误信息}</div>` : ''}
       `
     }
   };
@@ -481,12 +481,12 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
   </style>
 </head>
 <body>
-  <img id="backgroundImage" class="background-media">
-  <div class="floating-petals" id="petalsContainer"></div>
-  
-  <div class="auth-container">
-    <div class="cute-icon">🌸</div>
-    <div class="cute-icon">🌺</div>
+  <img id="backgroundImage" className="background-media">
+      <div className="floating-petals" id="petalsContainer"></div>
+
+      <div className="auth-container">
+    <div className="cute-icon">🌸</div>
+      <div className="cute-icon">🌺</div>
     <h1>${界面数据[类型].title}</h1>
     ${界面数据[类型].表单}
   </div>
@@ -1702,107 +1702,107 @@ function 生成订阅页面(配置路径, hostName, uuid) {
   </style>
 </head>
 <body>
-  <img id="backgroundImage" class="background-media">
-  <div class="container">
-    <div class="card">
-      <h1 class="card-title">🌸樱花面板🌸</h1>
+  <img id="backgroundImage" className="background-media">
+  <div className="container">
+    <div className="card">
+      <h1 className="card-title">🌸樱花面板🌸</h1>
       <p style="font-size: 1em;">支持 <span style="color: #ff69b4;">${atob('Y2xhc2g=')}</span> 和 <span style="color: #ff85a2;">${atob('djJyYXluZw==')}</span> 哦~</p>
     </div>
-    <div class="card">
-      <h2 class="card-title">🔑 当前 UUID</h2>
-      <div class="uuid-box">
+    <div className="card">
+      <h2 className="card-title">🔑 当前 UUID</h2>
+      <div className="uuid-box">
         <span id="currentUUID">${uuid}</span>
       </div>
-      <div class="button-group">
-        <button class="cute-button uuid-btn" onclick="更换UUID()">更换 UUID</button>
+      <div className="button-group">
+        <button className="cute-button uuid-btn" onclick="更换UUID()">更换 UUID</button>
       </div>
     </div>
-    <div class="card">
-      <h2 class="card-title">🌟 代理设置</h2>
-      <div class="switch-container">
-        <div class="toggle-row">
+    <div className="card">
+      <h2 className="card-title">🌟 代理设置</h2>
+      <div className="switch-container">
+        <div className="toggle-row">
           <label>代理开关</label>
-          <label class="toggle-switch">
+          <label className="toggle-switch">
             <input type="checkbox" id="proxyToggle" onchange="toggleProxy()">
-            <span class="slider"></span>
+            <span className="slider"></span>
           </label>
         </div>
-        <div class="toggle-row" id="forceProxyRow" style="display: none;">
+        <div className="toggle-row" id="forceProxyRow" style="display: none;">
           <label>强制代理</label>
-          <label class="toggle-switch">
+          <label className="toggle-switch">
             <input type="checkbox" id="forceProxyToggle" onchange="toggleForceProxy()">
-            <span class="slider"></span>
+            <span className="slider"></span>
           </label>
         </div>
-        <div class="proxy-capsule" id="proxyCapsule">
-          <div class="proxy-option active" data-type="reverse" onclick="switchProxyType('reverse')">反代</div>
-          <div class="proxy-option" data-type="socks5" onclick="switchProxyType('socks5')">SOCKS5</div>
+        <div className="proxy-capsule" id="proxyCapsule">
+          <div className="proxy-option active" data-type="reverse" onclick="switchProxyType('reverse')">反代</div>
+          <div className="proxy-option" data-type="socks5" onclick="switchProxyType('socks5')">SOCKS5</div>
         </div>
       </div>
-      <div class="proxy-status" id="proxyStatus">直连</div>
-      <div class="force-proxy-note" id="forceProxyNote" style="display: none;">
+      <div className="proxy-status" id="proxyStatus">直连</div>
+      <div className="force-proxy-note" id="forceProxyNote" style="display: none;">
         <span id="forceProxyText"></span>
       </div>
     </div>
-    <div class="card">
-      <h2 class="upload-title">🌏 优选IP网络路径</h2>
+    <div className="card">
+      <h2 className="upload-title">🌏 优选IP网络路径</h2>
       <div>
-        <input type="text" id="nodeUrlInput" class="url-input" placeholder="输入节点文件 URL（如 https://example.com/ips.txt）">
-        <button class="cute-button add-url-btn" onclick="添加节点路径()">添加路径</button>
-        <div class="url-list" id="urlList"></div>
+        <input type="text" id="nodeUrlInput" className="url-input" placeholder="输入节点文件 URL（如 https://example.com/ips.txt）">
+        <button className="cute-button add-url-btn" onclick="添加节点路径()">添加路径</button>
+        <div className="url-list" id="urlList"></div>
       </div>
     </div>
-    <div class="card">
-      <h2 class="upload-title">🌐 在线分流规则</h2>
-      <div class="routing-rules-container">
-        <div class="routing-rules-list" id="routingRulesList"></div>
+    <div className="card">
+      <h2 className="upload-title">🌐 在线分流规则</h2>
+      <div className="routing-rules-container">
+        <div className="routing-rules-list" id="routingRulesList"></div>
       </div>
       <div>
-        <input type="text" id="ruleNameInput" class="url-input" placeholder="输入规则名称（如 ACL4SSR）">
-        <input type="text" id="ruleUrlInput" class="url-input" placeholder="输入规则文件 URL（如 https://example.com/rule.list）">
-        <input type="text" id="ruleDescInput" class="url-input" placeholder="输入规则描述（可选）">
-        <button class="cute-button add-url-btn" onclick="添加分流规则()">添加规则</button>
+        <input type="text" id="ruleNameInput" className="url-input" placeholder="输入规则名称（如 ACL4SSR）">
+        <input type="text" id="ruleUrlInput" className="url-input" placeholder="输入规则文件 URL（如 https://example.com/rule.list）">
+        <input type="text" id="ruleDescInput" className="url-input" placeholder="输入规则描述（可选）">
+        <button className="cute-button add-url-btn" onclick="添加分流规则()">添加规则</button>
       </div>
     </div>
-    <div class="card">
-      <h2 class="card-title">🐾 猫咪订阅</h2>
-      <div class="link-box">
+    <div className="card">
+      <h2 className="card-title">🐾 猫咪订阅</h2>
+      <div className="link-box">
         <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}">https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}</a></p>
       </div>
-      <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('Y2xhc2g=')}')">一键导入</button>
+      <div className="button-group">
+        <button className="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('Y2xhc2g=')}')">一键导入</button>
       </div>
     </div>
-    <div class="card">
-      <h2 class="card-title">🐰 通用订阅</h2>
-      <div class="link-box">
+    <div className="card">
+      <h2 className="card-title">🐰 通用订阅</h2>
+      <div className="link-box">
         <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}">https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}</a></p>
       </div>
-      <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">一键导入</button>
+      <div className="button-group">
+        <button className="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">一键导入</button>
       </div>
     </div>
-    <div class="card">
-      <h2 class="upload-title">🌟 上传你的优选节点</h2>
-      <div class="upload-notice force-proxy-note">
+    <div className="card">
+      <h2 className="upload-title">🌟 上传你的优选节点</h2>
+      <div className="upload-notice force-proxy-note">
         <p>请上传包含优选IP或域名的.txt文件，每行一个节点</p>
       </div>
       <form id="uploadForm" action="/${配置路径}/upload" method="POST" enctype="multipart/form-data">
-        <label for="ipFiles" class="upload-label">选择文件</label>
+        <label for="ipFiles" className="upload-label">选择文件</label>
         <input type="file" id="ipFiles" name="ipFiles" accept=".txt" multiple required onchange="显示文件()" style="display: none;">
-        <div class="file-list" id="fileList"></div>
-        <button type="submit" class="cute-button upload-btn" onclick="开始上传(event)">上传</button>
-        <div class="progress-container" id="progressContainer">
-          <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
+        <div className="file-list" id="fileList"></div>
+        <button type="submit" className="cute-button upload-btn" onclick="开始上传(event)">上传</button>
+        <div className="progress-container" id="progressContainer">
+          <div className="progress-bar">
+            <div className="progress-fill" id="progressFill"></div>
           </div>
-          <div class="progress-text" id="progressText">0%</div>
+          <div className="progress-text" id="progressText">0%</div>
         </div>
       </form>
     </div>
-    <div class="card">
-      <div class="button-group">
-        <a href="/${配置路径}/logout" class="cute-button logout-btn">退出登录</a>
+    <div className="card">
+      <div className="button-group">
+        <a href="/${配置路径}/logout" className="cute-button logout-btn">退出登录</a>
       </div>
     </div>
   </div>
@@ -1882,19 +1882,19 @@ function 生成订阅页面(配置路径, hostName, uuid) {
             const div = document.createElement('div');
             div.className = 'routing-rule-item';
             div.innerHTML = `
-              <div class="rule-header">
-                <span class="rule-name">${rule.name}</span>
-                <button class="remove-rule-btn" onclick="移除分流规则(${index})">移除</button>
+              <div className="rule-header">
+                <span className="rule-name">${rule.name}</span>
+                <button className="remove-rule-btn" onclick="移除分流规则(${index})">移除</button>
               </div>
-              <div class="rule-description">${rule.description}</div>
-              <div class="rule-url">${rule.url}</div>
-              <div class="rule-controls">
-                <div class="rule-toggle">
-                  <label class="rule-switch">
+              <div className="rule-description">${rule.description}</div>
+              <div className="rule-url">${rule.url}</div>
+              <div className="rule-controls">
+                <div className="rule-toggle">
+                  <label className="rule-switch">
                     <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="切换分流规则(${index})">
-                    <span class="rule-slider"></span>
+                    <span className="rule-slider"></span>
                   </label>
-                  <span class="rule-status ${rule.enabled ? 'enabled' : 'disabled'}">${rule.enabled ? '已启用' : '已禁用'}</span>
+                  <span className="rule-status ${rule.enabled ? 'enabled' : 'disabled'}">${rule.enabled ? '已启用' : '已禁用'}</span>
                 </div>
               </div>
             `;
@@ -2296,11 +2296,11 @@ function 生成KV未绑定提示页面() {
   </style>
 </head>
 <body>
-  <img id="backgroundImage" class="background-media">
-  <div class="content">
+  <img id="backgroundImage" className="background-media">
+  <div className="content">
     <h1>💔 哎呀，KV没绑定哦</h1>
-    <p>喂！大臭宝，你的 <span class="highlight">Cloudflare KV 存储空间</span> 还没绑定呢~<br>快去 <span class="highlight">Cloudflare Workers</span> 设置里绑一个 KV 命名空间（变量名：<span class="highlight">KV数据库</span>），然后重新部署一下吧！</p>
-    <div class="instruction">绑定好后 <span class="highlight">刷新界面</span> 就可以进入注册啦~</div>
+    <p>喂！大臭宝，你的 <span className="highlight">Cloudflare KV 存储空间</span> 还没绑定呢~<br>快去 <span className="highlight">Cloudflare Workers</span> 设置里绑一个 KV 命名空间（变量名：<span className="highlight">KV数据库</span>），然后重新部署一下吧！</p>
+    <div className="instruction">绑定好后 <span className="highlight">刷新界面</span> 就可以进入注册啦~</div>
   </div>
   <script>
     const lightBg = '${白天背景图}';
