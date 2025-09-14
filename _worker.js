@@ -181,9 +181,9 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
           <input type="password" name="password" placeholder="设置密码" required minlength="6">
           <input type="password" name="confirm" placeholder="确认密码" required>
           <button type="submit">立即注册</button>
-        </form>
-        ${额外参数.错误信息 ? `<div class="error-message">${额外参数.错误信息}</div>` : ''}
-      `
+        </form>' +
+        (额外参数.错误信息 ? '<div class="error-message">' + 额外参数.错误信息 + '</div>' : '') +
+      '
     },
     登录: {
       title: '🌸欢迎回来🌸',
@@ -191,15 +191,15 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
         <form class="auth-form" action="/login/submit" method="POST" enctype="application/x-www-form-urlencoded">
           <input type="text" name="username" placeholder="登录账号" required>
           <input type="password" name="password" placeholder="登录密码" required>
-          <button type="submit" id="loginButton" ${额外参数.锁定状态 ? 'disabled' : ''}>立即登录</button>
-        </form>
-        ${额外参数.输错密码 ? `<div class="error-message">密码错误，剩余尝试次数：${额外参数.剩余次数}</div>` : ''}
-        ${额外参数.锁定状态 ? `
-          <div class="lock-message">
-            账户锁定，请<span id="countdown">${额外参数.剩余时间}</span>秒后重试
-          </div>` : ''}
-        ${额外参数.错误信息 ? `<div class="error-message">${额外参数.错误信息}</div>` : ''}
-      `
+          <button type="submit" id="loginButton" ' + (额外参数.锁定状态 ? 'disabled' : '') + '>立即登录</button>
+        </form>' +
+        (额外参数.输错密码 ? '<div class="error-message">密码错误，剩余尝试次数：' + 额外参数.剩余次数 + '</div>' : '') +
+        (额外参数.锁定状态 ? 
+          '<div class="lock-message">' +
+            '账户锁定，请<span id="countdown">' + 额外参数.剩余时间 + '</span>秒后重试' +
+          '</div>' : '') +
+        (额外参数.错误信息 ? '<div class="error-message">' + 额外参数.错误信息 + '</div>' : '') +
+      '
     }
   };
 
@@ -1881,23 +1881,22 @@ function 生成订阅页面(配置路径, hostName, uuid) {
           data.rules.forEach((rule, index) => {
             const div = document.createElement('div');
             div.className = 'routing-rule-item';
-            div.innerHTML = `
-              <div class="rule-header">
-                <span class="rule-name">${rule.name}</span>
-                <button class="remove-rule-btn" onclick="移除分流规则(${index})">移除</button>
-              </div>
-              <div class="rule-description">${rule.description}</div>
-              <div class="rule-url">${rule.url}</div>
-              <div class="rule-controls">
-                <div class="rule-toggle">
-                  <label class="rule-switch">
-                    <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="切换分流规则(${index})">
-                    <span class="rule-slider"></span>
-                  </label>
-                  <span class="rule-status ${rule.enabled ? 'enabled' : 'disabled'}">${rule.enabled ? '已启用' : '已禁用'}</span>
-                </div>
-              </div>
-            `;
+            div.innerHTML = 
+              '<div class="rule-header">' +
+                '<span class="rule-name">' + rule.name + '</span>' +
+                '<button class="remove-rule-btn" onclick="移除分流规则(' + index + ')">移除</button>' +
+              '</div>' +
+              '<div class="rule-description">' + rule.description + '</div>' +
+              '<div class="rule-url">' + rule.url + '</div>' +
+              '<div class="rule-controls">' +
+                '<div class="rule-toggle">' +
+                  '<label class="rule-switch">' +
+                    '<input type="checkbox" ' + (rule.enabled ? 'checked' : '') + ' onchange="切换分流规则(' + index + ')">' +
+                    '<span class="rule-slider"></span>' +
+                  '</label>' +
+                  '<span class="rule-status ' + (rule.enabled ? 'enabled' : 'disabled') + '">' + (rule.enabled ? '已启用' : '已禁用') + '</span>' +
+                '</div>' +
+              '</div>';
             rulesList.appendChild(div);
           });
         })
