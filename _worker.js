@@ -1009,6 +1009,42 @@ export default {
           const b64状态 = await env.KV数据库.get('b64Enabled') === 'true';
           return 创建JSON响应({ b64Enabled: b64状态 });
 
+        case `/${配置路径}/generate-cat-config`:
+          const catToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const 有效CatToken = await env.KV数据库.get('current_token');
+          if (!catToken || catToken !== 有效CatToken) {
+            return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+          }
+          try {
+            await 加载节点和配置(env, hostName);
+            const catConfig = await 生成猫咪(env, hostName);
+            const 新版本 = String(Date.now());
+            await env.KV数据库.put('config_' + atob('Y2xhc2g='), catConfig);
+            await env.KV数据库.put('config_' + atob('Y2xhc2g=') + '_version', 新版本);
+            return 创建JSON响应({ success: true });
+          } catch (错误) {
+            console.error(`生成猫咪配置失败: ${错误.message}`);
+            return 创建JSON响应({ error: `生成猫咪配置失败: ${错误.message}` }, 500);
+          }
+
+        case `/${配置路径}/generate-universal-config`:
+          const universalToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const 有效UniversalToken = await env.KV数据库.get('current_token');
+          if (!universalToken || universalToken !== 有效UniversalToken) {
+            return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+          }
+          try {
+            await 加载节点和配置(env, hostName);
+            const universalConfig = await 生成通用(env, hostName);
+            const 新版本 = String(Date.now());
+            await env.KV数据库.put('config_' + atob('djJyYXk='), universalConfig);
+            await env.KV数据库.put('config_' + atob('djJyYXk=') + '_version', 新版本);
+            return 创建JSON响应({ success: true });
+          } catch (错误) {
+            console.error(`生成通用配置失败: ${错误.message}`);
+            return 创建JSON响应({ error: `生成通用配置失败: ${错误.message}` }, 500);
+          }
+
         default:
           url.hostname = 伪装域名;
           url.protocol = 'https:';
@@ -1709,6 +1745,34 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       localStorage.setItem('b64Enabled', b64Enabled);
       saveB64State();
       updateB64Status();
+      // 立即生成猫咪和通用配置并存入KV数据库
+      generateAndSaveConfigs();
+    }
+
+    function generateAndSaveConfigs() {
+      // 生成猫咪配置
+      fetch('/${配置路径}/generate-cat-config', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('猫咪配置已生成并保存');
+          } else {
+            console.error('猫咪配置生成失败:', data.error);
+          }
+        })
+        .catch(error => console.error('猫咪配置生成请求失败:', error));
+      
+      // 生成通用配置
+      fetch('/${配置路径}/generate-universal-config', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('通用配置已生成并保存');
+          } else {
+            console.error('通用配置生成失败:', data.error);
+          }
+        })
+        .catch(error => console.error('通用配置生成请求失败:', error));
     }
 
     function saveB64State() {
