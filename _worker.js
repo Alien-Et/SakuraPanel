@@ -1277,7 +1277,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: 'Quicksand', 'Comic Sans MS', 'Arial', sans-serif;
+      font-family: 'Comic Sans MS', 'Arial', sans-serif;
       color: #ff6f91;
       margin: 0;
       padding: 20px;
@@ -1285,8 +1285,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      position: relative;
-      overflow: hidden;
       transition: background 0.5s ease;
     }
     @media (prefers-color-scheme: light) {
@@ -1468,41 +1466,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       box-sizing: border-box;
       margin-bottom: 10px;
     }
-    /* 花瓣效果样式 */
-    .floating-petals {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
-    @media (prefers-color-scheme: light) {
-      .floating-petals { background: rgba(255, 255, 255, 0.7); }
-    }
-    @media (prefers-color-scheme: dark) {
-      .floating-petals { background: rgba(255, 255, 255, 0.1); }
-    }
-    .petal {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      border-radius: 50% 0;
-      opacity: 0.7;
-      animation: float linear infinite;
-    }
-    @keyframes float {
-      0% {
-        transform: translateY(0) rotate(0deg);
-        opacity: 0.7;
-      }
-      100% {
-        transform: translateY(100vh) rotate(360deg);
-        opacity: 0;
-      }
-    }
     @media (max-width: 600px) {
       .card { padding: 15px; max-width: 90%; }
       .card-title { font-size: 1.3em; }
@@ -1520,7 +1483,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 </head>
 <body>
   <img id="backgroundImage" class="background-media">
-  <div class="floating-petals" id="petalsContainer"></div>
   <div class="container">
     <div class="card">
       <h1 class="card-title">🌸樱花面板🌸</h1>
@@ -1637,47 +1599,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     }
     updateBackground();
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateBackground);
-
-    // 创建漂浮花瓣效果
-    function createPetal() {
-      const petalsContainer = document.getElementById('petalsContainer');
-      const petal = document.createElement('div');
-      petal.className = 'petal';
-      
-      // 随机花瓣颜色
-      const colors = ['#ffb6c1', '#ff69b4', '#ffc0cb', '#ff1493', '#ffd1dc'];
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      
-      // 随机大小
-      const size = Math.random() * 15 + 5;
-      
-      // 随机位置
-      const left = Math.random() * 100;
-      
-      // 随机动画时长
-      const duration = Math.random() * 10 + 10;
-      
-      petal.style.backgroundColor = color;
-      petal.style.width = size + 'px';
-      petal.style.height = size + 'px';
-      petal.style.left = left + '%';
-      petal.style.animationDuration = duration + 's';
-      
-      petalsContainer.appendChild(petal);
-      
-      // 动画结束后移除花瓣
-      setTimeout(() => {
-        petal.remove();
-      }, duration * 1000);
-    }
-    
-    // 定期创建花瓣
-    setInterval(createPetal, 500);
-    
-    // 初始创建一些花瓣
-    for (let i = 0; i < 20; i++) {
-      setTimeout(createPetal, i * 200);
-    }
 
     let proxyEnabled = localStorage.getItem('proxyEnabled') === 'true';
     let proxyType = localStorage.getItem('proxyType') || 'reverse';
