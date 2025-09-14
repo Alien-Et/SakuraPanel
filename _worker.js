@@ -175,31 +175,29 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
   const 界面数据 = {
     注册: {
       title: '🌸首次使用注册🌸',
-      表单: `
-        <form class="auth-form" action="/register/submit" method="POST" enctype="application/x-www-form-urlencoded">
-          <input type="text" name="username" placeholder="设置账号" required pattern="^[a-zA-Z0-9]{4,20}$" title="4-20位字母数字">
-          <input type="password" name="password" placeholder="设置密码" required minlength="6">
-          <input type="password" name="confirm" placeholder="确认密码" required>
-          <button type="submit">立即注册</button>
-        </form>' +
-        (额外参数.错误信息 ? '<div class="error-message">' + 额外参数.错误信息 + '</div>' : '') +
-      '
+      表单: 
+        '<form class="auth-form" action="/register/submit" method="POST" enctype="application/x-www-form-urlencoded">' +
+          '<input type="text" name="username" placeholder="设置账号" required pattern="^[a-zA-Z0-9]{4,20}$" title="4-20位字母数字">' +
+          '<input type="password" name="password" placeholder="设置密码" required minlength="6">' +
+          '<input type="password" name="confirm" placeholder="确认密码" required>' +
+          '<button type="submit">立即注册</button>' +
+        '</form>' +
+        (额外参数.错误信息 ? '<div class="error-message">' + 额外参数.错误信息 + '</div>' : '')
     },
     登录: {
       title: '🌸欢迎回来🌸',
-      表单: `
-        <form class="auth-form" action="/login/submit" method="POST" enctype="application/x-www-form-urlencoded">
-          <input type="text" name="username" placeholder="登录账号" required>
-          <input type="password" name="password" placeholder="登录密码" required>
-          <button type="submit" id="loginButton" ' + (额外参数.锁定状态 ? 'disabled' : '') + '>立即登录</button>
-        </form>' +
+      表单: 
+        '<form class="auth-form" action="/login/submit" method="POST" enctype="application/x-www-form-urlencoded">' +
+          '<input type="text" name="username" placeholder="登录账号" required>' +
+          '<input type="password" name="password" placeholder="登录密码" required>' +
+          '<button type="submit" id="loginButton" ' + (额外参数.锁定状态 ? 'disabled' : '') + '>立即登录</button>' +
+        '</form>' +
         (额外参数.输错密码 ? '<div class="error-message">密码错误，剩余尝试次数：' + 额外参数.剩余次数 + '</div>' : '') +
         (额外参数.锁定状态 ? 
           '<div class="lock-message">' +
             '账户锁定，请<span id="countdown">' + 额外参数.剩余时间 + '</span>秒后重试' +
           '</div>' : '') +
-        (额外参数.错误信息 ? '<div class="error-message">' + 额外参数.错误信息 + '</div>' : '') +
-      '
+        (额外参数.错误信息 ? '<div class="error-message">' + 额外参数.错误信息 + '</div>' : '')
     }
   };
 
