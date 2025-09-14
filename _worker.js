@@ -11,6 +11,27 @@ let 最大失败次数 = 5;
 let 锁定时间 = 5 * 60 * 1000;
 let 白天背景图 = 'https://i.meee.com.tw/el91luR.png';
 let 暗黑背景图 = 'https://i.meee.com.tw/QPWx8nX.png';
+// 在线分流规则配置
+let 在线分流规则仓库 = [
+  {
+    name: 'ACL4SSR',
+    url: 'https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Proxy.list',
+    enabled: false,
+    description: 'ACL4SSR分流规则'
+  },
+  {
+    name: 'lhie1',
+    url: 'https://raw.githubusercontent.com/lhie1/Rules/master/Clash/Proxy.list',
+    enabled: false,
+    description: 'lhie1分流规则'
+  },
+  {
+    name: 'ConnersHua',
+    url: 'https://raw.githubusercontent.com/ConnersHua/Profiles/master/Clash/Provider/ProxyGrep.list',
+    enabled: false,
+    description: 'ConnersHua分流规则'
+  }
+];
 
 // ====================== 辅助函数 ======================
 function 创建HTML响应(内容, 状态码 = 200) {
@@ -68,6 +89,86 @@ async function 检查锁定(env, 设备标识) {
     被锁定,
     剩余时间: 被锁定 ? Math.ceil((Number(锁定时间戳) - 当前时间) / 1000) : 0
   };
+}
+
+// ====================== 在线分流规则相关函数 ======================
+async function 加载在线分流规则配置(env) {
+  try {
+    const 缓存配置 = await env.KV数据库.get('online_routing_rules');
+    if (缓存配置) {
+      在线分流规则仓库 = JSON.parse(缓存配置);
+    } else {
+      // 初始化默认配置
+      await env.KV数据库.put('online_routing_rules', JSON.stringify(在线分流规则仓库));
+    }
+    return 在线分流规则仓库;
+  } catch (错误) {
+    console.error(`加载在线分流规则配置失败: ${错误.message}`);
+    return 在线分流规则仓库;
+  }
+}
+
+async function 保存在线分流规则配置(env, 规则配置) {
+  try {
+    await env.KV数据库.put('online_routing_rules', JSON.stringify(规则配置));
+    在线分流规则仓库 = 规则配置;
+    return true;
+  } catch (错误) {
+    console.error(`保存在线分流规则配置失败: ${错误.message}`);
+    return false;
+  }
+}
+
+async function 获取在线分流规则(env, 规则URL) {
+  try {
+    const 响应 = await fetch(规则URL);
+    if (!响应.ok) {
+      throw new Error(`获取规则失败，状态码: ${响应.status}`);
+    }
+    const 规则内容 = await 响应.text();
+    return 规则内容;
+  } catch (错误) {
+    console.error(`获取在线分流规则失败: ${错误.message}`);
+    return null;
+  }
+}
+
+async function 切换在线分流规则状态(env, 规则索引) {
+  try {
+    const 规则配置 = await 加载在线分流规则配置(env);
+    if (规则索引 >= 0 && 规则索引 < 规则配置.length) {
+      规则配置[规则索引].enabled = !规则配置[规则索引].enabled;
+      await 保存在线分流规则配置(env, 规则配置);
+      return { success: true, enabled: 规则配置[规则索引].enabled };
+    }
+    return { success: false, error: '无效的规则索引' };
+  } catch (错误) {
+    console.error(`切换在线分流规则状态失败: ${错误.message}`);
+    return { success: false, error: 错误.message };
+  }
+}
+
+async function 获取启用的在线分流规则(env) {
+  try {
+    const 规则配置 = await 加载在线分流规则配置(env);
+    const 启用规则列表 = 规则配置.filter(规则 => 规则.enabled);
+    const 规则内容列表 = [];
+    
+    for (const 规则 of 启用规则列表) {
+      const 规则内容 = await 获取在线分流规则(env, 规则.url);
+      if (规则内容) {
+        规则内容列表.push({
+          name: 规则.name,
+          content: 规则内容
+        });
+      }
+    }
+    
+    return 规则内容列表;
+  } catch (错误) {
+    console.error(`获取启用的在线分流规则失败: ${错误.message}`);
+    return [];
+  }
 }
 
 function 生成登录注册界面(类型, 额外参数 = {}) {
@@ -971,6 +1072,63 @@ export default {
           nodePaths = nodePaths ? JSON.parse(nodePaths) : ['https://v2.i-sweet.us.kg/ips.txt', 'https://v2.i-sweet.us.kg/url.txt'];
           return 创建JSON响应({ paths: nodePaths }, 200);
 
+        case `/${配置路径}/get-online-routing-rules`:
+          const routingToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const 有效RoutingToken = await env.KV数据库.get('current_token');
+          if (!routingToken || routingToken !== 有效RoutingToken) {
+            return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+          }
+          const 规则配置 = await 加载在线分流规则配置(env);
+          return 创建JSON响应({ rules: 规则配置 }, 200);
+
+        case `/${配置路径}/toggle-routing-rule`:
+          const toggleToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const 有效ToggleToken = await env.KV数据库.get('current_token');
+          if (!toggleToken || toggleToken !== 有效ToggleToken) {
+            return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+          }
+          const toggleData = await 请求.json();
+          const 规则索引 = toggleData.index;
+          const 切换结果 = await 切换在线分流规则状态(env, 规则索引);
+          return 创建JSON响应(切换结果, 切换结果.success ? 200 : 400);
+
+        case `/${配置路径}/add-routing-rule`:
+          const addRuleToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const 有效AddRuleToken = await env.KV数据库.get('current_token');
+          if (!addRuleToken || addRuleToken !== 有效AddRuleToken) {
+            return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+          }
+          const addRuleData = await 请求.json();
+          const 新规则 = {
+            name: addRuleData.name,
+            url: addRuleData.url,
+            enabled: false,
+            description: addRuleData.description || addRuleData.name
+          };
+          if (!新规则.name || !新规则.url || !新规则.url.match(/^https?:\/\//)) {
+            return 创建JSON响应({ error: '无效的规则名称或URL' }, 400);
+          }
+          const 当前规则配置 = await 加载在线分流规则配置(env);
+          当前规则配置.push(新规则);
+          await 保存在线分流规则配置(env, 当前规则配置);
+          return 创建JSON响应({ success: true }, 200);
+
+        case `/${配置路径}/remove-routing-rule`:
+          const removeRuleToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const 有效RemoveRuleToken = await env.KV数据库.get('current_token');
+          if (!removeRuleToken || removeRuleToken !== 有效RemoveRuleToken) {
+            return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+          }
+          const removeRuleData = await 请求.json();
+          const 移除索引 = removeRuleData.index;
+          const 移除前规则配置 = await 加载在线分流规则配置(env);
+          if (移除索引 >= 0 && 移除索引 < 移除前规则配置.length) {
+            移除前规则配置.splice(移除索引, 1);
+            await 保存在线分流规则配置(env, 移除前规则配置);
+            return 创建JSON响应({ success: true }, 200);
+          }
+          return 创建JSON响应({ error: '无效的规则索引' }, 400);
+
         case '/set-proxy-state':
           formData = await 请求.formData();
           const proxyEnabled = formData.get('proxyEnabled');
@@ -1420,6 +1578,114 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       box-sizing: border-box;
       margin-bottom: 10px;
     }
+    .routing-rules-container {
+      margin: 15px 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .routing-rule-item {
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      border-radius: 15px;
+      margin: 8px 0;
+      font-size: 0.9em;
+      transition: background 0.3s ease;
+    }
+    .rule-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .rule-name {
+      font-weight: bold;
+      color: #ff69b4;
+    }
+    .rule-description {
+      font-size: 0.85em;
+      color: #ff85a2;
+      margin-bottom: 8px;
+    }
+    .rule-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rule-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rule-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .rule-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .rule-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .rule-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    .rule-switch input:checked + .rule-slider {
+      background-color: #ff69b4;
+    }
+    .rule-switch input:checked + .rule-slider:before {
+      transform: translateX(26px);
+    }
+    .rule-status {
+      font-size: 0.85em;
+      padding: 4px 10px;
+      border-radius: 12px;
+      color: white;
+    }
+    .rule-status.enabled {
+      background: linear-gradient(to right, #ffb6c1, #ff69b4);
+    }
+    .rule-status.disabled {
+      background: #ccc;
+    }
+    .rule-url {
+      font-size: 0.8em;
+      color: #ff85a2;
+      word-break: break-all;
+      margin-top: 5px;
+    }
+    .remove-rule-btn {
+      background: #ff9999;
+      border: none;
+      border-radius: 15px;
+      padding: 5px 10px;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .remove-rule-btn:hover {
+      background: #ff6666;
+    }
     @media (max-width: 600px) {
       .card { padding: 15px; max-width: 90%; }
       .card-title { font-size: 1.3em; }
@@ -1484,6 +1750,18 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         <input type="text" id="nodeUrlInput" class="url-input" placeholder="输入节点文件 URL（如 https://example.com/ips.txt）">
         <button class="cute-button add-url-btn" onclick="添加节点路径()">添加路径</button>
         <div class="url-list" id="urlList"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 class="upload-title">🌐 在线分流规则</h2>
+      <div class="routing-rules-container">
+        <div class="routing-rules-list" id="routingRulesList"></div>
+      </div>
+      <div>
+        <input type="text" id="ruleNameInput" class="url-input" placeholder="输入规则名称（如 ACL4SSR）">
+        <input type="text" id="ruleUrlInput" class="url-input" placeholder="输入规则文件 URL（如 https://example.com/rule.list）">
+        <input type="text" id="ruleDescInput" class="url-input" placeholder="输入规则描述（可选）">
+        <button class="cute-button add-url-btn" onclick="添加分流规则()">添加规则</button>
       </div>
     </div>
     <div class="card">
@@ -1593,6 +1871,125 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         })
         .catch(() => alert('添加失败，网络出错啦~'));
     }
+
+    function 加载分流规则() {
+      fetch('/${配置路径}/get-online-routing-rules')
+        .then(response => response.json())
+        .then(data => {
+          const rulesList = document.getElementById('routingRulesList');
+          rulesList.innerHTML = '';
+          data.rules.forEach((rule, index) => {
+            const div = document.createElement('div');
+            div.className = 'routing-rule-item';
+            div.innerHTML = `
+              <div class="rule-header">
+                <span class="rule-name">${rule.name}</span>
+                <button class="remove-rule-btn" onclick="移除分流规则(${index})">移除</button>
+              </div>
+              <div class="rule-description">${rule.description}</div>
+              <div class="rule-url">${rule.url}</div>
+              <div class="rule-controls">
+                <div class="rule-toggle">
+                  <label class="rule-switch">
+                    <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="切换分流规则(${index})">
+                    <span class="rule-slider"></span>
+                  </label>
+                  <span class="rule-status ${rule.enabled ? 'enabled' : 'disabled'}">${rule.enabled ? '已启用' : '已禁用'}</span>
+                </div>
+              </div>
+            `;
+            rulesList.appendChild(div);
+          });
+        })
+        .catch(() => alert('加载分流规则失败，请稍后再试~'));
+    }
+
+    function 添加分流规则() {
+      const nameInput = document.getElementById('ruleNameInput');
+      const urlInput = document.getElementById('ruleUrlInput');
+      const descInput = document.getElementById('ruleDescInput');
+      
+      const name = nameInput.value.trim();
+      const url = urlInput.value.trim();
+      const description = descInput.value.trim() || name;
+      
+      if (!name || !url) {
+        alert('喂！大臭宝，请输入规则名称和 URL 哦~');
+        return;
+      }
+      
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        alert('URL 必须以 http:// 或 https:// 开头哦~');
+        return;
+      }
+      
+      fetch('/${配置路径}/add-routing-rule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, url, description })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            nameInput.value = '';
+            urlInput.value = '';
+            descInput.value = '';
+            加载分流规则();
+            alert('规则添加成功！');
+          } else {
+            alert(data.error || '添加失败，请稍后再试~');
+          }
+        })
+        .catch(() => alert('添加失败，网络出错啦~'));
+    }
+
+    function 移除分流规则(index) {
+      if (!confirm('确定要移除这个分流规则吗？')) return;
+      
+      fetch('/${配置路径}/remove-routing-rule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            加载分流规则();
+            alert('规则移除成功！');
+          } else {
+            alert(data.error || '移除失败，请稍后再试~');
+          }
+        })
+        .catch(() => alert('移除失败，网络出错啦~'));
+    }
+
+    function 切换分流规则(index) {
+      fetch('/${配置路径}/toggle-routing-rule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            加载分流规则();
+          } else {
+            alert(data.error || '切换失败，请稍后再试~');
+            // 恢复开关状态
+            const checkbox = document.querySelector(`#routingRulesList .routing-rule-item:nth-child(${index + 1}) .rule-switch input`);
+            if (checkbox) checkbox.checked = !checkbox.checked;
+          }
+        })
+        .catch(() => {
+          alert('切换失败，网络出错啦~');
+          // 恢复开关状态
+          const checkbox = document.querySelector(`#routingRulesList .routing-rule-item:nth-child(${index + 1}) .rule-switch input`);
+          if (checkbox) checkbox.checked = !checkbox.checked;
+        });
+    }
+
+    // 页面加载时初始化分流规则
+    加载分流规则();
 
     function 移除节点路径(index) {
       fetch('/${配置路径}/remove-node-path', {
@@ -1934,6 +2331,9 @@ function 生成KV未绑定提示页面() {
 }
 
 async function 生成猫咪(env, hostName) {
+  // 加载在线分流规则配置
+  await 加载在线分流规则配置(env);
+  
   const uuid = await 获取或初始化UUID(env);
   const 节点列表 = 优选节点.length ? 优选节点 : [`${hostName}:443`];
   const 国家分组 = {};
@@ -1977,6 +2377,25 @@ async function 生成猫咪(env, hostName) {
     proxies:
 ${[...国家分组[国家].IPv4, ...国家分组[国家].IPv6].map(n => `      - "${n.name}"`).join("\n")}
 `).join("");
+
+  // 获取在线分流规则
+  let 分流规则 = '';
+  try {
+    const 启用规则列表 = await 获取启用的在线分流规则(env);
+    if (启用规则列表.length > 0) {
+      分流规则 = 启用规则列表.map(规则 => 规则.content).join("\n");
+    }
+  } catch (错误) {
+    console.error(`获取在线分流规则失败: ${错误.message}`);
+  }
+
+  // 如果没有获取到在线分流规则，使用默认规则
+  if (!分流规则) {
+    分流规则 = `  - GEOIP,LAN,DIRECT
+  - DOMAIN-SUFFIX,cn,DIRECT
+  - GEOIP,CN,DIRECT
+  - MATCH,🚀节点选择`;
+  }
 
   return `# Generated at: ${new Date().toISOString()}
 mixed-port: 7890
@@ -2030,10 +2449,7 @@ ${国家列表.map(国家 => `      - "${国家}"`).join("\n")}
 ${国家分组配置}
 
 rules:
-  - GEOIP,LAN,DIRECT
-  - DOMAIN-SUFFIX,cn,DIRECT
-  - GEOIP,CN,DIRECT
-  - MATCH,🚀节点选择
+${分流规则}
 `;
 }
 
