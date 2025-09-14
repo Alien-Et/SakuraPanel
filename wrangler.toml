@@ -1,0 +1,12 @@
+name = "sakura-panel"
+main = "_worker.js"
+compatibility_date = "2025-09-14"
+
+[build]
+command = ""
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[env.staging]
+vars = { ENVIRONMENT = "staging" }

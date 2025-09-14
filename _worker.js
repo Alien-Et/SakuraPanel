@@ -778,12 +778,12 @@ export default {
         case `/${配置路径}/` + atob('Y2xhc2g='):
           await 加载节点和配置(env, hostName);
           const config = await 获取配置(env, atob('Y2xhc2g='), hostName);
-          const b64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
+          const clashB64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
           
           // 检查配置是否为Base64格式
-          const isBase64 = /^[A-Za-z0-9+/]*={0,2}$/.test(config) && config.length > 10;
+          const clashIsBase64 = /^[A-Za-z0-9+/]*={0,2}$/.test(config) && config.length > 10;
           
-          if (isBase64 && b64Enabled) {
+          if (clashIsBase64 && clashB64Enabled) {
             // 如果是Base64加密的配置，设置适当的响应头
             return new Response(config, { 
               status: 200, 
@@ -807,12 +807,12 @@ export default {
         case `/${配置路径}/` + atob('djJyYXluZw=='):
           await 加载节点和配置(env, hostName);
           const vConfig = await 获取配置(env, atob('djJyYXk='), hostName);
-          const b64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
+          const universalB64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
           
           // 检查配置是否为Base64格式
-          const isBase64 = /^[A-Za-z0-9+/]*={0,2}$/.test(vConfig) && vConfig.length > 10;
+          const universalIsBase64 = /^[A-Za-z0-9+/]*={0,2}$/.test(vConfig) && vConfig.length > 10;
           
-          if (isBase64 && b64Enabled) {
+          if (universalIsBase64 && universalB64Enabled) {
             // 如果是Base64加密的配置，设置适当的响应头
             return new Response(vConfig, { 
               status: 200, 
@@ -1049,8 +1049,8 @@ export default {
 
         case '/set-b64-state':
           formData = await 请求.formData();
-          const b64Enabled = formData.get('b64Enabled');
-          await env.KV数据库.put('b64Enabled', b64Enabled);
+          const setB64Enabled = formData.get('b64Enabled');
+          await env.KV数据库.put('b64Enabled', setB64Enabled);
           return new Response(null, { status: 200 });
 
         case '/get-b64-status':
