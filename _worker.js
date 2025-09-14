@@ -108,8 +108,10 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+    
     body {
-      font-family: 'Comic Sans MS', 'Arial', sans-serif;
+      font-family: 'Quicksand', 'Comic Sans MS', 'Arial', sans-serif;
       color: #ff6f91;
       margin: 0;
       height: 100vh;
@@ -120,14 +122,19 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
       overflow: hidden;
       transition: background 0.5s ease;
     }
+    
     @media (prefers-color-scheme: light) {
       body { background: linear-gradient(135deg, #ffe6f0, #fff0f5); }
       .auth-container { background: rgba(255, 245, 247, 0.9); box-shadow: 0 8px 20px rgba(255, 182, 193, 0.3); }
+      .floating-petals { background: rgba(255, 255, 255, 0.7); }
     }
+    
     @media (prefers-color-scheme: dark) {
       body { background: linear-gradient(135deg, #1e1e2f, #2a2a3b); }
       .auth-container { background: rgba(30, 30, 30, 0.9); color: #ffd1dc; box-shadow: 0 8px 20px rgba(255, 133, 162, 0.2); }
+      .floating-petals { background: rgba(255, 255, 255, 0.1); }
     }
+    
     .background-media {
       position: fixed;
       top: 0;
@@ -138,65 +145,187 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
       z-index: -1;
       transition: opacity 0.5s ease;
     }
+    
+    /* 漂浮花瓣效果 */
+    .floating-petals {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    
+    .petal {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50% 0;
+      opacity: 0.7;
+      animation: float linear infinite;
+    }
+    
+    @keyframes float {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+    
+    /* 可爱装饰元素 */
+    .cute-decoration {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      opacity: 0.8;
+      z-index: 0;
+      animation: bounce 3s infinite alternate ease-in-out;
+    }
+    
+    .cute-decoration:nth-child(odd) {
+      animation-delay: 0.5s;
+    }
+    
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+    
     .auth-container {
-      padding: 30px;
-      border-radius: 25px;
+      padding: 40px;
+      border-radius: 30px;
       max-width: 400px;
       width: 90%;
       text-align: center;
       position: relative;
       z-index: 1;
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.8s ease-out;
     }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
     h1 {
-      font-size: 1.8em;
+      font-size: 2em;
       color: #ff69b4;
-      margin-bottom: 20px;
-      text-shadow: 1px 1px 3px rgba(255, 105, 180, 0.2);
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.3);
+      animation: pulse 2s infinite alternate;
     }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      100% {
+        transform: scale(1.05);
+      }
+    }
+    
     .auth-form {
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 20px;
       width: 100%;
       max-width: 300px;
       margin: 0 auto;
     }
+    
     .auth-form input {
-      padding: 12px;
-      border-radius: 15px;
+      padding: 15px;
+      border-radius: 25px;
       border: 2px solid #ffb6c1;
       font-size: 1em;
       width: 100%;
       box-sizing: border-box;
+      transition: all 0.3s ease;
+      background-color: rgba(255, 255, 255, 0.7);
     }
+    
+    .auth-form input:focus {
+      border-color: #ff69b4;
+      box-shadow: 0 0 10px rgba(255, 105, 180, 0.3);
+      transform: scale(1.02);
+      outline: none;
+    }
+    
     .auth-form button {
-      padding: 12px;
+      padding: 15px;
       background: linear-gradient(to right, #ffb6c1, #ff69b4);
       color: white;
       border: none;
-      border-radius: 20px;
+      border-radius: 30px;
       cursor: pointer;
-      font-size: 1em;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-size: 1.1em;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
     }
+    
+    .auth-form button:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .auth-form button:hover:before {
+      left: 100%;
+    }
+    
     .auth-form button:hover {
       transform: scale(1.05);
-      box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
+      box-shadow: 0 8px 20px rgba(255, 105, 180, 0.4);
     }
+    
     .auth-form button:active {
-      transform: scale(0.95);
+      transform: scale(0.98);
     }
+    
     .auth-form button:disabled {
       background: #ccc;
       cursor: not-allowed;
       box-shadow: none;
       transform: none;
     }
+    
     .error-message {
       color: #ff6666;
-      margin-top: 15px;
+      margin-top: 20px;
       font-size: 0.9em;
+      animation: shake 0.5s;
     }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
     .lock-message {
       color: #ff6666;
       margin-top: 20px;
@@ -206,26 +335,63 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
       justify-content: center;
       gap: 5px;
     }
+    
     #countdown {
       color: #ff1493;
       font-weight: bold;
       min-width: 50px;
       text-align: center;
+      animation: pulse 1s infinite alternate;
     }
+    
+    /* 可爱图标 */
+    .cute-icon {
+      position: absolute;
+      font-size: 1.5em;
+      animation: float-icon 3s infinite ease-in-out;
+    }
+    
+    .cute-icon:nth-child(1) {
+      top: -20px;
+      left: 20px;
+      animation-delay: 0.2s;
+    }
+    
+    .cute-icon:nth-child(2) {
+      top: -20px;
+      right: 20px;
+      animation-delay: 0.7s;
+    }
+    
+    @keyframes float-icon {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-10px) rotate(10deg);
+      }
+    }
+    
     @media (max-width: 600px) {
-      .auth-container { padding: 20px; }
-      h1 { font-size: 1.5em; }
-      .auth-form input, .auth-form button { padding: 10px; font-size: 0.95em; }
+      .auth-container { padding: 25px; }
+      h1 { font-size: 1.7em; }
+      .auth-form input, .auth-form button { padding: 12px; font-size: 1em; }
     }
   </style>
 </head>
 <body>
   <img id="backgroundImage" class="background-media">
+  <div class="floating-petals" id="petalsContainer"></div>
+  
   <div class="auth-container">
+    <div class="cute-icon">🌸</div>
+    <div class="cute-icon">🌺</div>
     <h1>${界面数据[类型].title}</h1>
     ${界面数据[类型].表单}
   </div>
+  
   <script>
+    // 背景图片切换
     const lightBg = '${白天背景图}';
     const darkBg = '${暗黑背景图}';
     const bgImage = document.getElementById('backgroundImage');
@@ -237,6 +403,47 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
     }
     updateBackground();
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateBackground);
+
+    // 创建漂浮花瓣效果
+    function createPetal() {
+      const petalsContainer = document.getElementById('petalsContainer');
+      const petal = document.createElement('div');
+      petal.className = 'petal';
+      
+      // 随机花瓣颜色
+      const colors = ['#ffb6c1', '#ff69b4', '#ffc0cb', '#ff1493', '#ffd1dc'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      
+      // 随机大小
+      const size = Math.random() * 15 + 5;
+      
+      // 随机位置
+      const left = Math.random() * 100;
+      
+      // 随机动画时长
+      const duration = Math.random() * 10 + 10;
+      
+      petal.style.backgroundColor = color;
+      petal.style.width = `${size}px`;
+      petal.style.height = `${size}px`;
+      petal.style.left = `${left}%`;
+      petal.style.animationDuration = `${duration}s`;
+      
+      petalsContainer.appendChild(petal);
+      
+      // 动画结束后移除花瓣
+      setTimeout(() => {
+        petal.remove();
+      }, duration * 1000);
+    }
+    
+    // 定期创建花瓣
+    setInterval(createPetal, 500);
+    
+    // 初始创建一些花瓣
+    for (let i = 0; i < 20; i++) {
+      setTimeout(createPetal, i * 200);
+    }
 
     // 倒计时逻辑
     let remainingTime = ${额外参数.锁定状态 ? 额外参数.剩余时间 : 0};
@@ -308,6 +515,18 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
       }
     }
     setInterval(checkUAChange, 500);
+    
+    // 添加输入框聚焦效果
+    const inputs = document.querySelectorAll('.auth-form input');
+    inputs.forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'scale(1.02)';
+      });
+      
+      input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'scale(1)';
+      });
+    });
   </script>
 </body>
 </html>
