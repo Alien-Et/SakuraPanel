@@ -778,12 +778,60 @@ export default {
         case `/${配置路径}/` + atob('Y2xhc2g='):
           await 加载节点和配置(env, hostName);
           const config = await 获取配置(env, atob('Y2xhc2g='), hostName);
-          return new Response(config, { status: 200, headers: { "Content-Type": "text/plain;charset=utf-8" } });
+          const b64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
+          
+          // 检查配置是否为Base64格式
+          const isBase64 = /^[A-Za-z0-9+/]*={0,2}$/.test(config) && config.length > 10;
+          
+          if (isBase64 && b64Enabled) {
+            // 如果是Base64加密的配置，设置适当的响应头
+            return new Response(config, { 
+              status: 200, 
+              headers: { 
+                "Content-Type": "text/plain;charset=utf-8",
+                "Content-Disposition": "attachment; filename=\"clash-config.b64\"",
+                "X-Config-Format": "base64"
+              } 
+            });
+          } else {
+            // 如果是普通配置，正常返回
+            return new Response(config, { 
+              status: 200, 
+              headers: { 
+                "Content-Type": "text/plain;charset=utf-8",
+                "X-Config-Format": "yaml"
+              } 
+            });
+          }
 
         case `/${配置路径}/` + atob('djJyYXluZw=='):
           await 加载节点和配置(env, hostName);
           const vConfig = await 获取配置(env, atob('djJyYXk='), hostName);
-          return new Response(vConfig, { status: 200, headers: { "Content-Type": "text/plain;charset=utf-8" } });
+          const b64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
+          
+          // 检查配置是否为Base64格式
+          const isBase64 = /^[A-Za-z0-9+/]*={0,2}$/.test(vConfig) && vConfig.length > 10;
+          
+          if (isBase64 && b64Enabled) {
+            // 如果是Base64加密的配置，设置适当的响应头
+            return new Response(vConfig, { 
+              status: 200, 
+              headers: { 
+                "Content-Type": "text/plain;charset=utf-8",
+                "Content-Disposition": "attachment; filename=\"universal-config.b64\"",
+                "X-Config-Format": "base64"
+              } 
+            });
+          } else {
+            // 如果是普通配置，正常返回
+            return new Response(vConfig, { 
+              status: 200, 
+              headers: { 
+                "Content-Type": "text/plain;charset=utf-8",
+                "X-Config-Format": "uri"
+              } 
+            });
+          }
 
         case `/${配置路径}/upload`:
           const uploadToken = 请求.headers.get('Cookie')?.split('=')[1];
