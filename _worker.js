@@ -999,6 +999,16 @@ export default {
           }
           return 创建JSON响应({ status });
 
+        case '/set-b64-state':
+          formData = await 请求.formData();
+          const b64Enabled = formData.get('b64Enabled');
+          await env.KV数据库.put('b64Enabled', b64Enabled);
+          return new Response(null, { status: 200 });
+
+        case '/get-b64-status':
+          const b64状态 = await env.KV数据库.get('b64Enabled') === 'true';
+          return 创建JSON响应({ b64Enabled: b64状态 });
+
         default:
           url.hostname = 伪装域名;
           url.protocol = 'https:';
@@ -1479,6 +1489,19 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       </div>
     </div>
     <div class="card">
+      <h2 class="card-title">🔐 加密设置</h2>
+      <div class="switch-container">
+        <div class="toggle-row">
+          <label>Base64加密</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="b64Toggle" onchange="toggleB64()">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="proxy-status" id="b64Status">当前订阅链接未加密</div>
+    </div>
+    <div class="card">
       <h2 class="upload-title">🌏 优选IP网络路径</h2>
       <div>
         <input type="text" id="nodeUrlInput" class="url-input" placeholder="输入节点文件 URL（如 https://example.com/ips.txt）">
@@ -1544,10 +1567,13 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     let proxyEnabled = localStorage.getItem('proxyEnabled') === 'true';
     let proxyType = localStorage.getItem('proxyType') || 'reverse';
     let forceProxy = localStorage.getItem('forceProxy') === 'true';
+    let b64Enabled = localStorage.getItem('b64Enabled') === 'true';
     document.getElementById('proxyToggle').checked = proxyEnabled;
     document.getElementById('forceProxyToggle').checked = forceProxy;
+    document.getElementById('b64Toggle').checked = b64Enabled;
     updateProxyUI();
     updateProxyStatus();
+    updateB64Status();
 
     function 加载节点路径() {
       fetch('/${配置路径}/get-node-paths')
@@ -1675,6 +1701,31 @@ function 生成订阅页面(配置路径, hostName, uuid) {
             statusElement.textContent = '直连';
             statusElement.className = 'proxy-status direct';
           });
+      }
+    }
+
+    function toggleB64() {
+      b64Enabled = document.getElementById('b64Toggle').checked;
+      localStorage.setItem('b64Enabled', b64Enabled);
+      saveB64State();
+      updateB64Status();
+    }
+
+    function saveB64State() {
+      const formData = new FormData();
+      formData.append('b64Enabled', b64Enabled);
+      fetch('/set-b64-state', { method: 'POST', body: formData })
+        .then(() => updateB64Status());
+    }
+
+    function updateB64Status() {
+      const statusElement = document.getElementById('b64Status');
+      if (b64Enabled) {
+        statusElement.textContent = '当前订阅链接已Base64加密';
+        statusElement.className = 'proxy-status success';
+      } else {
+        statusElement.textContent = '当前订阅链接未加密';
+        statusElement.className = 'proxy-status direct';
       }
     }
 
@@ -1936,6 +1987,7 @@ function 生成KV未绑定提示页面() {
 async function 生成猫咪(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
   const 节点列表 = 优选节点.length ? 优选节点 : [`${hostName}:443`];
+  const b64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
   const 国家分组 = {};
 
   节点列表.forEach((节点, 索引) => {
@@ -1978,7 +2030,7 @@ async function 生成猫咪(env, hostName) {
 ${[...国家分组[国家].IPv4, ...国家分组[国家].IPv6].map(n => `      - "${n.name}"`).join("\n")}
 `).join("");
 
-  return `# Generated at: ${new Date().toISOString()}
+  const 配置文本 = `# Generated at: ${new Date().toISOString()}
 mixed-port: 7890
 allow-lan: true
 mode: Rule
@@ -2035,11 +2087,18 @@ rules:
   - GEOIP,CN,DIRECT
   - MATCH,🚀节点选择
 `;
+
+  // 如果启用了Base64加密，则对整个配置文本进行Base64编码
+  if (b64Enabled) {
+    return btoa(unescape(encodeURIComponent(配置文本)));
+  }
+  return 配置文本;
 }
 
 async function 生成通用(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
   const 节点列表 = 优选节点.length ? 优选节点 : [`${hostName}:443`];
+  const b64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
   const 配置列表 = 节点列表.map(节点 => {
     try {
       const [主内容, tls = 'tls'] = 节点.split("@");
@@ -2059,6 +2118,12 @@ async function 生成通用(env, hostName) {
     }
   }).filter(Boolean);
 
-  return `# Generated at: ${new Date().toISOString()}
+  const 配置文本 = `# Generated at: ${new Date().toISOString()}
 ${配置列表.length ? 配置列表.join("\n") : (atob('dmxlc3M=') + '://' + uuid + '@' + hostName + ':443?encryption=none&security=tls&type=ws&host=' + hostName + '&path=' + encodeURIComponent('/?ed=2560') + '&sni=' + hostName + '#默认节点')}`;
+  
+  // 如果启用了Base64加密，则对整个配置文本进行Base64编码
+  if (b64Enabled) {
+    return btoa(unescape(encodeURIComponent(配置文本)));
+  }
+  return 配置文本;
 }
