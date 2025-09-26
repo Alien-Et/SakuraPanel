@@ -3,7 +3,7 @@ import { connect } from 'cloudflare:sockets';
 // 基础配置
 let 配置路径 = "config";
 let 优选节点 = [];
-let 反代地址 = 'ts.hpc.tw';
+let 反代地址 = 'ProxyIP.JP.CMLiussss.net';
 let SOCKS5账号 = '';
 let 节点名称 = '🌸樱花';
 let 伪装域名 = 'lkssite.vip';
