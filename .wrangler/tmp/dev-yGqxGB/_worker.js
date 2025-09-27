@@ -11,6 +11,8 @@ var \u8282\u70B9\u540D\u79F0 = "\u{1F338}\u6A31\u82B1";
 var \u4F2A\u88C5\u57DF\u540D = "lkssite.vip";
 var \u6700\u5927\u5931\u8D25\u6B21\u6570 = 5;
 var \u9501\u5B9A\u65F6\u95F4 = 5 * 60 * 1e3;
+var \u9ED8\u8BA4\u767D\u5929\u80CC\u666F\u56FE = "https://i.meee.com.tw/el91luR.png";
+var \u9ED8\u8BA4\u6697\u9ED1\u80CC\u666F\u56FE = "https://i.meee.com.tw/QPWx8nX.png";
 function \u521B\u5EFAHTML\u54CD\u5E94(\u5185\u5BB9, \u72B6\u6001\u7801 = 200) {
   return new Response(\u5185\u5BB9, {
     status: \u72B6\u6001\u7801,
@@ -389,8 +391,8 @@ function \u751F\u6210\u767B\u5F55\u6CE8\u518C\u754C\u9762(\u7C7B\u578B, \u989D\u
   
   <script>
     // \u80CC\u666F\u56FE\u7247\u5207\u6362
-    const lightBg = '${\u767D\u5929\u80CC\u666F\u56FE}';
-    const darkBg = '${\u6697\u9ED1\u80CC\u666F\u56FE}';
+    const lightBg = '${\u9ED8\u8BA4\u767D\u5929\u80CC\u666F\u56FE}';
+    const darkBg = '${\u9ED8\u8BA4\u6697\u9ED1\u80CC\u666F\u56FE}';
     const bgImage = document.getElementById('backgroundImage');
 
     function updateBackground() {
@@ -1590,8 +1592,8 @@ function \u751F\u6210\u8BA2\u9605\u9875\u9762(\u914D\u7F6E\u8DEF\u5F842, hostNam
     </div>
   </div>
   <script>
-    const lightBg = '${\u767D\u5929\u80CC\u666F\u56FE}';
-    const darkBg = '${\u6697\u9ED1\u80CC\u666F\u56FE}';
+    const lightBg = '${\u9ED8\u8BA4\u767D\u5929\u80CC\u666F\u56FE}';
+    const darkBg = '${\u9ED8\u8BA4\u6697\u9ED1\u80CC\u666F\u56FE}';
     const bgImage = document.getElementById('backgroundImage');
 
     async function \u83B7\u53D6\u58C1\u7EB8\u5730\u5740() {
@@ -1600,16 +1602,16 @@ function \u751F\u6210\u8BA2\u9605\u9875\u9762(\u914D\u7F6E\u8DEF\u5F842, hostNam
         if (response.ok) {
           const data = await response.json();
           return {
-            light: data.lightWallpaper || '${\u767D\u5929\u80CC\u666F\u56FE}',
-            dark: data.darkWallpaper || '${\u6697\u9ED1\u80CC\u666F\u56FE}'
+            light: data.lightWallpaper || '${\u9ED8\u8BA4\u767D\u5929\u80CC\u666F\u56FE}',
+      dark: data.darkWallpaper || '${\u9ED8\u8BA4\u6697\u9ED1\u80CC\u666F\u56FE}'
           };
         }
       } catch (error) {
         console.error('\u83B7\u53D6\u58C1\u7EB8\u5730\u5740\u5931\u8D25:', error);
       }
       return {
-        light: '${\u767D\u5929\u80CC\u666F\u56FE}',
-        dark: '${\u6697\u9ED1\u80CC\u666F\u56FE}'
+        light: '${\u9ED8\u8BA4\u767D\u5929\u80CC\u666F\u56FE}',
+      dark: '${\u9ED8\u8BA4\u6697\u9ED1\u80CC\u666F\u56FE}'
       };
     }
 
@@ -2160,8 +2162,8 @@ function \u751F\u6210KV\u672A\u7ED1\u5B9A\u63D0\u793A\u9875\u9762() {
     <div class="instruction">\u7ED1\u5B9A\u597D\u540E <span class="highlight">\u5237\u65B0\u754C\u9762</span> \u5C31\u53EF\u4EE5\u8FDB\u5165\u6CE8\u518C\u5566~</div>
   </div>
   <script>
-    const lightBg = '${\u767D\u5929\u80CC\u666F\u56FE}';
-    const darkBg = '${\u6697\u9ED1\u80CC\u666F\u56FE}';
+    const lightBg = '${\u9ED8\u8BA4\u767D\u5929\u80CC\u666F\u56FE}';
+    const darkBg = '${\u9ED8\u8BA4\u6697\u9ED1\u80CC\u666F\u56FE}';
     const bgImage = document.getElementById('backgroundImage');
 
     function updateBackground() {
@@ -2364,7 +2366,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-LqLESi/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-pcmWkf/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -2396,7 +2398,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-LqLESi/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-pcmWkf/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

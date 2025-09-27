@@ -394,8 +394,8 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
   
   <script>
     // 背景图片切换
-    const lightBg = '${白天背景图}';
-    const darkBg = '${暗黑背景图}';
+    const lightBg = '${默认白天背景图}';
+    const darkBg = '${默认暗黑背景图}';
     const bgImage = document.getElementById('backgroundImage');
 
     function updateBackground() {
@@ -1676,8 +1676,8 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     </div>
   </div>
   <script>
-    const lightBg = '${白天背景图}';
-    const darkBg = '${暗黑背景图}';
+    const lightBg = '${默认白天背景图}';
+    const darkBg = '${默认暗黑背景图}';
     const bgImage = document.getElementById('backgroundImage');
 
     async function 获取壁纸地址() {
@@ -1686,16 +1686,16 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         if (response.ok) {
           const data = await response.json();
           return {
-            light: data.lightWallpaper || '${白天背景图}',
-            dark: data.darkWallpaper || '${暗黑背景图}'
+            light: data.lightWallpaper || '${默认白天背景图}',
+      dark: data.darkWallpaper || '${默认暗黑背景图}'
           };
         }
       } catch (error) {
         console.error('获取壁纸地址失败:', error);
       }
       return {
-        light: '${白天背景图}',
-        dark: '${暗黑背景图}'
+        light: '${默认白天背景图}',
+      dark: '${默认暗黑背景图}'
       };
     }
 
@@ -2246,8 +2246,8 @@ function 生成KV未绑定提示页面() {
     <div class="instruction">绑定好后 <span class="highlight">刷新界面</span> 就可以进入注册啦~</div>
   </div>
   <script>
-    const lightBg = '${白天背景图}';
-    const darkBg = '${暗黑背景图}';
+    const lightBg = '${默认白天背景图}';
+    const darkBg = '${默认暗黑背景图}';
     const bgImage = document.getElementById('backgroundImage');
 
     function updateBackground() {
