@@ -2489,11 +2489,10 @@ rules:
   - MATCH,🚀节点选择
 `;
 
+// 如果启用了Base64加密，则先对配置进行Base64编码，然后添加明文标记
 if (b64Enabled) {
-  // 1. 先将YAML配置转为base64
-  const b64Config = btoa(unescape(encodeURIComponent(配置文本)));
-  // 2. 添加明文的base64标记
-  return '#!base64 ' + b64Config;
+  const encodedConfig = btoa(unescape(encodeURIComponent(配置文本)));
+  return '#!base64 ' + encodedConfig;  // 添加明文标记
 }
 return 配置文本;
 }
