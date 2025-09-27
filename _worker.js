@@ -2490,8 +2490,10 @@ rules:
 `;
 
 if (b64Enabled) {
-  const b64config = btoa(unescape(encodeURIComponent(配置文本)));
-  return '#!MANAGED-CONFIG ' + b64config + '\n';
+  // 1. 先将YAML配置转为base64
+  const b64Config = btoa(unescape(encodeURIComponent(配置文本)));
+  // 2. 添加明文的base64标记
+  return '#!base64 ' + b64Config;
 }
 return 配置文本;
 }
