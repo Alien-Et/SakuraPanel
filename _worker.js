@@ -1398,6 +1398,24 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       .upload-btn, .add-url-btn { background: linear-gradient(to right, #ff85a2, #ff1493); }
       .upload-label { background: linear-gradient(to right, #ff85a2, #ff1493); }
       .force-proxy-note { background: rgba(40, 40, 40, 0.9) !important; border: 2px dashed #ff85a2 !important; color: #ffd1dc !important; }
+      
+      /* 统一按钮样式 - 暗黑模式 */
+      .cute-button {
+        background: linear-gradient(to right, #ff85a2, #ff1493);
+        color: #ffffff;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      }
+      .cute-button:hover { box-shadow: 0 5px 15px rgba(255, 133, 162, 0.6); }
+      
+      /* 暗黑模式下统一所有按钮颜色 */
+      .config1-btn, .config2-btn, .logout-btn, .uuid-btn, .upload-btn, .add-url-btn, .upload-label {
+        background: linear-gradient(to right, #ff85a2, #ff1493);
+        color: #ffffff;
+      }
+      
+      /* 确保按钮文字与背景有足够反差 */
+      .upload-btn, .add-url-btn { background: linear-gradient(to right, #ff85a2, #ff1493); }
+      .upload-label { background: linear-gradient(to right, #ff85a2, #ff1493); }
     }
     .background-media {
       position: fixed;
