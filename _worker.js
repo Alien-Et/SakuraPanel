@@ -2489,15 +2489,11 @@ rules:
   - MATCH,🚀节点选择
 `;
 
-// 新代码
 if (b64Enabled) {
-  // 对 YAML 格式的配置文件进行特殊处理
-  // 1. 首先将配置文本转换为 UTF-8 字节
-  // 2. 然后进行 Base64 编码，但保持 YAML 格式
-  const encoder = new TextEncoder();
-  const bytes = encoder.encode(配置文本);
-  const base64 = btoa(String.fromCharCode(...bytes));
-  return base64;
+  // 先将配置文本转换为 UTF-8 编码的 Base64
+  const b64config = btoa(unescape(encodeURIComponent(配置文本)));
+  // 添加 Clash 所需的 Base64 解密标记
+  return `proxies: # ${b64config}`;
 }
 return 配置文本;
 }
