@@ -985,23 +985,23 @@ export default {
           const 代理启用 = await env.KV数据库.get('proxyEnabled') === 'true';
           const 代理类型 = await env.KV数据库.get('proxyType') || 'reverse';
           const 强制代理 = await env.KV数据库.get('forceProxy') === 'true';
-          const 反代地址 = env.PROXYIP || 'ts.hpc.tw';
+          const 当前反代地址 = env.PROXYIP || 反代地址;
           const SOCKS5账号 = env.SOCKS5 || '';
           let status = '直连';
           let 连接地址 = '';
           
           if (代理启用) {
             if (强制代理) {
-              if (代理类型 === 'reverse' && 反代地址) {
+              if (代理类型 === 'reverse' && 当前反代地址) {
                 status = '强制反代';
-                连接地址 = 反代地址;
+                连接地址 = 当前反代地址;
               } else if (代理类型 === 'socks5' && SOCKS5账号) {
                 status = '强制SOCKS5';
                 连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
               }
-            } else if (代理类型 === 'reverse' && 反代地址) {
+            } else if (代理类型 === 'reverse' && 当前反代地址) {
               status = '动态反代';
-              连接地址 = 反代地址;
+              连接地址 = 当前反代地址;
             } else if (代理类型 === 'socks5' && SOCKS5账号) {
               status = '动态SOCKS5';
               连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
@@ -1114,7 +1114,7 @@ async function 解析头(数据, env, uuid) {
 }
 
 async function 智能连接(地址, 端口, 地址类型, env) {
-  const 反代地址 = env.PROXYIP || 'ts.hpc.tw';
+  const 当前反代地址 = env.PROXYIP || 反代地址;
   const SOCKS5账号 = env.SOCKS5 || '';
 
   if (!地址 || 地址.trim() === '') {
@@ -1134,18 +1134,18 @@ async function 智能连接(地址, 端口, 地址类型, env) {
     }
 
     if (强制代理) {
-      if (代理类型 === 'reverse' && 反代地址) {
-        try {
-          const [反代主机, 反代端口] = 反代地址.split(':');
-          const 连接 = connect({ hostname: 反代主机, port: 反代端口 || 端口 });
-          await 连接.opened;
-          console.log(`强制通过反代连接: ${反代地址}`);
-          return 连接;
-        } catch (错误) {
-          console.error(`强制反代连接失败: ${错误.message}`);
-          throw new Error(`强制反代失败: ${错误.message}`);
-        }
-      } else if (代理类型 === 'socks5' && SOCKS5账号) {
+        if (代理类型 === 'reverse' && 当前反代地址) {
+          try {
+            const [反代主机, 反代端口] = 当前反代地址.split(':');
+            const 连接 = connect({ hostname: 反代主机, port: 反代端口 || 端口 });
+            await 连接.opened;
+            console.log(`强制通过反代连接: ${当前反代地址}`);
+            return 连接;
+          } catch (错误) {
+            console.error(`强制反代连接失败: ${错误.message}`);
+            throw new Error(`强制反代失败: ${错误.message}`);
+          }
+        } else if (代理类型 === 'socks5' && SOCKS5账号) {
         try {
           const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口);
           console.log(`强制通过 SOCKS5 连接: ${地址}:${端口}`);
@@ -1161,12 +1161,12 @@ async function 智能连接(地址, 端口, 地址类型, env) {
         return 连接;
       } catch (错误) {
         console.log(`直连失败，动态切换到代理: ${错误.message}`);
-        if (代理类型 === 'reverse' && 反代地址) {
+        if (代理类型 === 'reverse' && 当前反代地址) {
           try {
-            const [反代主机, 反代端口] = 反代地址.split(':');
+            const [反代主机, 反代端口] = 当前反代地址.split(':');
             const 连接 = connect({ hostname: 反代主机, port: 反代端口 || 端口 });
             await 连接.opened;
-            console.log(`动态通过反代连接: ${反代地址}`);
+            console.log(`动态通过反代连接: ${当前反代地址}`);
             return 连接;
           } catch (错误) {
             console.error(`动态反代连接失败: ${错误.message}`);
