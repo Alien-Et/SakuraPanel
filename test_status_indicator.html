@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>状态指示灯测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffe6f0, #fff0f5);
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status-demo {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            position: relative;
+            padding-left: 45px;
+        }
+        /* 状态指示灯样式 */
+        .status-indicator {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .status-indicator.connected { background-color: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .status-indicator.direct { background-color: #28a745; box-shadow: 0 0 10px #28a745; }
+        .status-indicator.error { background-color: #ffffff; box-shadow: 0 0 10px #ffffff; animation: pulse-error 1s infinite; }
+        .status-indicator.proxy { background-color: #ff6f91; box-shadow: 0 0 10px #ff6f91; }
+        @keyframes pulse {
+            0% { opacity: 1; transform: translateY(-50%) scale(1); }
+            50% { opacity: 0.7; transform: translateY(-50%) scale(1.1); }
+            100% { opacity: 1; transform: translateY(-50%) scale(1); }
+        }
+        @keyframes pulse-error {
+            0% { opacity: 1; transform: translateY(-50%) scale(1); }
+            50% { opacity: 0.5; transform: translateY(-50%) scale(0.9); }
+            100% { opacity: 1; transform: translateY(-50%) scale(1); }
+        }
+        /* 不同状态的背景色 */
+        .status-demo.direct { background: rgba(233, 236, 239, 0.9); color: #495057; }
+        .status-demo.success { background: rgba(212, 237, 218, 0.9); color: #155724; }
+        .status-demo.error { background: rgba(248, 215, 218, 0.9); color: #721c24; }
+        
+        .control-panel {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-direct { background: #28a745; color: white; }
+        .btn-proxy { background: #ff6f91; color: white; }
+        .btn-error { background: #dc3545; color: white; }
+        .btn-connected { background: #ff0000; color: white; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🌸 状态指示灯测试 🌸</h1>
+        <p>这个页面演示了代理状态指示灯的不同状态：</p>
+        
+        <div class="status-demo direct">
+            <span class="status-indicator direct"></span>
+            <strong>直连状态</strong> - 绿色指示灯，表示直接连接目标服务器
+        </div>
+        
+        <div class="status-demo success">
+            <span class="status-indicator connected"></span>
+            <strong>代理连接</strong> - 红色指示灯，表示通过代理服务器连接
+        </div>
+        
+        <div class="status-demo error">
+            <span class="status-indicator error"></span>
+            <strong>连接异常</strong> - 白色指示灯，表示连接出现问题
+        </div>
+        
+        <div class="status-demo success">
+            <span class="status-indicator proxy"></span>
+            <strong>动态代理</strong> - 粉色指示灯，表示动态代理模式
+        </div>
+
+        <div class="control-panel">
+            <h3>控制面板</h3>
+            <p>点击按钮查看不同状态的效果：</p>
+            <button class="btn-direct" onclick="simulateStatus('direct')">模拟直连</button>
+            <button class="btn-connected" onclick="simulateStatus('connected')">模拟代理</button>
+            <button class="btn-error" onclick="simulateStatus('error')">模拟异常</button>
+            <button class="btn-proxy" onclick="simulateStatus('proxy')">模拟动态</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+            <h4>💡 使用说明</h4>
+            <ul>
+                <li><strong>🔴 红色指示灯</strong>：表示通过代理服务器连接（强制代理或动态代理成功）</li>
+                <li><strong>🟢 绿色指示灯</strong>：表示直接连接目标服务器（直连模式）</li>
+                <li><strong>⚪ 白色指示灯</strong>：表示连接出现问题或异常情况</li>
+                <li><strong>🌸 粉色指示灯</strong>：表示动态代理模式</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function simulateStatus(type) {
+            const demos = document.querySelectorAll('.status-demo');
+            demos.forEach(demo => {
+                demo.style.display = 'none';
+            });
+            
+            // 显示对应的状态
+            let targetDemo;
+            switch(type) {
+                case 'direct':
+                    targetDemo = document.querySelector('.status-demo.direct');
+                    break;
+                case 'connected':
+                    targetDemo = document.querySelector('.status-demo.success');
+                    break;
+                case 'error':
+                    targetDemo = document.querySelector('.status-demo.error');
+                    break;
+                case 'proxy':
+                    targetDemo = document.querySelectorAll('.status-demo.success')[1]; // 第二个success元素
+                    break;
+            }
+            
+            if (targetDemo) {
+                targetDemo.style.display = 'block';
+                targetDemo.style.animation = 'none';
+                setTimeout(() => {
+                    targetDemo.style.animation = '';
+                }, 10);
+            }
+        }
+        
+        // 初始显示所有状态
+        window.onload = function() {
+            const demos = document.querySelectorAll('.status-demo');
+            demos.forEach(demo => {
+                demo.style.display = 'block';
+            });
+        };
+    </script>
+</body>
+</html>
