@@ -2489,11 +2489,14 @@ rules:
   - MATCH,🚀节点选择
 `;
 
-  // 如果启用了Base64加密，则对整个配置文本进行Base64编码
-  if (b64Enabled) {
-    return btoa(unescape(encodeURIComponent(配置文本)));
-  }
-  return 配置文本;
+// 2492-2498行替换为以下代码
+if (b64Enabled) {
+    // 只加密配置内容，不加密base64标记
+    const encodedConfig = btoa(unescape(encodeURIComponent(配置文本)));
+    // 在加密内容前添加未加密的 base64 标记
+    return `proxies: #!base64 ${encodedConfig}`;
+}
+return 配置文本;
 }
 
 async function 生成通用(env, hostName) {
