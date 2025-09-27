@@ -578,7 +578,7 @@ async function 获取或初始化UUID(env) {
 async function 获取壁纸地址(env) {
   const 白天壁纸 = await env.KV数据库.get('custom_light_bg');
   const 暗黑壁纸 = await env.KV数据库.get('custom_dark_bg');
-  
+
   return {
     白天: 白天壁纸 || 默认白天背景图,
     暗黑: 暗黑壁纸 || 默认暗黑背景图
@@ -842,26 +842,26 @@ export default {
           try {
             for (const ipFile of ipFiles) {
               if (!ipFile || !ipFile.text) throw new Error(`文件 ${ipFile.name} 无效`);
-              
+
               // 验证文件格式
               if (!ipFile.name.toLowerCase().endsWith('.txt')) {
                 throw new Error(`文件 ${ipFile.name} 不是txt格式，仅允许上传txt格式文件`);
               }
-              
+
               // 验证文件大小（限制为1MB）
               if (ipFile.size > 1024 * 1024) {
                 throw new Error(`文件 ${ipFile.name} 超过大小限制（1MB）`);
               }
-              
+
               const ipText = await ipFile.text();
-              
+
               // 验证文件内容格式
               const lines = ipText.split('\n').map(line => line.trim()).filter(Boolean);
               if (lines.length === 0) {
                 console.warn(`文件 ${ipFile.name} 内容为空`);
                 continue;
               }
-              
+
               // 验证每行是否符合节点格式：[地址]:端口#节点名称@tls 或 [地址]:端口#节点名称@notls
               const validLines = [];
               for (const line of lines) {
@@ -878,12 +878,12 @@ export default {
                   console.warn(`文件 ${ipFile.name} 中的行格式不正确，将被忽略: ${line}`);
                   continue;
                 }
-                
+
                 const address = match[1];
                 const port = match[2];
                 const nodeName = match[3] || 节点名称; // 使用全局变量节点名称作为默认值
                 const protocol = match[4] || 'tls'; // 默认使用tls
-                
+
                 // 如果有端口，验证端口范围
                 if (port) {
                   const portNum = parseInt(port);
@@ -892,7 +892,7 @@ export default {
                     continue;
                   }
                 }
-                
+
                 // 验证IP地址格式（如果是IPv4）
                 const ipv4Pattern = /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/;
                 if (ipv4Pattern.test(address)) {
@@ -910,17 +910,17 @@ export default {
                     continue;
                   }
                 }
-                
+
                 // 标准化节点格式
                 const standardPort = port || '443'; // 默认端口443
                 const standardizedLine = `${address}:${standardPort}#${nodeName}@${protocol}`;
                 validLines.push(standardizedLine);
               }
-              
+
               if (validLines.length === 0) {
                 throw new Error(`文件 ${ipFile.name} 中没有符合格式要求的节点`);
               }
-              
+
               console.log(`文件 ${ipFile.name} 验证通过，有效节点数: ${validLines.length}`);
               allIpList = allIpList.concat(validLines);
             }
@@ -1031,7 +1031,7 @@ export default {
           const SOCKS5账号 = env.SOCKS5 || '';
           let status = '直连';
           let 连接地址 = '';
-          
+
           if (代理启用) {
             if (强制代理) {
               if (代理类型 === 'reverse' && 当前反代地址) {
@@ -2489,11 +2489,17 @@ rules:
   - MATCH,🚀节点选择
 `;
 
-  // 如果启用了Base64加密，则对整个配置文本进行Base64编码
-  if (b64Enabled) {
-    return btoa(unescape(encodeURIComponent(配置文本)));
-  }
-  return 配置文本;
+// 新代码
+if (b64Enabled) {
+  // 对 YAML 格式的配置文件进行特殊处理
+  // 1. 首先将配置文本转换为 UTF-8 字节
+  // 2. 然后进行 Base64 编码，但保持 YAML 格式
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(配置文本);
+  const base64 = btoa(String.fromCharCode(...bytes));
+  return base64;
+}
+return 配置文本;
 }
 
 async function 生成通用(env, hostName) {
@@ -2521,7 +2527,7 @@ async function 生成通用(env, hostName) {
 
   const 配置文本 = `# Generated at: ${new Date().toISOString()}
 ${配置列表.length ? 配置列表.join("\n") : (atob('dmxlc3M=') + '://' + uuid + '@' + hostName + ':443?encryption=none&security=tls&type=ws&host=' + hostName + '&path=' + encodeURIComponent('/?ed=2560') + '&sni=' + hostName + '#默认节点')}`;
-  
+
   // 如果启用了Base64加密，则对整个配置文本进行Base64编码
   if (b64Enabled) {
     return btoa(unescape(encodeURIComponent(配置文本)));
