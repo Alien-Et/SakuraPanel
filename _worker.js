@@ -9,8 +9,10 @@ let 节点名称 = '🌸樱花';
 let 伪装域名 = 'lkssite.vip';
 let 最大失败次数 = 5;
 let 锁定时间 = 5 * 60 * 1000;
-let 白天背景图 = 'https://i.meee.com.tw/el91luR.png';
-let 暗黑背景图 = 'https://i.meee.com.tw/QPWx8nX.png';
+
+// 默认壁纸地址
+const 默认白天背景图 = 'https://i.meee.com.tw/el91luR.png';
+const 默认暗黑背景图 = 'https://i.meee.com.tw/QPWx8nX.png';
 
 // ====================== 辅助函数 ======================
 function 创建HTML响应(内容, 状态码 = 200) {
@@ -398,7 +400,12 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
 
     function updateBackground() {
       const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      bgImage.src = isDarkMode ? darkBg : lightBg;
+      // 使用自定义壁纸或默认壁纸
+      const customLightBg = document.getElementById('lightWallpaperInput')?.value.trim();
+      const customDarkBg = document.getElementById('darkWallpaperInput')?.value.trim();
+      const currentLightBg = customLightBg || lightBg;
+      const currentDarkBg = customDarkBg || darkBg;
+      bgImage.src = isDarkMode ? currentDarkBg : currentLightBg;
       bgImage.onerror = () => { bgImage.style.display = 'none'; };
     }
     updateBackground();
@@ -541,6 +548,16 @@ async function 获取或初始化UUID(env) {
     await env.KV数据库.put('current_uuid', uuid);
   }
   return uuid;
+}
+
+async function 获取壁纸地址(env) {
+  const 白天壁纸 = await env.KV数据库.get('custom_light_bg');
+  const 暗黑壁纸 = await env.KV数据库.get('custom_dark_bg');
+  
+  return {
+    白天: 白天壁纸 || 默认白天背景图,
+    暗黑: 暗黑壁纸 || 默认暗黑背景图
+  };
 }
 
 async function 加载节点和配置(env, hostName) {
@@ -1018,6 +1035,39 @@ export default {
         case '/get-b64-status':
           const b64状态 = await env.KV数据库.get('b64Enabled') === 'true';
           return 创建JSON响应({ b64Enabled: b64状态 });
+
+        case '/set-wallpaper':
+          const wallpaperToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const 有效WallpaperToken = await env.KV数据库.get('current_token');
+          if (!wallpaperToken || wallpaperToken !== 有效WallpaperToken) {
+            return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+          }
+          formData = await 请求.formData();
+          const lightWallpaper = formData.get('lightWallpaper') || '';
+          const darkWallpaper = formData.get('darkWallpaper') || '';
+          await env.KV数据库.put('custom_light_bg', lightWallpaper);
+          await env.KV数据库.put('custom_dark_bg', darkWallpaper);
+          return 创建JSON响应({ success: true });
+
+        case '/get-wallpaper':
+          const getWallpaperToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const 有效GetWallpaperToken = await env.KV数据库.get('current_token');
+          if (!getWallpaperToken || getWallpaperToken !== 有效GetWallpaperToken) {
+            return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+          }
+          const customLightBg = await env.KV数据库.get('custom_light_bg') || '';
+          const customDarkBg = await env.KV数据库.get('custom_dark_bg') || '';
+          return 创建JSON响应({ lightWallpaper: customLightBg, darkWallpaper: customDarkBg });
+
+        case '/reset-wallpaper':
+          const resetWallpaperToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const 有效ResetWallpaperToken = await env.KV数据库.get('current_token');
+          if (!resetWallpaperToken || resetWallpaperToken !== 有效ResetWallpaperToken) {
+            return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+          }
+          await env.KV数据库.delete('custom_light_bg');
+          await env.KV数据库.delete('custom_dark_bg');
+          return 创建JSON响应({ success: true });
 
         case `/${配置路径}/generate-cat-config`:
           const catToken = 请求.headers.get('Cookie')?.split('=')[1];
@@ -1549,6 +1599,33 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       <div class="proxy-status" id="b64Status">当前订阅链接未加密</div>
     </div>
     <div class="card">
+      <h2 class="card-title">🎨 壁纸设置</h2>
+      <div class="wallpaper-settings">
+        <div class="wallpaper-input-group">
+          <label>白天壁纸地址：</label>
+          <input type="text" id="lightWallpaperInput" class="wallpaper-input" placeholder="留空使用默认壁纸">
+        </div>
+        <div class="wallpaper-input-group">
+          <label>暗黑壁纸地址：</label>
+          <input type="text" id="darkWallpaperInput" class="wallpaper-input" placeholder="留空使用默认壁纸">
+        </div>
+        <div class="wallpaper-preview" id="wallpaperPreview">
+          <div class="preview-item">
+            <span>白天预览：</span>
+            <img id="lightPreview" class="preview-img">
+          </div>
+          <div class="preview-item">
+            <span>暗黑预览：</span>
+            <img id="darkPreview" class="preview-img">
+          </div>
+        </div>
+        <div class="button-group">
+          <button class="cute-button" onclick="保存壁纸设置()">保存设置</button>
+          <button class="cute-button" onclick="恢复默认壁纸()">恢复默认</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
       <h2 class="upload-title">🌏 优选IP网络路径</h2>
       <div>
         <input type="text" id="nodeUrlInput" class="url-input" placeholder="输入节点文件 URL（如 https://example.com/ips.txt）">
@@ -1603,9 +1680,29 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     const darkBg = '${暗黑背景图}';
     const bgImage = document.getElementById('backgroundImage');
 
-    function updateBackground() {
+    async function 获取壁纸地址() {
+      try {
+        const response = await fetch('/get-wallpaper');
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            light: data.lightWallpaper || '${白天背景图}',
+            dark: data.darkWallpaper || '${暗黑背景图}'
+          };
+        }
+      } catch (error) {
+        console.error('获取壁纸地址失败:', error);
+      }
+      return {
+        light: '${白天背景图}',
+        dark: '${暗黑背景图}'
+      };
+    }
+
+    async function updateBackground() {
       const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      bgImage.src = isDarkMode ? darkBg : lightBg;
+      const wallpaper = await 获取壁纸地址();
+      bgImage.src = isDarkMode ? wallpaper.dark : wallpaper.light;
       bgImage.onerror = () => { bgImage.style.display = 'none'; };
     }
     updateBackground();
@@ -1948,7 +2045,120 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 
     document.addEventListener('DOMContentLoaded', () => {
       updateProxyUI();
+      初始化壁纸设置();
     });
+
+    // 保存壁纸设置函数
+    async function 保存壁纸设置() {
+      const lightWallpaper = document.getElementById('lightWallpaperInput').value.trim();
+      const darkWallpaper = document.getElementById('darkWallpaperInput').value.trim();
+      
+      try {
+        const formData = new FormData();
+        formData.append('lightWallpaper', lightWallpaper);
+        formData.append('darkWallpaper', darkWallpaper);
+        
+        const response = await fetch('/set-wallpaper', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          alert('壁纸设置保存成功！');
+          // 更新预览
+          updateWallpaperPreview();
+          // 更新背景图
+          updateBackground();
+        } else {
+          const errorData = await response.json();
+          alert('保存失败：' + (errorData.error || '未知错误'));
+        }
+      } catch (error) {
+        alert('保存失败：网络错误');
+        console.error('保存壁纸设置失败:', error);
+      }
+    }
+
+    // 恢复默认壁纸函数
+    async function 恢复默认壁纸() {
+      if (!confirm('确定要恢复默认壁纸吗？')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch('/reset-wallpaper', {
+          method: 'POST'
+        });
+        
+        if (response.ok) {
+          alert('默认壁纸已恢复！');
+          // 清空输入框
+          document.getElementById('lightWallpaperInput').value = '';
+          document.getElementById('darkWallpaperInput').value = '';
+          // 更新预览
+          updateWallpaperPreview();
+          // 更新背景图
+          updateBackground();
+        } else {
+          const errorData = await response.json();
+          alert('恢复失败：' + (errorData.error || '未知错误'));
+        }
+      } catch (error) {
+        alert('恢复失败：网络错误');
+        console.error('恢复默认壁纸失败:', error);
+      }
+    }
+
+    // 更新壁纸预览函数
+    function updateWallpaperPreview() {
+      const lightWallpaper = document.getElementById('lightWallpaperInput').value.trim();
+      const darkWallpaper = document.getElementById('darkWallpaperInput').value.trim();
+      const lightPreview = document.getElementById('lightPreview');
+      const darkPreview = document.getElementById('darkPreview');
+      
+      // 设置白天预览
+      if (lightWallpaper) {
+        lightPreview.src = lightWallpaper;
+        lightPreview.style.display = 'block';
+        lightPreview.onerror = function() {
+          this.style.display = 'none';
+          alert('白天壁纸地址无效或无法加载');
+        };
+      } else {
+        lightPreview.style.display = 'none';
+      }
+      
+      // 设置暗黑预览
+      if (darkWallpaper) {
+        darkPreview.src = darkWallpaper;
+        darkPreview.style.display = 'block';
+        darkPreview.onerror = function() {
+          this.style.display = 'none';
+          alert('暗黑壁纸地址无效或无法加载');
+        };
+      } else {
+        darkPreview.style.display = 'none';
+      }
+    }
+
+    // 页面加载时初始化壁纸设置
+    async function 初始化壁纸设置() {
+      try {
+        const response = await fetch('/get-wallpaper');
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('lightWallpaperInput').value = data.lightWallpaper || '';
+          document.getElementById('darkWallpaperInput').value = data.darkWallpaper || '';
+          updateWallpaperPreview();
+        }
+      } catch (error) {
+        console.error('初始化壁纸设置失败:', error);
+      }
+    }
+
+    // 输入框变化时实时更新预览
+    document.getElementById('lightWallpaperInput').addEventListener('input', updateWallpaperPreview);
+    document.getElementById('darkWallpaperInput').addEventListener('input', updateWallpaperPreview);
   </script>
 </body>
 </html>
