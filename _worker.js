@@ -408,14 +408,29 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
     const darkBg = '${默认暗黑背景图}';
     const bgImage = document.getElementById('backgroundImage');
 
-    function updateBackground() {
+    async function 获取壁纸地址() {
+      try {
+        const response = await fetch('/get-wallpaper-public');
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            light: data.lightWallpaper || '${默认白天背景图}',
+            dark: data.darkWallpaper || '${默认暗黑背景图}'
+          };
+        }
+      } catch (error) {
+        console.error('获取壁纸地址失败:', error);
+      }
+      return {
+        light: '${默认白天背景图}',
+        dark: '${默认暗黑背景图}'
+      };
+    }
+
+    async function updateBackground() {
       const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      // 使用自定义壁纸或默认壁纸
-      const customLightBg = document.getElementById('lightWallpaperInput')?.value.trim();
-      const customDarkBg = document.getElementById('darkWallpaperInput')?.value.trim();
-      const currentLightBg = customLightBg || lightBg;
-      const currentDarkBg = customDarkBg || darkBg;
-      bgImage.src = isDarkMode ? currentDarkBg : currentLightBg;
+      const wallpaper = await 获取壁纸地址();
+      bgImage.src = isDarkMode ? wallpaper.dark : wallpaper.light;
       bgImage.onerror = () => { bgImage.style.display = 'none'; };
     }
     updateBackground();
@@ -1068,6 +1083,12 @@ export default {
           const customLightBg = await env.KV数据库.get('custom_light_bg') || '';
           const customDarkBg = await env.KV数据库.get('custom_dark_bg') || '';
           return 创建JSON响应({ lightWallpaper: customLightBg, darkWallpaper: customDarkBg });
+
+        case '/get-wallpaper-public':
+          // 公共API，不需要认证，用于登录/注册界面
+          const publicLightBg = await env.KV数据库.get('custom_light_bg') || '';
+          const publicDarkBg = await env.KV数据库.get('custom_dark_bg') || '';
+          return 创建JSON响应({ lightWallpaper: publicLightBg, darkWallpaper: publicDarkBg });
 
         case '/reset-wallpaper':
           const resetWallpaperToken = 请求.headers.get('Cookie')?.split('=')[1];
@@ -2321,9 +2342,29 @@ function 生成KV未绑定提示页面() {
     const darkBg = '${默认暗黑背景图}';
     const bgImage = document.getElementById('backgroundImage');
 
-    function updateBackground() {
+    async function 获取壁纸地址() {
+      try {
+        const response = await fetch('/get-wallpaper-public');
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            light: data.lightWallpaper || '${默认白天背景图}',
+            dark: data.darkWallpaper || '${默认暗黑背景图}'
+          };
+        }
+      } catch (error) {
+        console.error('获取壁纸地址失败:', error);
+      }
+      return {
+        light: '${默认白天背景图}',
+        dark: '${默认暗黑背景图}'
+      };
+    }
+
+    async function updateBackground() {
       const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      bgImage.src = isDarkMode ? darkBg : lightBg;
+      const wallpaper = await 获取壁纸地址();
+      bgImage.src = isDarkMode ? wallpaper.dark : wallpaper.light;
       bgImage.onerror = () => { bgImage.style.display = 'none'; };
     }
     updateBackground();
