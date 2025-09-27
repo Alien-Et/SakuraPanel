@@ -269,7 +269,7 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
       width: 100%;
       box-sizing: border-box;
       transition: all 0.3s ease;
-      background-color: rgba(255, 255, 255, 0.7);
+      background-color: rgba(255, 240, 245, 0.9);
     }
     
     .auth-form input:focus {
@@ -1377,7 +1377,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       .link-box a, .uuid-box span { color: #ff85a2; }
       .link-box a:hover { color: #ff1493; }
 .file-item, .url-item { background: rgba(50, 50, 50, 0.9); color: #ffd1dc; }
-.file-requirements { background: rgba(40, 40, 40, 0.9); border: 2px dashed #ff85a2; color: #ffd1dc; }
+.file-requirements { background: rgba(255, 240, 245, 0.9); border: 2px dashed #ffb6c1; color: #d63384; }
 .file-requirements h3 { color: #ff85a2; }
 .file-requirements .example { background: rgba(0, 0, 0, 0.3); }
 /* 统一按钮样式 - 暗黑模式 */
@@ -1397,7 +1397,19 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       /* 确保按钮文字与背景有足够反差 */
       .upload-btn, .add-url-btn { background: linear-gradient(to right, #ff85a2, #ff1493); }
       .upload-label { background: linear-gradient(to right, #ff85a2, #ff1493); }
-      .force-proxy-note { background: rgba(40, 40, 40, 0.9) !important; border: 2px dashed #ff85a2 !important; color: #ffd1dc !important; }
+      
+      /* 暗黑模式下统一输入框和状态框底色 */
+      .url-input, .wallpaper-input, .auth-form input {
+        background-color: rgba(50, 40, 45, 0.9) !important;
+        border-color: #ff85a2 !important;
+        color: #ffd1dc !important;
+      }
+      
+      .proxy-status.success, .proxy-status.direct, .uuid-box, .force-proxy-note, .file-requirements {
+        background: rgba(50, 40, 45, 0.9) !important;
+        border: 2px dashed #ff85a2 !important;
+        color: #ffd1dc !important;
+      }
       
       /* 统一按钮样式 - 暗黑模式 */
       .cute-button {
@@ -1516,8 +1528,8 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .proxy-option::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: rgba(255, 255, 255, 0.2); transform: rotate(30deg); transition: all 0.5s ease; pointer-events: none; }
     .proxy-option:hover::before { top: 100%; left: 100%; }
     .proxy-status, .uuid-box, .force-proxy-note { margin-top: 20px; padding: 12px 15px; border-radius: 15px; font-size: 0.9em; word-break: break-all; transition: background 0.3s ease, color 0.3s ease; width: 100%; box-sizing: border-box; line-height: 1.4; }
-    .proxy-status.success { background: rgba(212, 237, 218, 0.9); color: #155724; }
-    .proxy-status.direct { background: rgba(233, 236, 239, 0.9); color: #495057; }
+    .proxy-status.success { background: rgba(255, 240, 245, 0.9); color: #155724; }
+    .proxy-status.direct { background: rgba(255, 240, 245, 0.9); color: #495057; }
     .force-proxy-note { font-size: 0.9em; color: #ff85a2; border: 2px dashed #ffb6c1; }
 .file-requirements { margin-top: 20px; padding: 15px; border-radius: 15px; background: rgba(255, 240, 245, 0.9); border: 2px dashed #ffb6c1; font-size: 0.9em; color: #d63384; transition: background 0.3s ease, color 0.3s ease; }
 .file-requirements h3 { margin-top: 0; margin-bottom: 10px; color: #ff1493; font-size: 1.1em; }
@@ -1570,7 +1582,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       box-sizing: border-box;
       margin-bottom: 10px;
       transition: all 0.3s ease;
-      background-color: rgba(255, 255, 255, 0.7);
+      background-color: rgba(255, 240, 245, 0.9);
     }
     
     .url-input:focus {
@@ -1607,7 +1619,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       font-size: 1em;
       box-sizing: border-box;
       transition: all 0.3s ease;
-      background-color: rgba(255, 255, 255, 0.7);
+      background-color: rgba(255, 240, 245, 0.9);
     }
     
     .wallpaper-input:focus {
