@@ -127,8 +127,8 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
     
     @media (prefers-color-scheme: light) {
       body { background: linear-gradient(135deg, #ffe6f0, #fff0f5); }
-      .auth-container { background: rgba(255, 245, 247, 0.9); box-shadow: 0 8px 20px rgba(255, 182, 193, 0.3); }
-      .floating-petals { background: rgba(255, 255, 255, 0.7); }
+      .auth-container { background: rgba(255, 245, 247, 0.85); box-shadow: 0 8px 20px rgba(255, 182, 193, 0.2); }
+      .floating-petals { background: rgba(255, 255, 255, 0.3); }
     }
     
     @media (prefers-color-scheme: dark) {
@@ -211,7 +211,7 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
       text-align: center;
       position: relative;
       z-index: 1;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(8px);
       animation: fadeIn 0.8s ease-out;
     }
     
@@ -1520,12 +1520,63 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .progress-text { text-align: center; font-size: 0.85em; color: #ff6f91; margin-top: 5px; }
     .url-input {
       width: 100%;
-      padding: 10px;
-      border-radius: 15px;
+      padding: 12px 15px;
+      border-radius: 20px;
       border: 2px solid #ffb6c1;
       font-size: 1em;
       box-sizing: border-box;
       margin-bottom: 10px;
+      transition: all 0.3s ease;
+      background-color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .url-input:focus {
+      border-color: #ff69b4;
+      box-shadow: 0 0 10px rgba(255, 105, 180, 0.3);
+      outline: none;
+      transform: scale(1.02);
+    }
+    
+    /* 壁纸设置样式 */
+    .wallpaper-settings {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .wallpaper-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .wallpaper-input-group label {
+      font-size: 0.9em;
+      color: #ff6f91;
+      font-weight: 500;
+    }
+    
+    .wallpaper-input {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 20px;
+      border: 2px solid #ffb6c1;
+      font-size: 1em;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+      background-color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .wallpaper-input:focus {
+      border-color: #ff69b4;
+      box-shadow: 0 0 10px rgba(255, 105, 180, 0.3);
+      outline: none;
+      transform: scale(1.02);
+    }
+    
+    .wallpaper-input::placeholder {
+      color: #ffb6c1;
+      font-size: 0.9em;
     }
     @media (max-width: 600px) {
       .card { padding: 15px; max-width: 90%; }
@@ -1608,16 +1659,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         <div class="wallpaper-input-group">
           <label>暗黑壁纸地址：</label>
           <input type="text" id="darkWallpaperInput" class="wallpaper-input" placeholder="留空使用默认壁纸">
-        </div>
-        <div class="wallpaper-preview" id="wallpaperPreview">
-          <div class="preview-item">
-            <span>白天预览：</span>
-            <img id="lightPreview" class="preview-img">
-          </div>
-          <div class="preview-item">
-            <span>暗黑预览：</span>
-            <img id="darkPreview" class="preview-img">
-          </div>
         </div>
         <div class="button-group">
           <button class="cute-button" onclick="保存壁纸设置()">保存设置</button>
@@ -2109,36 +2150,9 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       }
     }
 
-    // 更新壁纸预览函数
+    // 更新壁纸预览函数（已移除预览功能）
     function updateWallpaperPreview() {
-      const lightWallpaper = document.getElementById('lightWallpaperInput').value.trim();
-      const darkWallpaper = document.getElementById('darkWallpaperInput').value.trim();
-      const lightPreview = document.getElementById('lightPreview');
-      const darkPreview = document.getElementById('darkPreview');
-      
-      // 设置白天预览
-      if (lightWallpaper) {
-        lightPreview.src = lightWallpaper;
-        lightPreview.style.display = 'block';
-        lightPreview.onerror = function() {
-          this.style.display = 'none';
-          alert('白天壁纸地址无效或无法加载');
-        };
-      } else {
-        lightPreview.style.display = 'none';
-      }
-      
-      // 设置暗黑预览
-      if (darkWallpaper) {
-        darkPreview.src = darkWallpaper;
-        darkPreview.style.display = 'block';
-        darkPreview.onerror = function() {
-          this.style.display = 'none';
-          alert('暗黑壁纸地址无效或无法加载');
-        };
-      } else {
-        darkPreview.style.display = 'none';
-      }
+      // 预览功能已移除，此函数保留用于兼容性
     }
 
     // 页面加载时初始化壁纸设置
@@ -2156,9 +2170,9 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       }
     }
 
-    // 输入框变化时实时更新预览
-    document.getElementById('lightWallpaperInput').addEventListener('input', updateWallpaperPreview);
-    document.getElementById('darkWallpaperInput').addEventListener('input', updateWallpaperPreview);
+    // 输入框变化时实时更新预览（已移除预览功能）
+    // document.getElementById('lightWallpaperInput').addEventListener('input', updateWallpaperPreview);
+    // document.getElementById('darkWallpaperInput').addEventListener('input', updateWallpaperPreview);
   </script>
 </body>
 </html>
