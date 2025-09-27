@@ -2489,12 +2489,9 @@ rules:
   - MATCH,🚀节点选择
 `;
 
-// 如果启用了Base64加密
 if (b64Enabled) {
-    // 1. 先对配置文本进行 Base64 加密
-    const encodedConfig = btoa(unescape(encodeURIComponent(配置文本)));
-    // 2. 添加未加密的 base64 标记
-    return `#!base64 ${encodedConfig}`;
+  const b64config = btoa(unescape(encodeURIComponent(配置文本)));
+  return '#!MANAGED-CONFIG ' + b64config + '\n';
 }
 return 配置文本;
 }
