@@ -2490,10 +2490,8 @@ rules:
 `;
 
 if (b64Enabled) {
-  // 先将配置文本转换为 UTF-8 编码的 Base64
-  const b64config = btoa(unescape(encodeURIComponent(配置文本)));
-  // 添加 Clash 所需的 Base64 解密标记
-  return `proxies: # ${b64config}`;
+    // 添加 base64 标记，确保 Clash 能正确识别和解密
+    return '#!base64 ' + btoa(unescape(encodeURIComponent(配置文本)));
 }
 return 配置文本;
 }
