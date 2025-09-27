@@ -988,16 +988,26 @@ export default {
           const 反代地址 = env.PROXYIP || 'ts.hpc.tw';
           const SOCKS5账号 = env.SOCKS5 || '';
           let status = '直连';
+          let 连接地址 = '';
+          
           if (代理启用) {
             if (强制代理) {
-              status = 代理类型 === 'reverse' && 反代地址 ? '强制反代' : '强制SOCKS5';
+              if (代理类型 === 'reverse' && 反代地址) {
+                status = '强制反代';
+                连接地址 = 反代地址;
+              } else if (代理类型 === 'socks5' && SOCKS5账号) {
+                status = '强制SOCKS5';
+                连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
+              }
             } else if (代理类型 === 'reverse' && 反代地址) {
               status = '动态反代';
+              连接地址 = 反代地址;
             } else if (代理类型 === 'socks5' && SOCKS5账号) {
               status = '动态SOCKS5';
+              连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
             }
           }
-          return 创建JSON响应({ status });
+          return 创建JSON响应({ status, 连接地址 });
 
         case '/set-b64-state':
           formData = await 请求.formData();
@@ -1163,7 +1173,7 @@ async function 智能连接(地址, 端口, 地址类型, env) {
           }
         } else if (代理类型 === 'socks5' && SOCKS5账号) {
           try {
-            const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口);
+            const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口, SOCKS5账号);
             console.log(`动态通过 SOCKS5 连接: ${地址}:${端口}`);
             return SOCKS5连接;
           } catch (错误) {
@@ -1218,8 +1228,9 @@ async function 建立管道(服务端, TCP接口, 初始数据) {
   }));
 }
 
-async function 创建SOCKS5(地址类型, 地址, 端口) {
-  const { username, password, hostname, port } = await 解析SOCKS5账号(SOCKS5账号);
+async function 创建SOCKS5(地址类型, 地址, 端口, socks5账号 = null) {
+  const 使用的SOCKS5账号 = socks5账号 || SOCKS5账号;
+  const { username, password, hostname, port } = await 解析SOCKS5账号(使用的SOCKS5账号);
   const SOCKS5接口 = connect({ hostname, port });
   try {
     await SOCKS5接口.opened;
@@ -1312,11 +1323,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 .upload-btn, .add-url-btn { background: linear-gradient(to right, #ff85a2, #ff1493); }
 .upload-label { background: linear-gradient(to right, #ff85a2, #ff1493); }
 .force-proxy-note { background: rgba(40, 40, 40, 0.9) !important; border: 2px dashed #ff85a2 !important; color: #ffd1dc !important; }
-      /* 暗色模式状态指示灯 */
-      .status-indicator.connected { background-color: #ff3333; box-shadow: 0 0 10px #ff3333; }
-      .status-indicator.direct { background-color: #4caf50; box-shadow: 0 0 10px #4caf50; }
-      .status-indicator.error { background-color: #ffffff; box-shadow: 0 0 10px #ffffff; }
-      .status-indicator.proxy { background-color: #ff85a2; box-shadow: 0 0 10px #ff85a2; }
     }
     .background-media {
       position: fixed;
@@ -1416,35 +1422,9 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .proxy-option[data-type="socks5"].active { background: linear-gradient(to right, #ffd1dc, #ff85a2); }
     .proxy-option::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: rgba(255, 255, 255, 0.2); transform: rotate(30deg); transition: all 0.5s ease; pointer-events: none; }
     .proxy-option:hover::before { top: 100%; left: 100%; }
-    .proxy-status, .uuid-box, .force-proxy-note { margin-top: 20px; padding: 8px 15px; border-radius: 15px; font-size: 0.95em; word-break: break-all; transition: background 0.3s ease, color 0.3s ease; width: 100%; box-sizing: border-box; position: relative; padding-left: 35px; }
+    .proxy-status, .uuid-box, .force-proxy-note { margin-top: 20px; padding: 12px 15px; border-radius: 15px; font-size: 0.9em; word-break: break-all; transition: background 0.3s ease, color 0.3s ease; width: 100%; box-sizing: border-box; line-height: 1.4; }
     .proxy-status.success { background: rgba(212, 237, 218, 0.9); color: #155724; }
     .proxy-status.direct { background: rgba(233, 236, 239, 0.9); color: #495057; }
-    .proxy-status.error { background: rgba(248, 215, 218, 0.9); color: #721c24; }
-    /* 状态指示灯 */
-    .status-indicator {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-    .status-indicator.connected { background-color: #ff0000; box-shadow: 0 0 10px #ff0000; }
-    .status-indicator.direct { background-color: #28a745; box-shadow: 0 0 10px #28a745; }
-    .status-indicator.error { background-color: #ffffff; box-shadow: 0 0 10px #ffffff; animation: pulse-error 1s infinite; }
-    .status-indicator.proxy { background-color: #ff6f91; box-shadow: 0 0 10px #ff6f91; }
-    @keyframes pulse {
-      0% { opacity: 1; transform: translateY(-50%) scale(1); }
-      50% { opacity: 0.7; transform: translateY(-50%) scale(1.1); }
-      100% { opacity: 1; transform: translateY(-50%) scale(1); }
-    }
-    @keyframes pulse-error {
-      0% { opacity: 1; transform: translateY(-50%) scale(1); }
-      50% { opacity: 0.5; transform: translateY(-50%) scale(0.9); }
-      100% { opacity: 1; transform: translateY(-50%) scale(1); }
-    }
     .force-proxy-note { font-size: 0.9em; color: #ff85a2; border: 2px dashed #ffb6c1; }
 .file-requirements { margin-top: 20px; padding: 15px; border-radius: 15px; background: rgba(255, 240, 245, 0.9); border: 2px dashed #ffb6c1; font-size: 0.9em; color: #d63384; transition: background 0.3s ease, color 0.3s ease; }
 .file-requirements h3 { margin-top: 0; margin-bottom: 10px; color: #ff1493; font-size: 1.1em; }
@@ -1503,8 +1483,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       .switch-container { gap: 10px; }
       .toggle-row { gap: 10px; }
       .proxy-option { width: 70px; padding: 8px 0; font-size: 0.9em; }
-      .proxy-status, .uuid-box, .force-proxy-note { font-size: 0.9em; padding: 8px 15px; padding-left: 30px; }
-      .status-indicator { width: 10px; height: 10px; left: 10px; }
+      .proxy-status, .uuid-box, .force-proxy-note { font-size: 0.85em; padding: 10px 12px; }
       .link-box { font-size: 0.9em; padding: 12px; }
       .cute-button, .upload-label { padding: 10px 20px; font-size: 0.9em; }
       .card::after { font-size: 50px; top: -15px; right: -15px; }
@@ -1551,10 +1530,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
           <div class="proxy-option" data-type="socks5" onclick="switchProxyType('socks5')">SOCKS5</div>
         </div>
       </div>
-      <div class="proxy-status" id="proxyStatus">
-          <span class="status-indicator direct" id="proxyIndicator"></span>
-          直连
-        </div>
+      <div class="proxy-status" id="proxyStatus">直连</div>
       <div class="force-proxy-note" id="forceProxyNote" style="display: none;">
         <span id="forceProxyText"></span>
       </div>
@@ -1758,34 +1734,23 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 
     function updateProxyStatus() {
       const statusElement = document.getElementById('proxyStatus');
-      const indicatorElement = document.getElementById('proxyIndicator');
-      
       if (!proxyEnabled) {
         statusElement.textContent = '直连';
         statusElement.className = 'proxy-status direct';
-        indicatorElement.className = 'status-indicator direct';
       } else {
         fetch('/get-proxy-status')
           .then(response => response.json())
           .then(data => {
-            statusElement.textContent = data.status;
-            
-            // 根据状态更新指示灯颜色
-            if (data.status === '直连') {
-              statusElement.className = 'proxy-status direct';
-              indicatorElement.className = 'status-indicator direct';
-            } else if (data.status.includes('强制') || data.status.includes('动态')) {
-              statusElement.className = 'proxy-status success';
-              indicatorElement.className = 'status-indicator connected';
-            } else {
-              statusElement.className = 'proxy-status success';
-              indicatorElement.className = 'status-indicator proxy';
+            let statusText = data.status;
+            if (data.连接地址) {
+              statusText += '：' + data.连接地址;
             }
+            statusElement.textContent = statusText;
+            statusElement.className = 'proxy-status ' + (data.status === '直连' ? 'direct' : 'success');
           })
           .catch(() => {
-            statusElement.textContent = '连接异常';
-            statusElement.className = 'proxy-status error';
-            indicatorElement.className = 'status-indicator error';
+            statusElement.textContent = '直连';
+            statusElement.className = 'proxy-status direct';
           });
       }
     }
