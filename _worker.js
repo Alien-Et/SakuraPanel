@@ -135,6 +135,15 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
       body { background: linear-gradient(135deg, #1e1e2f, #2a2a3b); }
       .auth-container { background: rgba(30, 30, 30, 0.9); color: #ffd1dc; box-shadow: 0 8px 20px rgba(255, 133, 162, 0.2); }
       .floating-petals { background: rgba(255, 255, 255, 0.1); }
+      h1 { color: #ff85a2; }
+      .auth-form button {
+        background: linear-gradient(to right, #ff85a2, #ff1493);
+        color: #ffffff;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      }
+      .auth-form button:hover {
+        box-shadow: 0 8px 20px rgba(255, 133, 162, 0.6);
+      }
     }
     
     .background-media {
@@ -272,7 +281,7 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
     
     .auth-form button {
       padding: 15px;
-      background: linear-gradient(to right, #ffb6c1, #ff69b4);
+      background: linear-gradient(to right, #ff69b4, #ff1493);
       color: white;
       border: none;
       border-radius: 30px;
@@ -282,6 +291,7 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
     }
     
     .auth-form button:before {
@@ -1370,9 +1380,24 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 .file-requirements { background: rgba(40, 40, 40, 0.9); border: 2px dashed #ff85a2; color: #ffd1dc; }
 .file-requirements h3 { color: #ff85a2; }
 .file-requirements .example { background: rgba(0, 0, 0, 0.3); }
-.upload-btn, .add-url-btn { background: linear-gradient(to right, #ff85a2, #ff1493); }
-.upload-label { background: linear-gradient(to right, #ff85a2, #ff1493); }
-.force-proxy-note { background: rgba(40, 40, 40, 0.9) !important; border: 2px dashed #ff85a2 !important; color: #ffd1dc !important; }
+/* 统一按钮样式 - 暗黑模式 */
+      .cute-button {
+        background: linear-gradient(to right, #ff85a2, #ff1493);
+        color: #ffffff;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      }
+      .cute-button:hover { box-shadow: 0 5px 15px rgba(255, 133, 162, 0.6); }
+      
+      /* 暗黑模式下统一所有按钮颜色 */
+      .config1-btn, .config2-btn, .logout-btn, .uuid-btn, .upload-btn, .add-url-btn, .upload-label {
+        background: linear-gradient(to right, #ff85a2, #ff1493);
+        color: #ffffff;
+      }
+      
+      /* 确保按钮文字与背景有足够反差 */
+      .upload-btn, .add-url-btn { background: linear-gradient(to right, #ff85a2, #ff1493); }
+      .upload-label { background: linear-gradient(to right, #ff85a2, #ff1493); }
+      .force-proxy-note { background: rgba(40, 40, 40, 0.9) !important; border: 2px dashed #ff85a2 !important; color: #ffd1dc !important; }
     }
     .background-media {
       position: fixed;
@@ -1485,6 +1510,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .link-box a { color: #ff69b4; text-decoration: none; transition: color 0.3s ease; }
     .link-box a:hover { color: #ff1493; }
     .button-group { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+    /* 统一按钮样式 - 白天模式 */
     .cute-button {
       padding: 12px 25px;
       border-radius: 20px;
@@ -1496,16 +1522,15 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       box-sizing: border-box;
       display: inline-block;
+      background: linear-gradient(to right, #ff69b4, #ff1493);
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
     }
     .cute-button:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4); }
     .cute-button:active { transform: scale(0.95); }
-    .config1-btn { background: linear-gradient(to right, #ffb6c1, #ff69b4); }
-    .config2-btn { background: linear-gradient(to right, #ffd1dc, #ff85a2); }
-    .logout-btn { background: linear-gradient(to right, #ff9999, #ff6666); }
-    .uuid-btn { background: linear-gradient(to right, #ffdead, #ff85a2); }
-    .upload-btn, .add-url-btn {
-      background: linear-gradient(to right, #ffdead, #ff85a2);
-      margin-top: 5px;
+    
+    /* 按钮颜色统一 - 移除不同按钮的特殊颜色 */
+    .config1-btn, .config2-btn, .logout-btn, .uuid-btn, .upload-btn, .add-url-btn {
+      background: linear-gradient(to right, #ff69b4, #ff1493);
     }
     .upload-title { font-size: 1.4em; color: #ff85a2; margin-bottom: 15px; }
     .upload-label { padding: 10px 20px; background: linear-gradient(to right, #ffb6c1, #ff69b4); color: white; border-radius: 20px; cursor: pointer; display: inline-block; transition: all 0.3s ease; margin-top: 10px; }
@@ -2205,6 +2230,8 @@ function 生成KV未绑定提示页面() {
     @media (prefers-color-scheme: dark) {
       body { background: linear-gradient(135deg, #1e1e2f, #2a2a3b); }
       .content { background: rgba(30, 30, 30, 0.9); color: #ffd1dc; box-shadow: 0 8px 20px rgba(255, 133, 162, 0.2); }
+      .highlight { color: #ff85a2; }
+      .instruction { color: #ff85a2; }
     }
     .background-media {
       position: fixed;
