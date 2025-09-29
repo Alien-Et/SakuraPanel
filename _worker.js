@@ -1023,47 +1023,55 @@ export default {
           await env.KV数据库.put('forceProxy', forceProxy);
           return new Response(null, { status: 200 });
 
-case '/get-proxy-status':
-  const 代理启用 = await env.KV数据库.get('proxyEnabled') === 'true';
-  const 代理类型 = await env.KV数据库.get('proxyType') || 'reverse';
-  const 强制代理 = await env.KV数据库.get('forceProxy') === 'true';
-  const 当前反代地址 = env.PROXYIP || 反代地址;
-  const SOCKS5账号 = env.SOCKS5 || '';
-  let status = '直连';
-  let 连接地址 = '';
-  let 出口IP = '未知';
+        case '/get-proxy-status': {
+          const 代理启用 = await env.KV数据库.get('proxyEnabled') === 'true';
+          const 代理类型 = await env.KV数据库.get('proxyType') || 'reverse';
+          const 强制代理 = await env.KV数据库.get('forceProxy') === 'true';
+          const 当前反代地址 = env.PROXYIP || 反代地址;
+          const SOCKS5账号 = env.SOCKS5 || '';
+          let status = '直连';
+          let 连接地址 = '';
+          let 出口IP = '未知';
 
-  if (代理启用) {
-    if (强制代理) {
-      if (代理类型 === 'reverse' && 当前反代地址) {
-        status = '强制反代';
-        连接地址 = 当前反代地址;
-      } else if (代理类型 === 'socks5' && SOCKS5账号) {
-        status = '强制SOCKS5';
-        连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
-      }
+          if (代理启用) {
+            if (强制代理) {
+              if (代理类型 === 'reverse' && 当前反代地址) {
+                status = '强制反代';
+                连接地址 = 当前反代地址;
+              } else if (代理类型 === 'socks5' && SOCKS5账号) {
+                status = '强制SOCKS5';
+                连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
+              }
 
-      // === 新增：检测代理出口 IP ===
-      try {
-        const ipCheck = await fetch('https://ipapi.co/json/');
-        if (ipCheck.ok) {
-          const data = await ipCheck.json();
-          出口IP = `${data.ip} (${data.country_name || '未知地区'})`;
+              // === 新增：检测代理出口 IP ===
+              try {
+                const ipCheck = await fetch('https://ipapi.co/json/');
+                if (ipCheck.ok) {
+                  const data = await ipCheck.json();
+                  出口IP = `${data.ip} (${data.country_name || '未知地区'})`;
+                }
+              } catch (e) {
+                出口IP = '检测失败';
+              }
+
+            } else if (代理类型 === 'reverse' && 当前反代地址) {
+              status = '动态反代';
+              连接地址 = 当前反代地址;
+            } else if (代理类型 === 'socks5' && SOCKS5账号) {
+              status = '动态SOCKS5';
+              连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
+            }
+          }
+
+          return 创建JSON响应({ status, 连接地址, 出口IP });
         }
-      } catch (e) {
-        出口IP = '检测失败';
-      }
 
-    } else if (代理类型 === 'reverse' && 当前反代地址) {
-      status = '动态反代';
-      连接地址 = 当前反代地址;
-    } else if (代理类型 === 'socks5' && SOCKS5账号) {
-      status = '动态SOCKS5';
-      连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
-    }
-  }
-
-  return 创建JSON响应({ status, 连接地址, 出口IP });
+        case '/get-proxy-settings': {
+          const proxyEnabled = await env.KV数据库.get('proxyEnabled') === 'true';
+          const proxyType = await env.KV数据库.get('proxyType') || 'reverse';
+          const forceProxy = await env.KV数据库.get('forceProxy') === 'true';
+          return 创建JSON响应({ proxyEnabled, proxyType, forceProxy });
+        }
 
         case '/set-b64-state':
           formData = await 请求.formData();
@@ -1818,7 +1826,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
           const data = await response.json();
           return {
             light: data.lightWallpaper || '${默认白天背景图}',
-      dark: data.darkWallpaper || '${默认暗黑背景图}'
+            dark: data.darkWallpaper || '${默认暗黑背景图}'
           };
         }
       } catch (error) {
@@ -1826,7 +1834,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       }
       return {
         light: '${默认白天背景图}',
-      dark: '${默认暗黑背景图}'
+        dark: '${默认暗黑背景图}'
       };
     }
 
@@ -1839,17 +1847,48 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     updateBackground();
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateBackground);
 
-    let proxyEnabled = localStorage.getItem('proxyEnabled') === 'true';
-    let proxyType = localStorage.getItem('proxyType') || 'reverse';
-    let forceProxy = localStorage.getItem('forceProxy') === 'true';
-    let b64Enabled = localStorage.getItem('b64Enabled') === 'true';
-    document.getElementById('proxyToggle').checked = proxyEnabled;
-    document.getElementById('forceProxyToggle').checked = forceProxy;
-    document.getElementById('b64Toggle').checked = b64Enabled;
-    updateProxyUI();
-    updateProxyStatus();
-    updateB64Status();
+    // 全局变量，用于存储从服务器获取的状态
+    let proxyEnabled = false;
+    let proxyType = 'reverse';
+    let forceProxy = false;
+    let b64Enabled = false; // b64状态也从服务器获取
 
+    // 页面加载时，从服务器初始化所有设置
+    async function initializeSettings() {
+      try {
+        // 获取代理设置
+        const proxyRes = await fetch('/get-proxy-settings');
+        if (proxyRes.ok) {
+          const proxyData = await proxyRes.json();
+          proxyEnabled = proxyData.proxyEnabled;
+          proxyType = proxyData.proxyType;
+          forceProxy = proxyData.forceProxy;
+        }
+
+        // 获取B64加密设置
+        const b64Res = await fetch('/get-b64-status');
+        if (b64Res.ok) {
+          const b64Data = await b64Res.json();
+          b64Enabled = b64Data.b64Enabled;
+        }
+      } catch (error) {
+        console.error('初始化设置失败:', error);
+        alert('从服务器同步设置失败，请刷新页面重试。');
+      } finally {
+        // 无论成功与否，都根据当前变量状态更新UI
+        document.getElementById('proxyToggle').checked = proxyEnabled;
+        document.getElementById('forceProxyToggle').checked = forceProxy;
+        document.getElementById('b64Toggle').checked = b64Enabled;
+
+        updateProxyUI();
+        updateProxyStatus();
+        updateB64Status();
+      }
+    }
+
+    // 确保DOM加载完毕后再执行初始化
+    document.addEventListener('DOMContentLoaded', initializeSettings);
+    
     function 加载节点路径() {
       fetch('/${配置路径}/get-node-paths')
         .then(response => response.json())
@@ -1917,7 +1956,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 
     function toggleProxy() {
       proxyEnabled = document.getElementById('proxyToggle').checked;
-      localStorage.setItem('proxyEnabled', proxyEnabled);
       updateProxyUI();
       saveProxyState();
       updateProxyStatus();
@@ -1925,7 +1963,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 
     function toggleForceProxy() {
       forceProxy = document.getElementById('forceProxyToggle').checked;
-      localStorage.setItem('forceProxy', forceProxy);
       saveProxyState();
       updateProxyStatus();
       updateProxyUI();
@@ -1933,7 +1970,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 
     function switchProxyType(type) {
       proxyType = type;
-      localStorage.setItem('proxyType', proxyType);
       updateProxyUI();
       saveProxyState();
       updateProxyStatus();
@@ -1985,7 +2021,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 
     function toggleB64() {
       b64Enabled = document.getElementById('b64Toggle').checked;
-      localStorage.setItem('b64Enabled', b64Enabled);
       saveB64State();
       updateB64Status();
       // 立即生成猫咪和通用配置并存入KV数据库
@@ -2175,7 +2210,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     adjustLayoutForUA();
 
     document.addEventListener('DOMContentLoaded', () => {
-      updateProxyUI();
+      // updateProxyUI() is called inside initializeSettings, so we can remove it from here
       初始化壁纸设置();
     });
 
