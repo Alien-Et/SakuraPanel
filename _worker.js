@@ -1010,7 +1010,7 @@ export default {
             return 创建JSON响应({ error: '未登录或Token无效' }, 401);
           }
           let nodePaths = await env.KV数据库.get('node_file_paths');
-          nodePaths = nodePaths ? JSON.parse(nodePaths) : ['https://v2.i-sweet.us.kg/ips.txt', 'https://v2.i-sweet.us.kg/url.txt'];
+          nodePaths = nodePaths ? JSON.parse(nodePaths) : ['https://raw.githubusercontent.com/Alien-Et/SakuraPanel/refs/heads/main/ips.txt', 'https://raw.githubusercontent.com/Alien-Et/SakuraPanel/refs/heads/main/url.txt'];
           return 创建JSON响应({ paths: nodePaths }, 200);
 
         case '/set-proxy-state':
