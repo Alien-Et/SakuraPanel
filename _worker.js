@@ -1023,33 +1023,47 @@ export default {
           await env.KV数据库.put('forceProxy', forceProxy);
           return new Response(null, { status: 200 });
 
-        case '/get-proxy-status':
-          const 代理启用 = await env.KV数据库.get('proxyEnabled') === 'true';
-          const 代理类型 = await env.KV数据库.get('proxyType') || 'reverse';
-          const 强制代理 = await env.KV数据库.get('forceProxy') === 'true';
-          const 当前反代地址 = env.PROXYIP || 反代地址;
-          const SOCKS5账号 = env.SOCKS5 || '';
-          let status = '直连';
-          let 连接地址 = '';
+case '/get-proxy-status':
+  const 代理启用 = await env.KV数据库.get('proxyEnabled') === 'true';
+  const 代理类型 = await env.KV数据库.get('proxyType') || 'reverse';
+  const 强制代理 = await env.KV数据库.get('forceProxy') === 'true';
+  const 当前反代地址 = env.PROXYIP || 反代地址;
+  const SOCKS5账号 = env.SOCKS5 || '';
+  let status = '直连';
+  let 连接地址 = '';
+  let 出口IP = '未知';
 
-          if (代理启用) {
-            if (强制代理) {
-              if (代理类型 === 'reverse' && 当前反代地址) {
-                status = '强制反代';
-                连接地址 = 当前反代地址;
-              } else if (代理类型 === 'socks5' && SOCKS5账号) {
-                status = '强制SOCKS5';
-                连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
-              }
-            } else if (代理类型 === 'reverse' && 当前反代地址) {
-              status = '动态反代';
-              连接地址 = 当前反代地址;
-            } else if (代理类型 === 'socks5' && SOCKS5账号) {
-              status = '动态SOCKS5';
-              连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
-            }
-          }
-          return 创建JSON响应({ status, 连接地址 });
+  if (代理启用) {
+    if (强制代理) {
+      if (代理类型 === 'reverse' && 当前反代地址) {
+        status = '强制反代';
+        连接地址 = 当前反代地址;
+      } else if (代理类型 === 'socks5' && SOCKS5账号) {
+        status = '强制SOCKS5';
+        连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
+      }
+
+      // === 新增：检测代理出口 IP ===
+      try {
+        const ipCheck = await fetch('https://ipapi.co/json/');
+        if (ipCheck.ok) {
+          const data = await ipCheck.json();
+          出口IP = `${data.ip} (${data.country_name || '未知地区'})`;
+        }
+      } catch (e) {
+        出口IP = '检测失败';
+      }
+
+    } else if (代理类型 === 'reverse' && 当前反代地址) {
+      status = '动态反代';
+      连接地址 = 当前反代地址;
+    } else if (代理类型 === 'socks5' && SOCKS5账号) {
+      status = '动态SOCKS5';
+      连接地址 = SOCKS5账号.split('@').pop() || SOCKS5账号;
+    }
+  }
+
+  return 创建JSON响应({ status, 连接地址, 出口IP });
 
         case '/set-b64-state':
           formData = await 请求.formData();
