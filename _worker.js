@@ -433,10 +433,11 @@ function 兼容双端导入(配置路径, hostName, type) {
   const isPC = /Windows|MacIntel|Linux/i.test(navigator.userAgent);
   // 2. 自动切换协议：电脑用v2ray://，手机用v2rayng://
   const protocol = isPC ? "v2ray://" : "v2rayng://";
-  // 3. 拼接导入链接并触发
-  const importUrl = `${protocol}install-config?url=https://${hostName}/${配置路径}/${type}`;
+  // 3. 拼接导入链接并触发（修复模板字符串语法错误）
+  const importUrl = protocol + "install-config?url=https://" + hostName + "/" + 配置路径 + "/" + type;
   window.location.href = importUrl;
 }
+
 
 
     async function updateBackground() {
