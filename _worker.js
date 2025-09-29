@@ -427,19 +427,6 @@ function 生成登录注册界面(类型, 额外参数 = {}) {
       };
     }
 
-// ====================== 核心新增：双端兼容导入函数 ======================
-function 兼容双端导入(配置路径, hostName, type) {
-  // 1. 识别设备类型：Windows/Mac/Linux → 电脑端（V2RayN）；其他 → 手机端（V2RayNG）
-  const isPC = /Windows|MacIntel|Linux/i.test(navigator.userAgent);
-  // 2. 自动切换协议：电脑用v2ray://，手机用v2rayng://
-  const protocol = isPC ? "v2ray://" : "v2rayng://";
-  // 3. 拼接导入链接并触发（修复模板字符串语法错误）
-  const importUrl = protocol + "install-config?url=https://" + hostName + "/" + 配置路径 + "/" + type;
-  window.location.href = importUrl;
-}
-
-
-
     async function updateBackground() {
       const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const wallpaper = await 获取壁纸地址();
@@ -1791,10 +1778,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}">https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}</a></p>
       </div>
       <div class="button-group">
-  <!-- 关键修改：调用兼容双端的导入函数 -->
-  <button class="cute-button config2-btn" onclick="兼容双端导入('${配置路径}', '${hostName}', '${atob('Y2xhc2g=')}')">一键导入（双端兼容）</button>
-</div>
-
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('Y2xhc2g=')}')">一键导入</button>
       </div>
     </div>
     <div class="card">
@@ -1803,10 +1787,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}">https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}</a></p>
       </div>
       <div class="button-group">
-  <!-- 关键修改：调用兼容双端的导入函数 -->
-  <button class="cute-button config2-btn" onclick="兼容双端导入('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">一键导入（双端兼容）</button>
-</div>
-
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">一键导入</button>
       </div>
     </div>
     <div class="card">
