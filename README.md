@@ -18,19 +18,19 @@
 以下是樱花面板的主要界面截图，展示了面板的主要功能和界面设计：
 
 ### 1. 登录界面
-![登录界面](screenshots/login-interface.png)
+![登录界面](./screenshots/登录界面.png)
 
 ### 2. 主面板界面
-![主面板界面](screenshots/main-panel-interface.png)
+![主面板界面](./screenshots/主面板界面.png)
 
 ### 3. 节点管理界面
-![节点管理界面](screenshots/node-management-interface.png)
+![节点管理界面](./screenshots/节点管理界面.png)
 
 ### 4. 订阅配置界面
-![订阅配置界面](screenshots/subscription-config-interface.png)
+![订阅配置界面](./screenshots/订阅配置界面.png)
 
 ### 5. 代理设置界面
-![代理设置界面](screenshots/client-download-interface.png)
+![代理设置界面](./screenshots/代理设置界面.png)
 
 ## 主要功能
 
