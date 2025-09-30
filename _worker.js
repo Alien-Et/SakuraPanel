@@ -822,15 +822,10 @@ export default {
           const config = await 获取配置(env, atob('Y2xhc2g='), hostName);
           return new Response(config, { status: 200, headers: { "Content-Type": "text/plain;charset=utf-8" } });
 
-        case `/${配置路径}/` + atob('djJyYXluZw=='):
+        case `/${配置路径}/` + atob('djJyYXk='):
           await 加载节点和配置(env, hostName);
           const vConfig = await 获取配置(env, atob('djJyYXk='), hostName);
           return new Response(vConfig, { status: 200, headers: { "Content-Type": "text/plain;charset=utf-8" } });
-
-        case `/${配置路径}/` + atob('djJyYXlu'):
-          await 加载节点和配置(env, hostName);
-          const v2rayNConfig = await 获取配置(env, atob('djJyYXk='), hostName);
-          return new Response(v2rayNConfig, { status: 200, headers: { "Content-Type": "text/plain;charset=utf-8" } });
 
         case `/${配置路径}/upload`:
           const uploadToken = 请求.headers.get('Cookie')?.split('=')[1];
@@ -1789,11 +1784,11 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     <div class="card">
       <h2 class="card-title">🐰 通用订阅</h2>
       <div class="link-box">
-        <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}">https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}</a></p>
+        <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('djJyYXk=')}">https://${hostName}/${配置路径}/${atob('djJyYXk=')}</a></p>
       </div>
       <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">导入手机</button>
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXlu')}')">导入电脑</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXk=')}')">导入手机</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXk=')}')">导入电脑</button>
       </div>
     </div>
     <div class="card">
