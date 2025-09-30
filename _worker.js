@@ -1788,7 +1788,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       </div>
       <div class="button-group">
         <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">导入手机</button>
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXlu')}')">导入电脑</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">导入电脑</button>
       </div>
     </div>
     <div class="card">
