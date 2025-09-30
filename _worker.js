@@ -827,6 +827,11 @@ export default {
           const vConfig = await 获取配置(env, atob('djJyYXk='), hostName);
           return new Response(vConfig, { status: 200, headers: { "Content-Type": "text/plain;charset=utf-8" } });
 
+        case `/${配置路径}/` + atob('djJyYXlu'):
+          await 加载节点和配置(env, hostName);
+          const v2rayNConfig = await 获取配置(env, atob('djJyYXk='), hostName);
+          return new Response(v2rayNConfig, { status: 200, headers: { "Content-Type": "text/plain;charset=utf-8" } });
+
         case `/${配置路径}/upload`:
           const uploadToken = 请求.headers.get('Cookie')?.split('=')[1];
           const 有效UploadToken = await env.KV数据库.get('current_token');
@@ -1788,7 +1793,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       </div>
       <div class="button-group">
         <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">导入手机</button>
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">导入电脑</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXlu')}')">导入电脑</button>
       </div>
     </div>
     <div class="card">
