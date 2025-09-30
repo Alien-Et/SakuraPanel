@@ -1093,6 +1093,26 @@ export default {
           const b64状态 = await env.KV数据库.get('b64Enabled') === 'true';
           return 创建JSON响应({ b64Enabled: b64状态 });
 
+        case '/set-airport-name':
+          const airportToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const 有效AirportToken = await env.KV数据库.get('current_token');
+          if (!airportToken || airportToken !== 有效AirportToken) {
+            return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+          }
+          formData = await 请求.formData();
+          const airportName = formData.get('airportName') || 'Sakura樱花面板';
+          await env.KV数据库.put('airportName', airportName);
+          return new Response(null, { status: 200 });
+
+        case '/get-airport-name':
+          const getAirportToken = 请求.headers.get('Cookie')?.split('=')[1];
+          const 有效GetAirportToken = await env.KV数据库.get('current_token');
+          if (!getAirportToken || getAirportToken !== 有效GetAirportToken) {
+            return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+          }
+          const currentAirportName = await env.KV数据库.get('airportName') || 'Sakura樱花面板';
+          return 创建JSON响应({ airportName: currentAirportName });
+
         case '/set-wallpaper':
           const wallpaperToken = 请求.headers.get('Cookie')?.split('=')[1];
           const 有效WallpaperToken = await env.KV数据库.get('current_token');
@@ -1758,6 +1778,20 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       <div class="proxy-status" id="b64Status">当前订阅链接未加密</div>
     </div>
     <div class="card">
+      <h2 class="card-title">✈️ 机场设置</h2>
+      <div class="wallpaper-settings">
+        <div class="wallpaper-input-group">
+          <label>机场名称：</label>
+          <input type="text" id="airportNameInput" class="wallpaper-input" placeholder="输入机场名称，默认为Sakura樱花面板">
+        </div>
+        <div class="button-group">
+          <button class="cute-button" onclick="保存机场设置()">保存设置</button>
+          <button class="cute-button" onclick="恢复默认机场()">恢复默认</button>
+        </div>
+      </div>
+      <div class="proxy-status" id="airportStatus">当前机场：Sakura樱花面板</div>
+    </div>
+    <div class="card">
       <h2 class="card-title">🎨 壁纸设置</h2>
       <div class="wallpaper-settings">
         <div class="wallpaper-input-group">
@@ -1863,6 +1897,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     let proxyType = 'reverse';
     let forceProxy = false;
     let b64Enabled = false; // b64状态也从服务器获取
+    let airportName = 'Sakura樱花面板'; // 机场名称
 
     // 页面加载时，从服务器初始化所有设置
     async function initializeSettings() {
@@ -1882,6 +1917,13 @@ function 生成订阅页面(配置路径, hostName, uuid) {
           const b64Data = await b64Res.json();
           b64Enabled = b64Data.b64Enabled;
         }
+
+        // 获取机场名称设置
+        const airportRes = await fetch('/get-airport-name');
+        if (airportRes.ok) {
+          const airportData = await airportRes.json();
+          airportName = airportData.airportName;
+        }
       } catch (error) {
         console.error('初始化设置失败:', error);
         alert('从服务器同步设置失败，请刷新页面重试。');
@@ -1894,6 +1936,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         updateProxyUI();
         updateProxyStatus();
         updateB64Status();
+        updateAirportStatus();
       }
     }
 
@@ -2306,6 +2349,45 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       }
     }
 
+    // 保存机场设置函数
+    async function 保存机场设置() {
+      const airportNameInput = document.getElementById('airportNameInput').value.trim();
+      const finalAirportName = airportNameInput || 'Sakura樱花面板';
+
+      try {
+        const formData = new FormData();
+        formData.append('airportName', finalAirportName);
+
+        const response = await fetch('/set-airport-name', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          airportName = finalAirportName;
+          updateAirportStatus();
+          alert('机场设置保存成功！');
+        } else {
+          alert('机场设置保存失败，请重试。');
+        }
+      } catch (error) {
+        console.error('保存机场设置失败:', error);
+        alert('保存机场设置失败，请检查网络连接。');
+      }
+    }
+
+    // 恢复默认机场函数
+    async function 恢复默认机场() {
+      document.getElementById('airportNameInput').value = 'Sakura樱花面板';
+      await 保存机场设置();
+    }
+
+    // 更新机场状态显示
+    function updateAirportStatus() {
+      document.getElementById('airportStatus').textContent = `当前机场：${airportName}`;
+      document.getElementById('airportNameInput').value = airportName;
+    }
+
     // 输入框变化时实时更新预览（已移除预览功能）
     // document.getElementById('lightWallpaperInput').addEventListener('input', updateWallpaperPreview);
     // document.getElementById('darkWallpaperInput').addEventListener('input', updateWallpaperPreview);
@@ -2449,6 +2531,8 @@ async function 生成猫咪(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
   const 节点列表 = 优选节点.length ? 优选节点 : [`${hostName}:443`];
   const b64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
+  // 获取机场名称，默认为"Sakura樱花面板"
+  const 机场名称 = await env.KV数据库.get('airportName') || 'Sakura樱花面板';
   const 国家分组 = {};
 
   节点列表.forEach((节点, 索引) => {
@@ -2492,6 +2576,7 @@ ${[...国家分组[国家].IPv4, ...国家分组[国家].IPv6].map(n => `      -
 `).join("");
 
   const 配置文本 = `# Generated at: ${new Date().toISOString()}
+# Airport: ${机场名称}
 mixed-port: 7890
 allow-lan: true
 mode: Rule
@@ -2563,6 +2648,8 @@ async function 生成通用(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
   const 节点列表 = 优选节点.length ? 优选节点 : [`${hostName}:443`];
   const b64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
+  // 获取机场名称，默认为"Sakura樱花面板"
+  const 机场名称 = await env.KV数据库.get('airportName') || 'Sakura樱花面板';
   const 配置列表 = 节点列表.map(节点 => {
     try {
       const [主内容, tls = 'tls'] = 节点.split("@");
@@ -2583,6 +2670,7 @@ async function 生成通用(env, hostName) {
   }).filter(Boolean);
 
   const 配置文本 = `# Generated at: ${new Date().toISOString()}
+# Airport: ${机场名称}
 ${配置列表.length ? 配置列表.join("\n") : (atob('dmxlc3M=') + '://' + uuid + '@' + hostName + ':443?encryption=none&security=tls&type=ws&host=' + hostName + '&path=' + encodeURIComponent('/?ed=2560') + '&sni=' + hostName + '#默认节点')}`;
 
   // 如果启用了Base64加密，则对整个配置文本进行Base64编码
