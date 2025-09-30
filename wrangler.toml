@@ -1,0 +1,19 @@
+name = "sakura-panel"
+main = "_worker.js"
+compatibility_date = "2024-01-01"
+
+[env.production]
+name = "sakura-panel"
+
+[[env.production.kv_namespaces]]
+binding = "KV数据库"
+id = "your-kv-namespace-id"
+preview_id = "your-kv-namespace-preview-id"
+
+[env.development]
+name = "sakura-panel-dev"
+
+[[env.development.kv_namespaces]]
+binding = "KV数据库"
+id = "your-kv-namespace-id"
+preview_id = "your-kv-namespace-preview-id"

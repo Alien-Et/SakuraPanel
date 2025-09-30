@@ -2384,7 +2384,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 
     // 更新机场状态显示
     function updateAirportStatus() {
-      document.getElementById('airportStatus').textContent = `当前机场：${airportName}`;
+      document.getElementById('airportStatus').textContent = '当前机场：' + airportName;
       document.getElementById('airportNameInput').value = airportName;
     }
 
