@@ -1778,7 +1778,8 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}">https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}</a></p>
       </div>
       <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('Y2xhc2g=')}')">一键导入</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('Y2xhc2g=')}')">导入手机</button>
+        <button class="cute-button config2-btn" onclick="导入电脑Config('${配置路径}', '${hostName}', '${atob('Y2xhc2g=')}')">导入电脑</button>
       </div>
     </div>
     <div class="card">
@@ -1787,7 +1788,8 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}">https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}</a></p>
       </div>
       <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">一键导入</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">导入手机</button>
+        <button class="cute-button config2-btn" onclick="导入电脑Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">导入电脑</button>
       </div>
     </div>
     <div class="card">
@@ -2082,6 +2084,17 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 
     function 导入Config(配置路径, hostName, type) {
       window.location.href = type + '://install-config?url=https://' + hostName + '/' + 配置路径 + '/' + type;
+    }
+
+    function 导入电脑Config(配置路径, hostName, type) {
+      // 复制订阅链接到剪贴板
+      const subscriptionUrl = 'https://' + hostName + '/' + 配置路径 + '/' + type;
+      navigator.clipboard.writeText(subscriptionUrl).then(() => {
+        alert('订阅链接已复制到剪贴板，您可以在电脑客户端中粘贴使用');
+      }).catch(err => {
+        // 如果复制失败，显示链接供手动复制
+        prompt('复制失败，请手动复制订阅链接:', subscriptionUrl);
+      });
     }
 
     function 更换UUID() {
