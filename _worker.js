@@ -1784,10 +1784,10 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     <div class="card">
       <h2 class="card-title">🐰 通用订阅</h2>
       <div class="link-box">
-        <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}">https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}</a></p>
+        <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('ZGpnOHdncTN2')}">https://${hostName}/${配置路径}/${atob('ZGpnOHdncTN2')}</a></p>
       </div>
       <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">一键导入</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', atob('ZGpnOHdncTN2'))">一键导入</button>
       </div>
     </div>
     <div class="card">
@@ -2081,7 +2081,51 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     }
 
     function 导入Config(配置路径, hostName, type) {
-      window.location.href = type + '://install-config?url=https://' + hostName + '/' + 配置路径 + '/' + type;
+      // 解码base64编码的协议类型
+      const decodedType = atob(type);
+      const configUrl = 'https://' + hostName + '/' + 配置路径 + '/' + decodedType;
+      
+      // 检测用户代理，判断是否为电脑版
+      const isDesktop = !/Mobile|Android|iPhone|iPad/i.test(navigator.userAgent);
+      
+      // 对配置URL进行编码，确保安全传输
+      const encodedUrl = encodeURIComponent(configUrl);
+      
+      if (isDesktop) {
+        // 电脑版使用标准协议格式
+        const importUrl = decodedType + '://install-config?url=' + encodedUrl;
+        // 尝试多种导入方式以提高兼容性
+        try {
+          // 首先尝试直接跳转
+          window.location.href = importUrl;
+          // 如果直接跳转失败，使用延迟跳转
+          setTimeout(() => {
+            window.open(importUrl, '_blank');
+          }, 1000);
+        } catch (error) {
+          // 如果都失败，复制链接到剪贴板
+          copyToClipboard(configUrl);
+          alert('导入链接已复制到剪贴板，请手动导入到客户端');
+        }
+      } else {
+        // 移动版使用通用格式
+        window.location.href = decodedType + '://install-config?url=' + encodedUrl;
+      }
+    }
+    
+    // 复制到剪贴板辅助函数
+    function copyToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      } else {
+        // 降级方案
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
     }
 
     function 更换UUID() {
