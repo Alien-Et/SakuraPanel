@@ -1,19 +1,40 @@
+# 🌸 Sakura樱花面板 - Cloudflare Workers配置文件
+# 项目名称
 name = "sakura-panel"
+# 主入口文件
 main = "_worker.js"
+# 兼容性日期（Cloudflare Workers API版本）
 compatibility_date = "2024-01-01"
 
+# 🚀 生产环境配置
 [env.production]
+# 生产环境服务名称
 name = "sakura-panel"
 
+# 📚 KV数据库命名空间配置（生产环境）
 [[env.production.kv_namespaces]]
+# 在Worker代码中使用的绑定名称
 binding = "KV数据库"
+# 你的KV命名空间ID（需要在Cloudflare控制台创建）
 id = "your-kv-namespace-id"
+# 预览环境的KV命名空间ID
 preview_id = "your-kv-namespace-preview-id"
 
+# 🛠️ 开发环境配置
 [env.development]
+# 开发环境服务名称（带-dev后缀）
 name = "sakura-panel-dev"
 
+# 📚 KV数据库命名空间配置（开发环境）
 [[env.development.kv_namespaces]]
+# 在Worker代码中使用的绑定名称（与生产环境保持一致）
 binding = "KV数据库"
+# 你的KV命名空间ID（需要在Cloudflare控制台创建）
 id = "your-kv-namespace-id"
+# 预览环境的KV命名空间ID
 preview_id = "your-kv-namespace-preview-id"
+
+# ⚠️ 使用说明：
+# 1. 需要将 "your-kv-namespace-id" 替换为你在Cloudflare控制台创建的实际KV命名空间ID
+# 2. 生产环境和开发环境可以使用相同的KV空间，也可以分开
+# 3. 绑定名称 "KV数据库" 对应代码中的 env.KV数据库
