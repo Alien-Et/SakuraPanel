@@ -2081,7 +2081,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     }
 
     function 导入Config(配置路径, hostName, type) {
-      window.location.href = type + '://install-config?url=https://' + hostName + '/${路径}/}type;
+      window.location.href = type + '://install-config?url=https://' + hostName + '/' + 配置路径 + '/' + type;
     }
 
     function 更换UUID() {
