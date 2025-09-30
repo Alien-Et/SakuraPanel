@@ -1605,110 +1605,6 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     .config1-btn, .config2-btn, .logout-btn, .uuid-btn, .upload-btn, .add-url-btn {
       background: linear-gradient(to right, #ff69b4, #ff1493);
     }
-    
-    /* 导入模态框样式 */
-    .import-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 10000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    
-    .import-modal-content {
-      background: white;
-      padding: 25px;
-      border-radius: 15px;
-      max-width: 90%;
-      max-height: 80%;
-      overflow-y: auto;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-    
-    @media (prefers-color-scheme: dark) {
-      .import-modal-content {
-        background: #2a2a3b;
-        color: #ffd1dc;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      }
-    }
-    
-    .import-modal-textarea {
-      width: 100%;
-      height: 100px;
-      margin: 15px 0;
-      padding: 12px;
-      border: 2px solid #ffb6c1;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 14px;
-      resize: vertical;
-      background: rgba(255, 255, 255, 0.9);
-    }
-    
-    @media (prefers-color-scheme: dark) {
-      .import-modal-textarea {
-        background: rgba(30, 30, 30, 0.9);
-        border-color: #ff85a2;
-        color: #ffd1dc;
-      }
-    }
-    
-    .import-modal-close {
-      background: linear-gradient(to right, #ff69b4, #ff1493);
-      color: white;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 1em;
-      font-family: 'Comic Sans MS', 'Arial', sans-serif;
-      transition: transform 0.2s ease;
-      margin-top: 15px;
-    }
-    
-    .import-modal-close:hover {
-      transform: scale(1.05);
-    }
-    
-    /* 移动端适配 */
-    @media (max-width: 768px) {
-      .import-modal-content {
-        padding: 20px;
-        margin: 20px;
-        max-width: calc(100% - 40px);
-      }
-      
-      .import-modal-textarea {
-        height: 80px;
-        font-size: 12px;
-      }
-      
-      .import-modal-content h3,
-      .import-modal-content h4 {
-        font-size: 1.1em;
-        margin: 10px 0;
-      }
-      
-      .import-modal-content p {
-        font-size: 0.9em;
-        margin: 8px 0;
-      }
-      
-      .import-modal-content ol {
-        font-size: 0.9em;
-        padding-left: 20px;
-      }
-      
-      .import-modal-content li {
-        margin: 5px 0;
-      }
-    }
     .upload-title { font-size: 1.4em; color: #ff85a2; margin-bottom: 15px; }
     .upload-label { padding: 10px 20px; background: linear-gradient(to right, #ffb6c1, #ff69b4); color: white; border-radius: 20px; cursor: pointer; display: inline-block; transition: all 0.3s ease; margin-top: 10px; }
     .upload-label:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4); }
@@ -1879,23 +1775,19 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     <div class="card">
       <h2 class="card-title">🐾 猫咪订阅</h2>
       <div class="link-box">
-        <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}" target="_blank" id="clash-link">https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}</a></p>
+        <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}">https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}</a></p>
       </div>
       <div class="button-group">
         <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('Y2xhc2g=')}')">一键导入</button>
-        <button class="cute-button" onclick="复制链接('clash-link')" style="background: linear-gradient(to right, #87ceeb, #4682b4);">📋 复制链接</button>
-        <button class="cute-button" onclick="打开配置('${hostName}', '${配置路径}', '${atob('Y2xhc2g=')}')" style="background: linear-gradient(to right, #98fb98, #3cb371);">👁️ 查看配置</button>
       </div>
     </div>
     <div class="card">
       <h2 class="card-title">🐰 通用订阅</h2>
       <div class="link-box">
-        <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}" target="_blank" id="universal-link">https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}</a></p>
+        <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}">https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}</a></p>
       </div>
       <div class="button-group">
         <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">一键导入</button>
-        <button class="cute-button" onclick="复制链接('universal-link')" style="background: linear-gradient(to right, #87ceeb, #4682b4);">📋 复制链接</button>
-        <button class="cute-button" onclick="打开配置('${hostName}', '${配置路径}', '${atob('djJyYXluZw==')}')" style="background: linear-gradient(to right, #98fb98, #3cb371);">👁️ 查看配置</button>
       </div>
     </div>
     <div class="card">
@@ -2188,178 +2080,8 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         .then(() => updateProxyStatus());
     }
 
-    // 复制链接函数
-    function 复制链接(elementId) {
-      const linkElement = document.getElementById(elementId);
-      const linkText = linkElement.href;
-      
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(linkText).then(() => {
-          alert('🔗 链接已复制到剪贴板！\n\n' + linkText);
-        }).catch(() => {
-          fallbackCopy(linkText);
-        });
-      } else {
-        fallbackCopy(linkText);
-      }
-    }
-    
-    // 备用复制方法
-    function fallbackCopy(text) {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.top = '-9999px';
-      document.body.appendChild(textArea);
-      textArea.select();
-      
-      try {
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        alert('🔗 链接已复制到剪贴板！\n\n' + text);
-      } catch (err) {
-        document.body.removeChild(textArea);
-        // 显示手动复制模态框
-        showManualCopyModal(text);
-      }
-    }
-    
-    // 显示手动复制模态框
-    function showManualCopyModal(text) {
-      const modal = document.createElement('div');
-      modal.className = 'import-modal';
-      modal.innerHTML = `
-        <div class="import-modal-content">
-          <h3>🔗 手动复制链接</h3>
-          <textarea readonly class="import-modal-textarea" onclick="this.select()">${text}</textarea>
-          <p>📋 请手动复制上方链接</p>
-          <button class="import-modal-close" onclick="this.parentElement.parentElement.remove()">关闭</button>
-        </div>
-      `;
-      document.body.appendChild(modal);
-    }
-    
-    // 打开配置函数
-    function 打开配置(hostName, 配置路径, type) {
-      const configUrl = 'https://' + hostName + '/${配置路径}/' + type;
-      
-      // 在新窗口中打开配置
-      window.open(configUrl, '_blank');
-      
-      // 显示提示
-      setTimeout(() => {
-        if (confirm('👁️ 配置已在新窗口打开！\n\n' +
-                    '💡 您可以：\n' +
-                    '1. 查看配置内容\n' +
-                    '2. 复制配置内容\n' +
-                    '3. 手动导入到客户端\n\n' +
-                    '需要复制链接吗？')) {
-          复制链接(type === atob('Y2xhc2g=') ? 'clash-link' : 'universal-link');
-        }
-      }, 1000);
-    }
-    
     function 导入Config(配置路径, hostName, type) {
-      const configUrl = 'https://' + hostName + '/${配置路径}/' + type;
-      
-      // 检测设备类型
-      const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      
-      // 复制链接到剪贴板
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(configUrl).then(() => {
-          // 根据设备类型显示不同的提示
-          if (isMobile) {
-            // 手机设备：尝试使用自定义协议，失败则显示手动导入指南
-            const protocolUrl = type + '://install-config?url=' + encodeURIComponent(configUrl);
-            
-            // 创建隐藏的iframe尝试打开协议
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = protocolUrl;
-            document.body.appendChild(iframe);
-            
-            // 1秒后移除iframe
-            setTimeout(() => {
-              document.body.removeChild(iframe);
-            }, 1000);
-            
-            alert('🔗 订阅链接已复制到剪贴板！\n\n' +
-                  '📱 手机用户：\n' +
-                  '1. 如果支持一键导入的客户端已安装，会自动打开\n' +
-                  '2. 如果没有自动打开，请手动打开客户端\n' +
-                  '3. 在客户端中选择「从剪贴板导入」或类似选项\n\n' +
-                  '💡 链接：' + configUrl);
-          } else {
-            // 电脑设备：显示手动导入指南
-            alert('🔗 订阅链接已复制到剪贴板！\n\n' +
-                  '💻 电脑用户：\n' +
-                  '1. 打开您的代理客户端\n' +
-                  '2. 找到「导入配置」或「订阅管理」选项\n' +
-                  '3. 粘贴链接或选择「从剪贴板导入」\n\n' +
-                  '💡 链接：' + configUrl);
-          }
-        }).catch(() => {
-          // 复制失败，显示链接供手动复制
-          showManualImportGuide(configUrl, isMobile);
-        });
-      } else {
-        // 不支持自动复制，显示手动导入指南
-        showManualImportGuide(configUrl, isMobile);
-      }
-    }
-    
-    function showManualImportGuide(configUrl, isMobile) {
-      // 创建临时文本框供复制
-      const textArea = document.createElement('textarea');
-      textArea.value = configUrl;
-      textArea.style.position = 'fixed';
-      textArea.style.top = '-9999px';
-      document.body.appendChild(textArea);
-      textArea.select();
-      
-      try {
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        alert('🔗 订阅链接已复制到剪贴板！\n\n' +
-              (isMobile ? 
-                '📱 手机用户：\n1. 打开您的代理客户端\n2. 选择「从剪贴板导入」或类似选项\n' :
-                '💻 电脑用户：\n1. 打开您的代理客户端\n2. 找到「导入配置」或「订阅管理」选项\n3. 粘贴链接或选择「从剪贴板导入」\n') +
-              '\n💡 链接：' + configUrl);
-      } catch (err) {
-        document.body.removeChild(textArea);
-        
-        // 显示链接供手动复制
-        const deviceType = isMobile ? '手机' : '电脑';
-        const message = '🔗 订阅链接：\n\n' + configUrl + '\n\n' +
-                       `📋 请手动复制上方链接\n\n` +
-                       `📱 ${deviceType}用户导入步骤：\n` +
-                       `1. 复制上方订阅链接\n` +
-                       `2. 打开您的代理客户端\n` +
-                       `3. 找到「导入配置」或「订阅管理」选项\n` +
-                       `4. 粘贴链接或选择「从剪贴板导入」`;
-        
-        // 创建模态框显示链接
-         const modal = document.createElement('div');
-         modal.className = 'import-modal';
-         modal.innerHTML = `
-           <div class="import-modal-content">
-             <h3>🔗 订阅链接</h3>
-             <textarea readonly class="import-modal-textarea" onclick="this.select()">${configUrl}</textarea>
-             <p>📋 请手动复制上方链接</p>
-             <h4>📱 ${deviceType}用户导入步骤：</h4>
-             <ol>
-               <li>复制上方订阅链接</li>
-               <li>打开您的代理客户端</li>
-               <li>找到「导入配置」或「订阅管理」选项</li>
-               <li>粘贴链接或选择「从剪贴板导入」</li>
-             </ol>
-             <button class="import-modal-close" onclick="this.parentElement.parentElement.remove()">关闭</button>
-           </div>
-         `;
-         document.body.appendChild(modal);
-      }
+      window.location.href = type + '://install-config?url=https://' + hostName + '/${配置路径}/' + type;
     }
 
     function 更换UUID() {
