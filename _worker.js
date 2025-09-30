@@ -1787,7 +1787,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
         <p>订阅链接：<br><a href="https://${hostName}/${配置路径}/${atob('ZGpnOHdncTN2')}">https://${hostName}/${配置路径}/${atob('ZGpnOHdncTN2')}</a></p>
       </div>
       <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', atob('ZGpnOHdncTN2'))">一键导入</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('ZGpnOHdncTN2')}')">一键导入</button>
       </div>
     </div>
     <div class="card">
@@ -2081,36 +2081,61 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     }
 
     function 导入Config(配置路径, hostName, type) {
-      // 解码base64编码的协议类型
-      const decodedType = atob(type);
-      const configUrl = 'https://' + hostName + '/' + 配置路径 + '/' + decodedType;
+      console.log('导入Config被调用:', {配置路径, hostName, type});
       
-      // 检测用户代理，判断是否为电脑版
-      const isDesktop = !/Mobile|Android|iPhone|iPad/i.test(navigator.userAgent);
+      // 判断传入的type是否已经base64编码（猫咪订阅）
+      let decodedType;
+      let configUrl;
       
-      // 对配置URL进行编码，确保安全传输
-      const encodedUrl = encodeURIComponent(configUrl);
-      
-      if (isDesktop) {
-        // 电脑版使用标准协议格式
-        const importUrl = decodedType + '://install-config?url=' + encodedUrl;
-        // 尝试多种导入方式以提高兼容性
-        try {
-          // 首先尝试直接跳转
-          window.location.href = importUrl;
-          // 如果直接跳转失败，使用延迟跳转
-          setTimeout(() => {
-            window.open(importUrl, '_blank');
-          }, 1000);
-        } catch (error) {
-          // 如果都失败，复制链接到剪贴板
-          copyToClipboard(configUrl);
-          alert('导入链接已复制到剪贴板，请手动导入到客户端');
-        }
-      } else {
-        // 移动版使用通用格式
-        window.location.href = decodedType + '://install-config?url=' + encodedUrl;
+      try {
+        // 尝试解码，如果成功说明是base64编码的
+        decodedType = atob(type);
+        console.log('成功解码type:', decodedType);
+        // 构建配置URL
+        configUrl = 'https://' + hostName + '/' + 配置路径 + '/' + decodedType;
+      } catch (e) {
+        // 如果解码失败，说明是明文类型（向后兼容）
+        decodedType = type;
+        configUrl = 'https://' + hostName + '/' + 配置路径 + '/' + type;
+        console.log('使用明文type:', type);
       }
+      
+      console.log('生成的配置URL:', configUrl);
+      
+      // 生成导入链接
+      const importUrl = decodedType + '://install-config?url=' + encodeURIComponent(configUrl);
+      console.log('生成的导入链接:', importUrl);
+      
+      // 立即显示导入提示
+      alert('正在尝试导入配置，请稍候...');
+      
+      // 尝试打开导入链接 - 使用最基础的方式
+      console.log('尝试打开导入链接...');
+      
+      try {
+        // 创建临时链接元素并点击
+        const link = document.createElement('a');
+        link.href = importUrl;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        console.log('链接已触发');
+      } catch (error) {
+        console.error('触发链接失败:', error);
+        alert('自动导入失败，请手动复制链接导入');
+      }
+      
+      // 延迟显示备用方案
+      setTimeout(() => {
+        if (confirm('如果导入没有反应，是否复制配置链接到剪贴板？')) {
+          copyToClipboard(configUrl);
+          alert('配置链接已复制到剪贴板！\n\n您可以：\n1. 手动打开客户端\n2. 找到导入配置功能\n3. 粘贴链接导入');
+        } else {
+          // 提供手动导入的详细指导
+          alert('手动导入方法：\n\n1. 复制配置链接：' + configUrl + '\n2. 打开您的客户端应用\n3. 找到"导入配置"或类似选项\n4. 粘贴链接并导入\n\n或者使用二维码扫描功能');
+        }
+      }, 3000);
     }
     
     // 复制到剪贴板辅助函数
