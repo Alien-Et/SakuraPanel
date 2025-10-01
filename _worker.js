@@ -820,9 +820,9 @@ export default {
         case `/${配置路径}/` + atob('Y2xhc2g='):
           await 加载节点和配置(env, hostName);
           const config = await 获取配置(env, atob('Y2xhc2g='), hostName);
-          // 获取机场名称用于文件名，避免使用任何后缀
+          // 获取机场名称用于文件名，atob('54yr5ZKq6YWN572u')配置使用atob('LnlhbWw=')后缀
           const 机场名称 = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileName = 机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
+          const fileName = 机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '') + atob('LnlhbWw=');
           return new Response(config, { 
             status: 200, 
             headers: { 
@@ -833,11 +833,11 @@ export default {
 
         case `/${配置路径}/` + atob('djJyYXk='):
           await 加载节点和配置(env, hostName);
-          const vConfig = await 获取配置(env, atob('djJyYXk='), hostName);
-          // 获取机场名称用于文件名，避免使用任何后缀
+          const 通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
+          // 获取机场名称用于文件名，atob('6YCa55So6YWN572u')配置使用atob('LnR4dA==')后缀
           const 机场名称v2 = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileNamev2 = 机场名称v2.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
-          return new Response(vConfig, { 
+          const fileNamev2 = 机场名称v2.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '') + atob('LnR4dA==');
+          return new Response(通用配置, { 
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
@@ -847,11 +847,11 @@ export default {
 
         case `/${配置路径}/` + atob('djJyYXluZw=='):
           await 加载节点和配置(env, hostName);
-          const v2rayNGConfig = await 获取配置(env, atob('djJyYXk='), hostName);
-          // 获取机场名称用于文件名，避免使用任何后缀
+          const 手机通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
+          // 获取机场名称用于文件名，atob('VjJSYXlOR+mFjee9rg==')配置使用atob('LnR4dA==')后缀
           const 机场名称ng = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileNameng = 机场名称ng.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
-          return new Response(v2rayNGConfig, { 
+          const fileNameng = 机场名称ng.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '') + atob('LnR4dA==');
+          return new Response(手机通用配置, { 
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
@@ -861,11 +861,11 @@ export default {
 
         case `/${配置路径}/` + atob('djJyYXlu'):
           await 加载节点和配置(env, hostName);
-          const v2rayNConfig = await 获取配置(env, atob('djJyYXk='), hostName);
-          // 获取机场名称用于文件名，避免使用任何后缀
+          const 电脑通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
+          // 获取机场名称用于文件名，atob('6YCa55So6YWN572u')使用atob('LnR4dA==')后缀
           const 机场名称n = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileNamen = 机场名称n.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
-          return new Response(v2rayNConfig, { 
+          const fileNamen = 机场名称n.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '') + atob('LnR4dA==');
+          return new Response(电脑通用配置, { 
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
