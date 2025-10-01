@@ -828,7 +828,7 @@ export default {
             status: 200, 
             headers: { 
               "Content-Type": "application/x-yaml;charset=utf-8",
-              "Content-Disposition": `attachment; filename="${cleanAirportName}"; filename*=utf-8''${encodeURIComponent(cleanAirportName)}`
+              "Content-Disposition": `inline; filename="${cleanAirportName}"; filename*=utf-8''${encodeURIComponent(cleanAirportName)}`
             } 
           });
 
@@ -843,7 +843,7 @@ export default {
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "Content-Disposition": `attachment; filename="${cleanAirportNamev2}"; filename*=utf-8''${encodeURIComponent(cleanAirportNamev2)}`
+              "Content-Disposition": `inline; filename="${cleanAirportNamev2}"; filename*=utf-8''${encodeURIComponent(cleanAirportNamev2)}`
             } 
           });
 
