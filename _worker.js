@@ -826,7 +826,8 @@ export default {
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "X-Airport-Name": 机场名称
+              "X-Airport-Name": 机场名称,
+              "X-Config-Name": 机场名称
             } 
           });
 
@@ -839,7 +840,8 @@ export default {
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "X-Airport-Name": 机场名称v2
+              "X-Airport-Name": 机场名称v2,
+              "X-Config-Name": 机场名称v2
             } 
           });
 
@@ -852,7 +854,8 @@ export default {
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "X-Airport-Name": 机场名称ng
+              "X-Airport-Name": 机场名称ng,
+              "X-Config-Name": 机场名称ng
             } 
           });
 
@@ -865,7 +868,8 @@ export default {
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "X-Airport-Name": 机场名称n
+              "X-Airport-Name": 机场名称n,
+              "X-Config-Name": 机场名称n
             } 
           });
 
@@ -2578,8 +2582,8 @@ async function 生成猫咪(env, hostName) {
 
     国家分组[国家] = 国家分组[国家] || { IPv4: [], IPv6: [] };
     国家分组[国家][地址类型].push({
-      name: `${节点名字}-${国家分组[国家][地址类型].length + 1}`,
-      config: `- name: "${节点名字}-${国家分组[国家][地址类型].length + 1}"
+      name: `${机场名称}-${节点名字}-${国家分组[国家][地址类型].length + 1}`,
+      config: `- name: "${机场名称}-${节点名字}-${国家分组[国家][地址类型].length + 1}"
   type: ${atob('dmxlc3M=')}
   server: ${修正地址}
   port: ${端口}
@@ -2609,6 +2613,10 @@ ${[...国家分组[国家].IPv4, ...国家分组[国家].IPv6].map(n => `      -
 
   const 配置文本 = `# Generated at: ${new Date().toISOString()}
 # Airport: ${机场名称}
+# Config Name: ${机场名称}
+# Subscription: ${机场名称}
+# TITLE: ${机场名称}
+# REMARKS: ${机场名称}
 mixed-port: 7890
 allow-lan: true
 mode: Rule
@@ -2694,7 +2702,7 @@ async function 生成通用(env, hostName) {
       const 修正地址 = 地址.includes(":") ? `[${地址}]` : 地址;
       const TLS开关 = tls === 'notls' ? 'none' : 'tls';
       const encodedPath = encodeURIComponent('/?ed=2560');
-      return `${atob('dmxlc3M=')}://${uuid}@${修正地址}:${端口}?encryption=none&security=${TLS开关}&type=ws&host=${hostName}&path=${encodedPath}&sni=${hostName}#${节点名字}`;
+      return `${atob('dmxlc3M=')}://${uuid}@${修正地址}:${端口}?encryption=none&security=${TLS开关}&type=ws&host=${hostName}&path=${encodedPath}&sni=${hostName}#${机场名称}-${节点名字}`;
     } catch (error) {
       console.error(`生成通用节点失败: ${节点}, 错误: ${error.message}`);
       return null;
@@ -2703,7 +2711,11 @@ async function 生成通用(env, hostName) {
 
   const 配置文本 = `# Generated at: ${new Date().toISOString()}
 # Airport: ${机场名称}
-${配置列表.length ? 配置列表.join("\n") : (atob('dmxlc3M=') + '://' + uuid + '@' + hostName + ':443?encryption=none&security=tls&type=ws&host=' + hostName + '&path=' + encodeURIComponent('/?ed=2560') + '&sni=' + hostName + '#默认节点')}`;
+# Config Name: ${机场名称}
+# Subscription: ${机场名称}
+# TITLE: ${机场名称}
+# REMARKS: ${机场名称}
+${配置列表.length ? 配置列表.join("\n") : (atob('dmxlc3M9') + '://' + uuid + '@' + hostName + ':443?encryption=none&security=tls&type=ws&host=' + hostName + '&path=' + encodeURIComponent('/?ed=2560') + '&sni=' + hostName + '#' + 机场名称 + '-默认节点')}`;
 
   // 如果启用了Base64加密，则对整个配置文本进行Base64编码
   if (b64Enabled) {
