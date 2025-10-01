@@ -822,12 +822,13 @@ export default {
           const config = await 获取配置(env, atob('Y2xhc2g='), hostName);
           // 获取机场名称用于文件名，atob('54yr5ZKq6YWN572u')配置使用atob('LnlhbWw=')后缀
           const 机场名称 = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileName = 机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '') + atob('LnlhbWw=');
+          const cleanAirportName = 机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
+          const fileName = cleanAirportName + atob('LnlhbWw=');
           return new Response(config, { 
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "Content-Disposition": `attachment; filename="${fileName}"; filename*=utf-8''${encodeURIComponent(fileName)}`
+              "Content-Disposition": `attachment; filename="${cleanAirportName}"; filename*=utf-8''${encodeURIComponent(cleanAirportName)}`
             } 
           });
 
@@ -836,12 +837,13 @@ export default {
           const 通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
           // 获取机场名称用于文件名，atob('6YCa55So6YWN572u')配置使用atob('LnR4dA==')后缀
           const 机场名称v2 = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileNamev2 = 机场名称v2.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '') + atob('LnR4dA==');
+          const cleanAirportNamev2 = 机场名称v2.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
+          const fileNamev2 = cleanAirportNamev2 + atob('LnR4dA==');
           return new Response(通用配置, { 
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "Content-Disposition": `attachment; filename="${fileNamev2}"; filename*=utf-8''${encodeURIComponent(fileNamev2)}`
+              "Content-Disposition": `attachment; filename="${cleanAirportNamev2}"; filename*=utf-8''${encodeURIComponent(cleanAirportNamev2)}`
             } 
           });
 
@@ -850,12 +852,13 @@ export default {
           const 手机通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
           // 获取机场名称用于文件名，atob('VjJSYXlOR+mFjee9rg==')配置使用atob('LnR4dA==')后缀
           const 机场名称ng = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileNameng = 机场名称ng.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '') + atob('LnR4dA==');
+          const cleanAirportNameng = 机场名称ng.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
+          const fileNameng = cleanAirportNameng + atob('LnR4dA==');
           return new Response(手机通用配置, { 
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "Content-Disposition": `attachment; filename="${fileNameng}"; filename*=utf-8''${encodeURIComponent(fileNameng)}`
+              "Content-Disposition": `attachment; filename="${cleanAirportNameng}"; filename*=utf-8''${encodeURIComponent(cleanAirportNameng)}`
             } 
           });
 
@@ -864,12 +867,13 @@ export default {
           const 电脑通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
           // 获取机场名称用于文件名，atob('6YCa55So6YWN572u')使用atob('LnR4dA==')后缀
           const 机场名称n = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileNamen = 机场名称n.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '') + atob('LnR4dA==');
+          const cleanAirportNamen = 机场名称n.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
+          const fileNamen = cleanAirportNamen + atob('LnR4dA==');
           return new Response(电脑通用配置, { 
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "Content-Disposition": `attachment; filename="${fileNamen}"; filename*=utf-8''${encodeURIComponent(fileNamen)}`
+              "Content-Disposition": `attachment; filename="${cleanAirportNamen}"; filename*=utf-8''${encodeURIComponent(cleanAirportNamen)}`
             } 
           });
 
