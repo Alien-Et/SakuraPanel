@@ -820,56 +820,52 @@ export default {
         case `/${配置路径}/` + atob('Y2xhc2g='):
           await 加载节点和配置(env, hostName);
           const config = await 获取配置(env, atob('Y2xhc2g='), hostName);
-          // 获取机场名称用于文件名，避免使用任何后缀
+          // 获取机场名称用于请求头，发送给客户端
           const 机场名称 = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileName = 机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
           return new Response(config, { 
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "Content-Disposition": `attachment; filename="${fileName}"; filename*=utf-8''${encodeURIComponent(fileName)}`
+              "X-Airport-Name": 机场名称
             } 
           });
 
         case `/${配置路径}/` + atob('djJyYXk='):
           await 加载节点和配置(env, hostName);
           const vConfig = await 获取配置(env, atob('djJyYXk='), hostName);
-          // 获取机场名称用于文件名，避免使用任何后缀
+          // 获取机场名称用于请求头，发送给客户端
           const 机场名称v2 = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileNamev2 = 机场名称v2.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
           return new Response(vConfig, { 
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "Content-Disposition": `attachment; filename="${fileNamev2}"; filename*=utf-8''${encodeURIComponent(fileNamev2)}`
+              "X-Airport-Name": 机场名称v2
             } 
           });
 
         case `/${配置路径}/` + atob('djJyYXluZw=='):
           await 加载节点和配置(env, hostName);
           const v2rayNGConfig = await 获取配置(env, atob('djJyYXk='), hostName);
-          // 获取机场名称用于文件名，避免使用任何后缀
+          // 获取机场名称用于请求头，发送给客户端
           const 机场名称ng = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileNameng = 机场名称ng.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
           return new Response(v2rayNGConfig, { 
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "Content-Disposition": `attachment; filename="${fileNameng}"; filename*=utf-8''${encodeURIComponent(fileNameng)}`
+              "X-Airport-Name": 机场名称ng
             } 
           });
 
         case `/${配置路径}/` + atob('djJyYXlu'):
           await 加载节点和配置(env, hostName);
           const v2rayNConfig = await 获取配置(env, atob('djJyYXk='), hostName);
-          // 获取机场名称用于文件名，避免使用任何后缀
+          // 获取机场名称用于请求头，发送给客户端
           const 机场名称n = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
-          const fileNamen = 机场名称n.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
           return new Response(v2rayNConfig, { 
             status: 200, 
             headers: { 
               "Content-Type": "text/plain;charset=utf-8",
-              "Content-Disposition": `attachment; filename="${fileNamen}"; filename*=utf-8''${encodeURIComponent(fileNamen)}`
+              "X-Airport-Name": 机场名称n
             } 
           });
 
