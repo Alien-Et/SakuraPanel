@@ -821,13 +821,13 @@ export default {
           await 加载节点和配置(env, hostName);
           const config = await 获取配置(env, atob('Y2xhc2g='), hostName);
           // 获取机场名称用于文件名，atob('54yr5ZKq6YWN572u')配置使用atob('LnlhbWw=')后缀
-          const 机场名称 = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
+          const 机场名称 = await env.KV数据库.get('airportName') || '樱花订阅';
           const cleanAirportName = 机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
           const fileName = cleanAirportName + atob('LnlhbWw=');
           return new Response(config, { 
             status: 200, 
             headers: { 
-              "Content-Type": "text/plain;charset=utf-8",
+              "Content-Type": "application/x-yaml;charset=utf-8",
               "Content-Disposition": `attachment; filename="${cleanAirportName}"; filename*=utf-8''${encodeURIComponent(cleanAirportName)}`
             } 
           });
@@ -836,7 +836,7 @@ export default {
           await 加载节点和配置(env, hostName);
           const 通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
           // 获取机场名称用于文件名，atob('6YCa55So6YWN572u')配置使用atob('LnR4dA==')后缀
-          const 机场名称v2 = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
+          const 机场名称v2 = await env.KV数据库.get('airportName') || '樱花订阅';
           const cleanAirportNamev2 = 机场名称v2.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
           const fileNamev2 = cleanAirportNamev2 + atob('LnR4dA==');
           return new Response(通用配置, { 
@@ -851,7 +851,7 @@ export default {
           await 加载节点和配置(env, hostName);
           const 手机通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
           // 获取机场名称用于文件名，atob('VjJSYXlOR+mFjee9rg==')配置使用atob('LnR4dA==')后缀
-          const 机场名称ng = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
+          const 机场名称ng = await env.KV数据库.get('airportName') || '樱花订阅';
           const cleanAirportNameng = 机场名称ng.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
           const fileNameng = cleanAirportNameng + atob('LnR4dA==');
           return new Response(手机通用配置, { 
@@ -866,7 +866,7 @@ export default {
           await 加载节点和配置(env, hostName);
           const 电脑通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
           // 获取机场名称用于文件名，atob('6YCa55So6YWN572u')使用atob('LnR4dA==')后缀
-          const 机场名称n = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
+          const 机场名称n = await env.KV数据库.get('airportName') || '樱花订阅';
           const cleanAirportNamen = 机场名称n.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
           const fileNamen = cleanAirportNamen + atob('LnR4dA==');
           return new Response(电脑通用配置, { 
@@ -1140,7 +1140,7 @@ export default {
             return 创建JSON响应({ error: '未登录或Token无效' }, 401);
           }
           formData = await 请求.formData();
-          const airportName = formData.get('airportName') || '❀Sakura樱花订阅❀';
+          const airportName = formData.get('airportName') || '樱花订阅';
           await env.KV数据库.put('airportName', airportName);
           return new Response(null, { status: 200 });
 
@@ -1150,7 +1150,7 @@ export default {
           if (!getAirportToken || getAirportToken !== 有效GetAirportToken) {
             return 创建JSON响应({ error: '未登录或Token无效' }, 401);
           }
-          const currentAirportName = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
+          const currentAirportName = await env.KV数据库.get('airportName') || '樱花订阅';
           return 创建JSON响应({ airportName: currentAirportName });
 
         case '/set-wallpaper':
@@ -1822,14 +1822,14 @@ function 生成订阅页面(配置路径, hostName, uuid) {
       <div class="wallpaper-settings">
         <div class="wallpaper-input-group">
           <label>机场名称：</label>
-          <input type="text" id="airportNameInput" class="wallpaper-input" placeholder="输入机场名称，默认为❀Sakura樱花订阅❀">
+          <input type="text" id="airportNameInput" class="wallpaper-input" placeholder="输入机场名称，默认为樱花订阅">
         </div>
         <div class="button-group">
           <button class="cute-button" onclick="保存机场设置()">保存设置</button>
           <button class="cute-button" onclick="恢复默认机场()">恢复默认</button>
         </div>
       </div>
-      <div class="proxy-status" id="airportStatus">当前机场：❀Sakura樱花订阅❀</div>
+      <div class="proxy-status" id="airportStatus">当前机场：樱花订阅</div>
     </div>
     <div class="card">
       <h2 class="card-title">🎨 壁纸设置</h2>
@@ -1937,7 +1937,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     let proxyType = 'reverse';
     let forceProxy = false;
     let b64Enabled = false; // b64状态也从服务器获取
-    let airportName = '❀Sakura樱花订阅❀'; // 机场名称
+    let airportName = '樱花订阅'; // 机场名称
 
     // 页面加载时，从服务器初始化所有设置
     async function initializeSettings() {
@@ -2392,7 +2392,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     // 保存机场设置函数
     async function 保存机场设置() {
       const airportNameInput = document.getElementById('airportNameInput').value.trim();
-      const finalAirportName = airportNameInput || '❀Sakura樱花订阅❀';
+      const finalAirportName = airportNameInput || '樱花订阅';
 
       try {
         const formData = new FormData();
@@ -2418,7 +2418,7 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 
     // 恢复默认机场函数
     async function 恢复默认机场() {
-      document.getElementById('airportNameInput').value = '❀Sakura樱花订阅❀';
+      document.getElementById('airportNameInput').value = '樱花订阅';
       await 保存机场设置();
     }
 
@@ -2571,8 +2571,8 @@ async function 生成猫咪(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
   const 节点列表 = 优选节点.length ? 优选节点 : [`${hostName}:443`];
   const b64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
-  // 获取机场名称，默认为"❀Sakura樱花订阅❀"
-  const 机场名称 = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
+  // 获取机场名称，默认为"樱花订阅"
+  const 机场名称 = await env.KV数据库.get('airportName') || '樱花订阅';
   const 国家分组 = {};
 
   节点列表.forEach((节点, 索引) => {
@@ -2688,8 +2688,8 @@ async function 生成通用(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
   const 节点列表 = 优选节点.length ? 优选节点 : [`${hostName}:443`];
   const b64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
-  // 获取机场名称，默认为"❀Sakura樱花订阅❀"
-  const 机场名称 = await env.KV数据库.get('airportName') || '❀Sakura樱花订阅❀';
+  // 获取机场名称，默认为"樱花订阅"
+  const 机场名称 = await env.KV数据库.get('airportName') || '樱花订阅';
   const 配置列表 = 节点列表.map(节点 => {
     try {
       const [主内容, tls = 'tls'] = 节点.split("@");
