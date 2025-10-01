@@ -827,7 +827,7 @@ export default {
           return new Response(config, { 
             status: 200, 
             headers: { 
-              "Content-Type": "application/x-yaml;charset=utf-8",
+              "Content-Type": "text/plain;charset=utf-8",
               "Content-Disposition": `inline; filename="${cleanAirportName}"; filename*=utf-8''${encodeURIComponent(cleanAirportName)}`
             } 
           });
