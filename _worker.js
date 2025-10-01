@@ -2115,10 +2115,19 @@ function 生成订阅页面(配置路径, hostName, uuid) {
 
     function toggleB64() {
       b64Enabled = document.getElementById('b64Toggle').checked;
-      saveB64State();
-      updateB64Status();
-      // 立即生成猫咪和通用配置并存入KV数据库
-      generateAndSaveConfigs();
+      // 先保存状态到服务器，确保状态同步
+      saveB64State().then(() => {
+        updateB64Status();
+        // 状态保存成功后再生成和保存配置
+        generateAndSaveConfigs();
+      }).catch(error => {
+        console.error('保存加密状态失败:', error);
+        alert('切换加密状态失败，请重试');
+        // 恢复开关状态
+        document.getElementById('b64Toggle').checked = !b64Enabled;
+        b64Enabled = !b64Enabled;
+        updateB64Status();
+      });
     }
 
     function generateAndSaveConfigs() {
@@ -2150,8 +2159,14 @@ function 生成订阅页面(配置路径, hostName, uuid) {
     function saveB64State() {
       const formData = new FormData();
       formData.append('b64Enabled', b64Enabled);
-      fetch('/set-b64-state', { method: 'POST', body: formData })
-        .then(() => updateB64Status());
+      // 返回Promise以便调用者知道何时完成
+      return fetch('/set-b64-state', { method: 'POST', body: formData })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('保存失败，服务器响应错误');
+          }
+          updateB64Status();
+        });
     }
 
     function updateB64Status() {
