@@ -1,0 +1,11 @@
+# Wrangler 本地状态（KV数据、临时构建文件）
+.wrangler/
+# 依赖
+node_modules/
+# 本地环境变量
+.dev.vars
+# 系统文件
+.DS_Store
+Thumbs.db
+参考代码非项目本身_worker.js
+原单文件.js
