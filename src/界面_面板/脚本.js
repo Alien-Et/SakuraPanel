@@ -447,7 +447,8 @@ export function 生成脚本(参数) {
     }
 
     function 导入Config(配置路径, hostName, type) {
-      window.location.href = type + '://install-config?url=https://' + hostName + '/' + 配置路径 + '/' + type;
+      const tokenParam = subTokenEnabled && subToken ? '?token=' + subToken : '';
+      window.location.href = type + '://install-config?url=https://' + hostName + '/' + 配置路径 + '/' + type + tokenParam;
     }
 
     function 更换UUID() {
