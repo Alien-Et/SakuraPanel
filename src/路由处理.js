@@ -22,6 +22,13 @@ export async function 路由处理(请求, env) {
     const 设备标识 = `${UA}_${IP}`;
     let formData;
 
+    if (url.pathname === '/favicon.ico') {
+      return new Response('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌸</text></svg>', {
+        status: 200,
+        headers: { 'Content-Type': 'image/svg+xml' }
+      });
+    }
+
     if (请求头 && 请求头 === 'websocket') {
       共享状态.反代地址 = (await env.KV数据库.get('proxyIP')) || env.PROXYIP || 共享状态.反代地址;
       共享状态.SOCKS5账号 = (await env.KV数据库.get('socks5')) || env.SOCKS5 || 共享状态.SOCKS5账号;
