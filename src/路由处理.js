@@ -1,6 +1,6 @@
 import { 共享状态 } from './共享状态.js';
-import { 创建HTML响应, 创建重定向响应, 创建JSON响应, 生成UUID, 加密密码, 提取设备指纹, 检查锁定, 验证订阅Token, 获取流量信息头, 生成订阅Token, 查询CF请求数 } from './逻辑/辅助函数.js';
-import { 获取或初始化UUID, 加载节点和配置, 获取配置 } from './逻辑/节点配置.js';
+import { 创建HTML响应, 创建重定向响应, 创建JSON响应, 生成UUID, 加密密码, 提取设备指纹, 检查锁定, 验证订阅Token, 获取流量信息头, 生成订阅Token, 查询CF请求数, 解析节点 } from './逻辑/辅助函数.js';
+import { 获取或初始化UUID, 加载节点和配置 } from './逻辑/节点配置.js';
 import { 升级请求 } from './逻辑/WebSocket处理.js';
 import { 生成猫咪, 生成通用, 生成SingBox } from './逻辑/配置生成器.js';
 import { 生成登录注册界面 } from './界面_登录注册/模板.js';
@@ -175,7 +175,7 @@ export async function 路由处理(请求, env) {
       case `/${共享状态.配置路径}/` + atob('Y2xhc2g='): {
         if (!(await 验证订阅Token(env, hostName, url))) return 创建JSON响应({ error: 'Token无效或缺失' }, 403);
         await 加载节点和配置(env, hostName);
-        const config = await 获取配置(env, atob('Y2xhc2g='), hostName);
+        const config = await 生成猫咪(env, hostName);
         const 机场名称 = await env.KV数据库.get('airportName') || '樱花订阅';
         const cleanAirportName = 机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
         const 流量头 = await 获取流量信息头(env);
@@ -192,7 +192,7 @@ export async function 路由处理(请求, env) {
       case `/${共享状态.配置路径}/` + atob('djJyYXk='): {
         if (!(await 验证订阅Token(env, hostName, url))) return 创建JSON响应({ error: 'Token无效或缺失' }, 403);
         await 加载节点和配置(env, hostName);
-        const 通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
+        const 通用配置 = await 生成通用(env, hostName);
         const 机场名称v2 = await env.KV数据库.get('airportName') || '樱花订阅';
         const cleanAirportNamev2 = 机场名称v2.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
         const 流量头v2 = await 获取流量信息头(env);
@@ -209,7 +209,7 @@ export async function 路由处理(请求, env) {
       case `/${共享状态.配置路径}/` + atob('djJyYXluZw=='): {
         if (!(await 验证订阅Token(env, hostName, url))) return 创建JSON响应({ error: 'Token无效或缺失' }, 403);
         await 加载节点和配置(env, hostName);
-        const 手机通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
+        const 手机通用配置 = await 生成通用(env, hostName);
         const 机场名称ng = await env.KV数据库.get('airportName') || '樱花订阅';
         const cleanAirportNameng = 机场名称ng.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
         const 流量头ng = await 获取流量信息头(env);
@@ -243,7 +243,7 @@ export async function 路由处理(请求, env) {
       case `/${共享状态.配置路径}/` + atob('djJyYXlu'): {
         if (!(await 验证订阅Token(env, hostName, url))) return 创建JSON响应({ error: 'Token无效或缺失' }, 403);
         await 加载节点和配置(env, hostName);
-        const 电脑通用配置 = await 获取配置(env, atob('djJyYXk='), hostName);
+        const 电脑通用配置 = await 生成通用(env, hostName);
         const 机场名称n = await env.KV数据库.get('airportName') || '樱花订阅';
         const cleanAirportNamen = 机场名称n.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
         const 流量头n = await 获取流量信息头(env);
@@ -357,22 +357,26 @@ export async function 路由处理(请求, env) {
           if (allIpList.length === 0) {
             return 创建JSON响应({ error: '所有上传文件中没有符合格式要求的节点' }, 400);
           }
-          const uniqueIpList = [...new Set(allIpList)];
-
+          // 合并现有手动节点 + 新上传节点，按 地址:端口 去重（新上传覆盖旧的，可更新名称）
           const 当前手动节点 = await env.KV数据库.get('manual_preferred_ips');
           const 当前节点列表 = 当前手动节点 ? JSON.parse(当前手动节点) : [];
+          const 合并Map = new Map();
+          for (const 节点 of 当前节点列表) {
+            const 解析 = 解析节点(节点);
+            if (解析) 合并Map.set(解析.去重键, 节点);
+          }
+          for (const 节点 of allIpList) {
+            const 解析 = 解析节点(节点);
+            if (解析) 合并Map.set(解析.去重键, 节点);
+          }
+          const uniqueIpList = [...合并Map.values()];
+
           const 是重复上传 = JSON.stringify(当前节点列表.sort()) === JSON.stringify(uniqueIpList.sort());
           if (是重复上传) {
             return 创建JSON响应({ message: '上传内容与现有节点相同，无需更新' }, 200);
           }
 
           await env.KV数据库.put('manual_preferred_ips', JSON.stringify(uniqueIpList));
-          const 新版本 = String(Date.now());
-          await env.KV数据库.put('ip_preferred_ips_version', 新版本);
-          await env.KV数据库.put('config_' + atob('Y2xhc2g='), await 生成猫咪(env, hostName));
-          await env.KV数据库.put('config_' + atob('Y2xhc2g=') + '_version', 新版本);
-          await env.KV数据库.put('config_' + atob('djJyYXk='), await 生成通用(env, hostName));
-          await env.KV数据库.put('config_' + atob('djJyYXk=') + '_version', 新版本);
           return 创建JSON响应({ message: '上传成功，即将跳转' }, 200, { 'Location': `/${共享状态.配置路径}` });
         } catch (错误) {
           console.error(`上传处理失败: ${错误.message}`);
@@ -387,11 +391,6 @@ export async function 路由处理(请求, env) {
         }
         const 新UUID = 生成UUID();
         await env.KV数据库.put('current_uuid', 新UUID);
-        await env.KV数据库.put('config_' + atob('Y2xhc2g='), await 生成猫咪(env, hostName));
-        await env.KV数据库.put('config_' + atob('djJyYXk='), await 生成通用(env, hostName));
-        const 新版本 = String(Date.now());
-        await env.KV数据库.put('config_' + atob('Y2xhc2g=') + '_version', 新版本);
-        await env.KV数据库.put('config_' + atob('djJyYXk=') + '_version', 新版本);
         return 创建JSON响应({ uuid: 新UUID }, 200);
 
       case `/${共享状态.配置路径}/add-node-path`:
@@ -426,16 +425,9 @@ export async function 路由处理(请求, env) {
         }
         currentPaths.push(newPath);
         await env.KV数据库.put('node_file_paths', JSON.stringify(currentPaths));
-        // 清理所有缓存，强制实时重新拉取并生成订阅配置
-        await env.KV数据库.delete('ip_preferred_ips');
-        await env.KV数据库.delete('ip_preferred_ips_version');
-        await env.KV数据库.delete('config_' + atob('Y2xhc2g='));
-        await env.KV数据库.delete('config_' + atob('Y2xhc2g=') + '_version');
-        await env.KV数据库.delete('config_' + atob('djJyYXk='));
-        await env.KV数据库.delete('config_' + atob('djJyYXk=') + '_version');
+        // 节点实时拉取，直接加载即可获取最新节点数
         await 加载节点和配置(env, hostName);
-        const 最终节点 = await env.KV数据库.get('ip_preferred_ips');
-        const 总节点数 = 最终节点 ? JSON.parse(最终节点).length : 0;
+        const 总节点数 = 共享状态.优选节点.length;
         return 创建JSON响应({ success: true, 消息: 拉取状态 + '；当前总节点数 ' + 总节点数 }, 200);
 
       case `/${共享状态.配置路径}/remove-node-path`:
@@ -453,12 +445,6 @@ export async function 路由处理(请求, env) {
         }
         paths.splice(index, 1);
         await env.KV数据库.put('node_file_paths', JSON.stringify(paths));
-        await env.KV数据库.delete('ip_preferred_ips');
-        await env.KV数据库.delete('ip_preferred_ips_version');
-        await env.KV数据库.delete('config_' + atob('Y2xhc2g='));
-        await env.KV数据库.delete('config_' + atob('Y2xhc2g=') + '_version');
-        await env.KV数据库.delete('config_' + atob('djJyYXk='));
-        await env.KV数据库.delete('config_' + atob('djJyYXk=') + '_version');
         await 加载节点和配置(env, hostName);
         return 创建JSON响应({ success: true }, 200);
 
@@ -660,10 +646,7 @@ export async function 路由处理(请求, env) {
         }
         try {
           await 加载节点和配置(env, hostName);
-          const catConfig = await 生成猫咪(env, hostName);
-          const 新版本 = String(Date.now());
-          await env.KV数据库.put('config_' + atob('Y2xhc2g='), catConfig);
-          await env.KV数据库.put('config_' + atob('Y2xhc2g=') + '_version', 新版本);
+          await 生成猫咪(env, hostName);
           return 创建JSON响应({ success: true });
         } catch (错误) {
           console.error(`生成猫咪配置失败: ${错误.message}`);
@@ -678,10 +661,7 @@ export async function 路由处理(请求, env) {
         }
         try {
           await 加载节点和配置(env, hostName);
-          const universalConfig = await 生成通用(env, hostName);
-          const 新版本 = String(Date.now());
-          await env.KV数据库.put('config_' + atob('djJyYXk='), universalConfig);
-          await env.KV数据库.put('config_' + atob('djJyYXk=') + '_version', 新版本);
+          await 生成通用(env, hostName);
           return 创建JSON响应({ success: true });
         } catch (错误) {
           console.error(`生成通用配置失败: ${错误.message}`);

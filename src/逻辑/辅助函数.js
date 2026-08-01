@@ -67,6 +67,33 @@ export function 提取设备指纹(UA) {
   return 浏览器 + '_' + 系统;
 }
 
+// 统一解析节点字符串，提取地址/端口/名称/tls，生成去重键
+// 支持格式：[IPv6]:端口#名称@tls / IPv4:端口#名称@tls / 域名#名称 / 纯地址 等
+// 去重键 = 地址小写:端口 （IPv6去括号、域名/IP统一小写、端口缺省443）
+export function 解析节点(节点字符串) {
+  const line = (节点字符串 || '').trim();
+  if (!line) return null;
+  const [主内容, tls = 'tls'] = line.split('@');
+  const [地址端口, 名称] = 主内容.split('#');
+  let 地址 = '';
+  let 端口 = '443';
+  // IPv6：[::1]:port 或 [::1]
+  const v6 = 地址端口.match(/^\[([0-9a-fA-F:]+)\](?::(\d+))?$/);
+  // IPv4/域名：addr:port 或 addr
+  const other = 地址端口.match(/^([^:]+)(?::(\d+))?$/);
+  if (v6) {
+    地址 = v6[1];
+    端口 = v6[2] || '443';
+  } else if (other) {
+    地址 = other[1];
+    端口 = other[2] || '443';
+  } else {
+    return null;
+  }
+  const 去重键 = 地址.toLowerCase() + ':' + 端口;
+  return { 地址, 端口, 名称: 名称 || '', tls, 去重键, 原始: line };
+}
+
 export async function 检查锁定(env, 设备标识) {
   const 锁定时间戳 = await env.KV数据库.get(`lock_${设备标识}`);
   const 当前时间 = Date.now();
