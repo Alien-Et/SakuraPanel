@@ -60,7 +60,7 @@ async function 智能连接(地址, 端口, 地址类型, env) {
   const 是IP = 地址类型 === 1 || (地址类型 === 2 && 地址.match(/^\d+\.\d+\.\d+\.\d+$/)) || 地址类型 === 3;
 
   if (是域名 || 是IP) {
-    const 代理启用 = await env.KV数据库.get('proxyEnabled') === 'true';
+    const 代理启用 = await env.KV数据库.get('proxyEnabled') !== 'false';
     const 强制代理 = await env.KV数据库.get('forceProxy') === 'true';
     const 代理类型 = await env.KV数据库.get('proxyType') || 'reverse';
 

@@ -6,7 +6,7 @@ export async function 生成猫咪(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
   const 节点列表 = 共享状态.优选节点.length ? 共享状态.优选节点 : [`${hostName}:443`];
   // ECH 设置
-  const echEnabled = await env.KV数据库.get('echEnabled') === 'true';
+  const echEnabled = await env.KV数据库.get('echEnabled') !== 'false';
   const echSNI = (await env.KV数据库.get('echSNI')) || 'cloudflare-ech.com';
   const echDNS = (await env.KV数据库.get('echDNS')) || 'https://dns.alidns.com/dns-query';
   // 获取机场名称，默认为"樱花订阅"
@@ -127,9 +127,9 @@ return 配置文本;
 export async function 生成通用(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
   const 节点列表 = 共享状态.优选节点.length ? 共享状态.优选节点 : [`${hostName}:443`];
-  const b64Enabled = await env.KV数据库.get('b64Enabled') === 'true';
+  const b64Enabled = await env.KV数据库.get('b64Enabled') !== 'false';
   // ECH 设置
-  const echEnabled = await env.KV数据库.get('echEnabled') === 'true';
+  const echEnabled = await env.KV数据库.get('echEnabled') !== 'false';
   const echSNI = (await env.KV数据库.get('echSNI')) || 'cloudflare-ech.com';
   const echDNS = (await env.KV数据库.get('echDNS')) || 'https://dns.alidns.com/dns-query';
   // ECH 参数：&ech=SNI+DNS  （SNI 为空时省略 SNI+ 部分）
@@ -170,7 +170,7 @@ ${配置列表.length ? 配置列表.join("\n") : (atob('dmxlc3M=') + '://' + uu
 export async function 生成SingBox(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
   const 节点列表 = 共享状态.优选节点.length ? 共享状态.优选节点 : [`${hostName}:443`];
-  const echEnabled = await env.KV数据库.get('echEnabled') === 'true';
+  const echEnabled = await env.KV数据库.get('echEnabled') !== 'false';
   const echSNI = (await env.KV数据库.get('echSNI')) || 'cloudflare-ech.com';
   const 机场名称 = await env.KV数据库.get('airportName') || '樱花订阅';
 

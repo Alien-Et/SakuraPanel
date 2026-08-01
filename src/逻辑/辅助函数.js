@@ -111,7 +111,7 @@ export async function 生成订阅Token(hostName, uuid) {
 
 // 验证订阅请求的Token
 export async function 验证订阅Token(env, hostName, url) {
-  const tokenEnabled = await env.KV数据库.get('subTokenEnabled') === 'true';
+  const tokenEnabled = await env.KV数据库.get('subTokenEnabled') !== 'false';
   if (!tokenEnabled) return true;
   const uuid = await env.KV数据库.get('current_uuid');
   if (!uuid) return false;

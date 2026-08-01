@@ -37,15 +37,15 @@ export function 生成脚本(参数) {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateBackground);
 
     // 全局变量，用于存储从服务器获取的状态
-    let proxyEnabled = false;
+    let proxyEnabled = true;
     let proxyType = 'reverse';
     let forceProxy = false;
-    let b64Enabled = false; // b64状态也从服务器获取
+    let b64Enabled = true; // b64状态也从服务器获取
     let airportName = '樱花订阅'; // 机场名称
-    let echEnabled = false; // ECH 状态
+    let echEnabled = true; // ECH 状态
     let echSNI = '';        // ECH SNI
     let echDNS = 'https://dns.alidns.com/dns-query'; // ECH DNS
-    let subTokenEnabled = false; // 订阅Token验证
+    let subTokenEnabled = true; // 订阅Token验证
     let subToken = ''; // 订阅Token值
     let subInfoEnabled = false; // 流量信息显示
 

@@ -486,7 +486,7 @@ export async function 路由处理(请求, env) {
         return new Response(null, { status: 200 });
 
       case '/get-proxy-status': {
-        const 代理启用 = await env.KV数据库.get('proxyEnabled') === 'true';
+        const 代理启用 = await env.KV数据库.get('proxyEnabled') !== 'false';
         const 代理类型 = await env.KV数据库.get('proxyType') || 'reverse';
         const 强制代理 = await env.KV数据库.get('forceProxy') === 'true';
         const 当前反代地址 = (await env.KV数据库.get('proxyIP')) || env.PROXYIP || 共享状态.反代地址;
@@ -529,7 +529,7 @@ export async function 路由处理(请求, env) {
       }
 
       case '/get-proxy-settings': {
-        const proxyEnabled = await env.KV数据库.get('proxyEnabled') === 'true';
+        const proxyEnabled = await env.KV数据库.get('proxyEnabled') !== 'false';
         const proxyType = await env.KV数据库.get('proxyType') || 'reverse';
         const forceProxy = await env.KV数据库.get('forceProxy') === 'true';
         const proxyIP = await env.KV数据库.get('proxyIP') || '';
@@ -544,7 +544,7 @@ export async function 路由处理(请求, env) {
         return new Response(null, { status: 200 });
 
       case '/get-b64-status':
-        const b64状态 = await env.KV数据库.get('b64Enabled') === 'true';
+        const b64状态 = await env.KV数据库.get('b64Enabled') !== 'false';
         return 创建JSON响应({ b64Enabled: b64状态 });
 
       case '/get-ech-config': {
@@ -553,7 +553,7 @@ export async function 路由处理(请求, env) {
         if (!echToken || echToken !== 有效EchToken) {
           return 创建JSON响应({ error: '未登录或Token无效' }, 401);
         }
-        const echEnabled = await env.KV数据库.get('echEnabled') === 'true';
+        const echEnabled = await env.KV数据库.get('echEnabled') !== 'false';
         const echSNI = await env.KV数据库.get('echSNI') || '';
         const echDNS = await env.KV数据库.get('echDNS') || 'https://dns.alidns.com/dns-query';
         return 创建JSON响应({ echEnabled, echSNI, echDNS });
@@ -680,7 +680,7 @@ export async function 路由处理(请求, env) {
         if (!stToken || stToken !== 有效StToken) {
           return 创建JSON响应({ error: '未登录或Token无效' }, 401);
         }
-        const subTokenEnabled = await env.KV数据库.get('subTokenEnabled') === 'true';
+        const subTokenEnabled = await env.KV数据库.get('subTokenEnabled') !== 'false';
         const uuid = await env.KV数据库.get('current_uuid');
         const subToken = uuid ? await 生成订阅Token(hostName, uuid) : '';
         return 创建JSON响应({ subTokenEnabled, subToken });
