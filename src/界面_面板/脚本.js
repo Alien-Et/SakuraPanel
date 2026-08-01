@@ -187,7 +187,7 @@ export function 生成脚本(参数) {
           if (data.success) {
             urlInput.value = '';
             加载节点路径();
-            alert('路径添加成功！');
+            alert(data.消息 || '路径添加成功！');
           } else {
             alert(data.error || '添加失败，请稍后再试~');
           }

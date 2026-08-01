@@ -399,14 +399,37 @@ export async function 路由处理(请求, env) {
           return 创建JSON响应({ error: '无效的URL格式' }, 400);
         }
         let currentPaths = await env.KV数据库.get('node_file_paths');
-        currentPaths = currentPaths ? JSON.parse(currentPaths) : [];
+        currentPaths = currentPaths ? JSON.parse(currentPaths) : ['https://raw.githubusercontent.com/Alien-Et/SakuraPanel/refs/heads/main/ips.txt', 'https://raw.githubusercontent.com/Alien-Et/SakuraPanel/refs/heads/main/url.txt'];
         if (currentPaths.includes(newPath)) {
           return 创建JSON响应({ error: '该路径已存在' }, 400);
         }
+        // 先验证新 URL 能否拉取
+        let 拉取状态 = '';
+        try {
+          const 验证响应 = await fetch(newPath);
+          if (验证响应.ok) {
+            const 文本 = await 验证响应.text();
+            const 行数 = 文本.split('\n').map(l => l.trim()).filter(Boolean).length;
+            拉取状态 = '拉取成功，含 ' + 行数 + ' 个节点';
+          } else {
+            拉取状态 = '拉取失败（HTTP ' + 验证响应.status + '），请检查 URL';
+          }
+        } catch (e) {
+          拉取状态 = '拉取异常：' + e.message;
+        }
         currentPaths.push(newPath);
         await env.KV数据库.put('node_file_paths', JSON.stringify(currentPaths));
+        // 清理所有缓存，强制实时重新拉取并生成订阅配置
+        await env.KV数据库.delete('ip_preferred_ips');
+        await env.KV数据库.delete('ip_preferred_ips_version');
+        await env.KV数据库.delete('config_' + atob('Y2xhc2g='));
+        await env.KV数据库.delete('config_' + atob('Y2xhc2g=') + '_version');
+        await env.KV数据库.delete('config_' + atob('djJyYXk='));
+        await env.KV数据库.delete('config_' + atob('djJyYXk=') + '_version');
         await 加载节点和配置(env, hostName);
-        return 创建JSON响应({ success: true }, 200);
+        const 最终节点 = await env.KV数据库.get('ip_preferred_ips');
+        const 总节点数 = 最终节点 ? JSON.parse(最终节点).length : 0;
+        return 创建JSON响应({ success: true, 消息: 拉取状态 + '；当前总节点数 ' + 总节点数 }, 200);
 
       case `/${共享状态.配置路径}/remove-node-path`:
         const removeToken = 请求.headers.get('Cookie')?.split('=')[1];
@@ -417,12 +440,18 @@ export async function 路由处理(请求, env) {
         const removeData = await 请求.json();
         const index = removeData.index;
         let paths = await env.KV数据库.get('node_file_paths');
-        paths = paths ? JSON.parse(paths) : [];
+        paths = paths ? JSON.parse(paths) : ['https://raw.githubusercontent.com/Alien-Et/SakuraPanel/refs/heads/main/ips.txt', 'https://raw.githubusercontent.com/Alien-Et/SakuraPanel/refs/heads/main/url.txt'];
         if (index < 0 || index >= paths.length) {
           return 创建JSON响应({ error: '无效的索引' }, 400);
         }
         paths.splice(index, 1);
         await env.KV数据库.put('node_file_paths', JSON.stringify(paths));
+        await env.KV数据库.delete('ip_preferred_ips');
+        await env.KV数据库.delete('ip_preferred_ips_version');
+        await env.KV数据库.delete('config_' + atob('Y2xhc2g='));
+        await env.KV数据库.delete('config_' + atob('Y2xhc2g=') + '_version');
+        await env.KV数据库.delete('config_' + atob('djJyYXk='));
+        await env.KV数据库.delete('config_' + atob('djJyYXk=') + '_version');
         await 加载节点和配置(env, hostName);
         return 创建JSON响应({ success: true }, 200);
 
