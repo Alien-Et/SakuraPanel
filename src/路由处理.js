@@ -176,7 +176,7 @@ export async function 路由处理(请求, env) {
           status: 200,
           headers: {
             "Content-Type": "text/plain;charset=utf-8",
-            "Content-Disposition": `inline; filename="${cleanAirportName}"; filename*=utf-8''${encodeURIComponent(cleanAirportName)}`,
+            "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanAirportName)}`,
             ...流量头
           }
         });
@@ -193,7 +193,7 @@ export async function 路由处理(请求, env) {
           status: 200,
           headers: {
             "Content-Type": "text/plain;charset=utf-8",
-            "Content-Disposition": `inline; filename="${cleanAirportNamev2}"; filename*=utf-8''${encodeURIComponent(cleanAirportNamev2)}`,
+            "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanAirportNamev2)}`,
             ...流量头v2
           }
         });
@@ -210,7 +210,7 @@ export async function 路由处理(请求, env) {
           status: 200,
           headers: {
             "Content-Type": "text/plain;charset=utf-8",
-            "Content-Disposition": `attachment; filename="${cleanAirportNameng}"; filename*=utf-8''${encodeURIComponent(cleanAirportNameng)}`,
+            "Content-Disposition": `attachment; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanAirportNameng)}`,
             ...流量头ng
           }
         });
@@ -227,7 +227,7 @@ export async function 路由处理(请求, env) {
           status: 200,
           headers: {
             "Content-Type": "application/json; charset=utf-8",
-            "Content-Disposition": `inline; filename="${cleanSbName}"; filename*=utf-8''${encodeURIComponent(cleanSbName)}`,
+            "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanSbName)}`,
             ...流量头sb
           }
         });
@@ -244,7 +244,7 @@ export async function 路由处理(请求, env) {
           status: 200,
           headers: {
             "Content-Type": "text/plain;charset=utf-8",
-            "Content-Disposition": `attachment; filename="${cleanAirportNamen}"; filename*=utf-8''${encodeURIComponent(cleanAirportNamen)}`,
+            "Content-Disposition": `attachment; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanAirportNamen)}`,
             ...流量头n
           }
         });
