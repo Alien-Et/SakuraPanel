@@ -371,13 +371,19 @@ export async function 路由处理(请求, env) {
           }
           const uniqueIpList = [...合并Map.values()];
 
+          // 去重统计：上传数、新增数、去重数、当前总数
+          const 上传节点数 = allIpList.length;
+          const 新增数 = uniqueIpList.length - 当前节点列表.length;
+          const 去重数 = 上传节点数 - 新增数;
+          const 当前总数 = uniqueIpList.length;
+
           const 是重复上传 = JSON.stringify(当前节点列表.sort()) === JSON.stringify(uniqueIpList.sort());
           if (是重复上传) {
-            return 创建JSON响应({ message: '上传内容与现有节点相同，无需更新' }, 200);
+            return 创建JSON响应({ message: '上传内容与现有节点相同：共上传 ' + 上传节点数 + ' 个均为已有节点，当前共 ' + 当前总数 + ' 个手动节点，无需更新' }, 200);
           }
 
           await env.KV数据库.put('manual_preferred_ips', JSON.stringify(uniqueIpList));
-          return 创建JSON响应({ message: '上传成功，即将跳转' }, 200, { 'Location': `/${共享状态.配置路径}` });
+          return 创建JSON响应({ message: '上传成功：共上传 ' + 上传节点数 + ' 个，新增 ' + 新增数 + ' 个，去重 ' + 去重数 + ' 个，当前共 ' + 当前总数 + ' 个手动节点' }, 200, { 'Location': `/${共享状态.配置路径}` });
         } catch (错误) {
           console.error(`上传处理失败: ${错误.message}`);
           return 创建JSON响应({ error: `上传处理失败: ${错误.message}` }, 500);
