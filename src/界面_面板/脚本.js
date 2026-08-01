@@ -118,7 +118,7 @@ export function 生成脚本(参数) {
           });
           // 根据已保存的凭证自动选择认证方式
           const method = cfData.authMethod || (cfData.apiToken ? 'token' : (cfData.email ? 'email' : 'token'));
-          document.getElementById('cfAuthMethod').value = method;
+          设置下拉值('cfAuthMethod', method);
           切换CF认证方式();
         }
       } catch (error) {
@@ -131,9 +131,22 @@ export function 生成脚本(参数) {
         document.getElementById('b64Toggle').checked = b64Enabled;
         document.getElementById('echToggle').checked = echEnabled;
         document.getElementById('echSNIInput').value = echSNI;
-        // DNS 输入框：只有用户显式设置过的非默认值才显示，留空表示使用默认
-        const 默认DNS = 'https://dns.alidns.com/dns-query';
-        document.getElementById('echDNSInput').value = (echDNS && echDNS !== 默认DNS) ? echDNS : '';
+        // DNS 下拉：匹配预设则选中对应项，否则选"自定义"并填入输入框
+        const 预设DNS列表 = ['https://dns.alidns.com/dns-query','https://sm2.doh.pub/dns-query','https://cloudflare-dns.com/dns-query','https://dns.google/dns-query'];
+        const dnsInputEl = document.getElementById('echDNSInput');
+        if (echDNS && 预设DNS列表.includes(echDNS)) {
+          设置下拉值('echDNSSelect', echDNS);
+          dnsInputEl.style.display = 'none';
+          dnsInputEl.value = '';
+        } else if (echDNS) {
+          设置下拉值('echDNSSelect', 'custom');
+          dnsInputEl.style.display = '';
+          dnsInputEl.value = echDNS;
+        } else {
+          设置下拉值('echDNSSelect', 'https://dns.alidns.com/dns-query');
+          dnsInputEl.style.display = 'none';
+          dnsInputEl.value = '';
+        }
         document.getElementById('subTokenToggle').checked = subTokenEnabled;
 
         updateProxyUI();
@@ -376,9 +389,22 @@ export function 生成脚本(参数) {
       }
     }
 
+    function 切换EchDNS() {
+      const select = document.getElementById('echDNSSelect');
+      const input = document.getElementById('echDNSInput');
+      if (select.value === 'custom') {
+        input.style.display = '';
+        input.focus();
+      } else {
+        input.style.display = 'none';
+        input.value = '';
+      }
+    }
+
     async function 保存Ech设置() {
       const sni = document.getElementById('echSNIInput').value.trim();
-      const dns = document.getElementById('echDNSInput').value.trim();
+      const dnsSelectEl = document.getElementById('echDNSSelect');
+      const dns = dnsSelectEl.value === 'custom' ? document.getElementById('echDNSInput').value.trim() : dnsSelectEl.value;
       const formData = new FormData();
       formData.append('echSNI', sni);
       formData.append('echDNS', dns);
@@ -404,7 +430,9 @@ export function 生成脚本(参数) {
       if (!confirm('确定要恢复 ECH 默认设置吗？')) return;
       // 清空两个输入框，保存默认值
       document.getElementById('echSNIInput').value = '';
+      设置下拉值('echDNSSelect', 'https://dns.alidns.com/dns-query');
       document.getElementById('echDNSInput').value = '';
+      document.getElementById('echDNSInput').style.display = 'none';
       const formData = new FormData();
       formData.append('echSNI', '');
       formData.append('echDNS', 'https://dns.alidns.com/dns-query');
@@ -438,7 +466,7 @@ export function 生成脚本(参数) {
       const statusElement = document.getElementById('echStatus');
       if (echEnabled) {
         const sniText = echSNI ? ', SNI: ' + echSNI : '';
-        statusElement.textContent = '当前已启用 ECH' + sniText;
+        statusElement.textContent = '当前已启用 ECH（DNS: ' + echDNS + sniText + '）';
         statusElement.className = 'proxy-status success';
       } else {
         statusElement.textContent = '当前未启用 ECH';
@@ -846,6 +874,60 @@ export function 生成脚本(参数) {
         }
       }
     }
+
+    // ===== 自定义下拉框通用逻辑 =====
+    function 关闭所有下拉() {
+      document.querySelectorAll('.custom-select-options.show').forEach(el => {
+        el.classList.remove('show');
+        const card = el.closest('.card');
+        if (card) card.style.zIndex = '';
+      });
+      document.querySelectorAll('.custom-select-trigger.open').forEach(el => el.classList.remove('open'));
+    }
+
+    function 切换下拉框(trigger) {
+      const wrapper = trigger.closest('.custom-select-wrapper');
+      const optionsEl = wrapper.querySelector('.custom-select-options');
+      const card = trigger.closest('.card');
+      const isOpen = optionsEl.classList.contains('show');
+      关闭所有下拉();
+      if (!isOpen) {
+        optionsEl.classList.add('show');
+        trigger.classList.add('open');
+        if (card) card.style.zIndex = '999';
+      }
+    }
+
+    function 选择下拉项(option, callback) {
+      const wrapper = option.closest('.custom-select-wrapper');
+      const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+      hiddenInput.value = option.dataset.value;
+      wrapper.querySelector('.custom-select-text').textContent = option.textContent;
+      wrapper.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('selected'));
+      option.classList.add('selected');
+      关闭所有下拉();
+      if (callback && typeof window[callback] === 'function') window[callback]();
+    }
+
+    function 设置下拉值(id, value) {
+      const hiddenInput = document.getElementById(id);
+      if (!hiddenInput) return;
+      hiddenInput.value = value;
+      const wrapper = hiddenInput.closest('.custom-select-wrapper');
+      if (!wrapper) return;
+      wrapper.querySelectorAll('.custom-select-option').forEach(opt => {
+        if (opt.dataset.value === value) {
+          opt.classList.add('selected');
+          wrapper.querySelector('.custom-select-text').textContent = opt.textContent;
+        } else {
+          opt.classList.remove('selected');
+        }
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.custom-select-wrapper')) 关闭所有下拉();
+    });
 
     function 切换CF认证方式() {
       const method = document.getElementById('cfAuthMethod').value;

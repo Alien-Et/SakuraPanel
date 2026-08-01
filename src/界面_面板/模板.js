@@ -116,10 +116,17 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
         <div style="font-size: 12px; color: #888; margin-bottom: 10px;">填入 Cloudflare 凭证后自动开启请求统计，未填写则不开启。每次加载面板自动刷新用量。</div>
         <div class="wallpaper-input-group">
           <label>认证方式：</label>
-          <select id="cfAuthMethod" class="wallpaper-input" onchange="切换CF认证方式()">
-            <option value="token">API Token</option>
-            <option value="email">邮箱 + Global API Key</option>
-          </select>
+          <div class="custom-select-wrapper">
+            <input type="hidden" id="cfAuthMethod" value="token">
+            <div class="custom-select-trigger" onclick="切换下拉框(this)">
+              <span class="custom-select-text">API Token</span>
+              <span class="custom-select-arrow">▼</span>
+            </div>
+            <div class="custom-select-options">
+              <div class="custom-select-option selected" data-value="token" onclick="选择下拉项(this, '切换CF认证方式')">API Token</div>
+              <div class="custom-select-option" data-value="email" onclick="选择下拉项(this, '切换CF认证方式')">邮箱 + Global API Key</div>
+            </div>
+          </div>
         </div>
         <div id="cfTokenFields">
           <div class="wallpaper-input-group">
@@ -165,7 +172,21 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
         </div>
         <div class="wallpaper-input-group">
           <label>ECH DNS：</label>
-          <input type="text" id="echDNSInput" class="wallpaper-input" placeholder="留空使用默认 https://dns.alidns.com/dns-query">
+          <div class="custom-select-wrapper">
+            <input type="hidden" id="echDNSSelect" value="https://dns.alidns.com/dns-query">
+            <div class="custom-select-trigger" onclick="切换下拉框(this)">
+              <span class="custom-select-text">阿里 DNS</span>
+              <span class="custom-select-arrow">▼</span>
+            </div>
+            <div class="custom-select-options">
+              <div class="custom-select-option selected" data-value="https://dns.alidns.com/dns-query" onclick="选择下拉项(this, '切换EchDNS')">阿里 DNS</div>
+              <div class="custom-select-option" data-value="https://sm2.doh.pub/dns-query" onclick="选择下拉项(this, '切换EchDNS')">腾讯 DNS</div>
+              <div class="custom-select-option" data-value="https://cloudflare-dns.com/dns-query" onclick="选择下拉项(this, '切换EchDNS')">Cloudflare</div>
+              <div class="custom-select-option" data-value="https://dns.google/dns-query" onclick="选择下拉项(this, '切换EchDNS')">Google</div>
+              <div class="custom-select-option" data-value="custom" onclick="选择下拉项(this, '切换EchDNS')">自定义...</div>
+            </div>
+          </div>
+          <input type="text" id="echDNSInput" class="wallpaper-input" placeholder="输入自定义 DoH 地址（如 https://xxx/dns-query）" style="display:none; margin-top:8px;">
         </div>
         <div class="button-group">
           <button class="cute-button" onclick="保存Ech设置()">保存设置</button>
@@ -229,7 +250,6 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
       </div>
       <div class="button-group">
         <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">导入手机</button>
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXlu')}')">导入电脑</button>
       </div>
     </div>
     <div class="card">
