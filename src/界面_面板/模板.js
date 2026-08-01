@@ -10,16 +10,26 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
   <style>${样式}</style>
 </head>
 <body>
   <img id="backgroundImage" class="background-media">
   ${花瓣容器HTML}
   <div class="container">
-    <div class="card">
-      <h1 class="card-title">🌸樱花面板🌸</h1>
-      <p style="font-size: 1em;">支持 <span style="color: #ff69b4;">${atob('Y2xhc2g=')}</span> 和 <span style="color: #ff85a2;">${atob('djJyYXluZw==')}</span> 哦~</p>
-    </div>
+    <div class="panel-header">
+	      <div class="title-aura"></div>
+	      <span class="sakura-float s1">🌸</span>
+	      <span class="sakura-float s2">🌸</span>
+	      <span class="sakura-float s3">🌸</span>
+	      <span class="sakura-float s4">🌸</span>
+	      <span class="sakura-float s5">🌸</span>
+	      <h1 class="panel-title">樱花面板</h1>
+	      <div class="panel-divider"><span>❀</span></div>
+	      <p class="panel-subtitle">落樱缤纷，静待君来</p>
+	    </div>
     <div class="card">
       <h2 class="card-title"> 当前 UUID</h2>
       <div class="uuid-box">
@@ -46,9 +56,23 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
             <span class="slider"></span>
           </label>
         </div>
-        <div class="proxy-capsule" id="proxyCapsule">
+        <div class="proxy-segment" id="proxyCapsule">
+          <div class="proxy-segment-thumb" id="proxySegmentThumb"></div>
           <div class="proxy-option active" data-type="reverse" onclick="switchProxyType('reverse')">反代</div>
           <div class="proxy-option" data-type="socks5" onclick="switchProxyType('socks5')">SOCKS5</div>
+        </div>
+      </div>
+      <div class="wallpaper-settings" id="proxyFieldGroup" style="margin-top: 12px; display: none;">
+        <div class="wallpaper-input-group" id="reverseField">
+          <label>动态反代地址：</label>
+          <input type="text" id="proxyIPInput" class="wallpaper-input" placeholder="留空默认 ProxyIP.JP.CMLiussss.net">
+        </div>
+        <div class="wallpaper-input-group" id="socks5Field" style="display:none">
+          <label>SOCKS5 账号：</label>
+          <input type="text" id="socks5Input" class="wallpaper-input" placeholder="留空默认直连，格式 user:pass@host:port">
+        </div>
+        <div class="button-group">
+          <button class="cute-button" onclick="保存代理地址()">保存地址</button>
         </div>
       </div>
       <div class="proxy-status" id="proxyStatus">直连</div>
@@ -87,16 +111,8 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
     </div>
     <div class="card">
       <h2 class="card-title">📊 CF请求统计</h2>
-      <div class="switch-container">
-        <div class="toggle-row">
-          <label>启用请求统计</label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="subInfoToggle" onchange="toggleSubInfo()">
-            <span class="slider"></span>
-          </label>
-        </div>
-      </div>
       <div class="wallpaper-settings" style="margin-top: 12px;">
+        <div style="font-size: 12px; color: #888; margin-bottom: 10px;">填入 Cloudflare 凭证后自动开启请求统计，未填写则不开启。每次加载面板自动刷新用量。</div>
         <div class="wallpaper-input-group">
           <label>认证方式：</label>
           <select id="cfAuthMethod" class="wallpaper-input" onchange="切换CF认证方式()">
@@ -126,10 +142,9 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
         </div>
         <div class="button-group">
           <button class="cute-button" onclick="保存CF凭证()">保存设置</button>
-          <button class="cute-button" onclick="刷新用量()">刷新用量</button>
         </div>
       </div>
-      <div class="proxy-status" id="subInfoStatus">当前未启用请求统计</div>
+      <div class="proxy-status" id="subInfoStatus">加载中...</div>
     </div>
     <div class="card">
       <h2 class="card-title">🛡️ ECH 设置</h2>

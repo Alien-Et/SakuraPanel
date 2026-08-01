@@ -49,8 +49,8 @@ async function 解析头(数据, env, uuid) {
 }
 
 async function 智能连接(地址, 端口, 地址类型, env) {
-  const 当前反代地址 = env.PROXYIP || 共享状态.反代地址;
-  const SOCKS5账号 = env.SOCKS5 || '';
+  const 当前反代地址 = 共享状态.反代地址;
+  const SOCKS5账号 = 共享状态.SOCKS5账号;
 
   if (!地址 || 地址.trim() === '') {
     return await 尝试直连(地址, 端口);

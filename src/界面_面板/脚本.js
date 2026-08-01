@@ -59,6 +59,8 @@ export function 生成脚本(参数) {
           proxyEnabled = proxyData.proxyEnabled;
           proxyType = proxyData.proxyType;
           forceProxy = proxyData.forceProxy;
+          document.getElementById('proxyIPInput').value = proxyData.proxyIP || '';
+          document.getElementById('socks5Input').value = proxyData.socks5 || '';
         }
 
         // 获取B64加密设置
@@ -133,7 +135,6 @@ export function 生成脚本(参数) {
         const 默认DNS = 'https://dns.alidns.com/dns-query';
         document.getElementById('echDNSInput').value = (echDNS && echDNS !== 默认DNS) ? echDNS : '';
         document.getElementById('subTokenToggle').checked = subTokenEnabled;
-        document.getElementById('subInfoToggle').checked = subInfoEnabled;
 
         updateProxyUI();
         updateProxyStatus();
@@ -141,8 +142,8 @@ export function 生成脚本(参数) {
         updateAirportStatus();
         updateEchStatus();
         updateSubTokenStatus();
-        updateSubInfoStatus();
         updateSubLinks();
+        刷新用量();
       }
     }
 
@@ -240,14 +241,22 @@ export function 生成脚本(参数) {
       const forceProxyNote = document.getElementById('forceProxyNote');
       const forceProxyText = document.getElementById('forceProxyText');
       const proxyCapsule = document.getElementById('proxyCapsule');
+      const proxyFieldGroup = document.getElementById('proxyFieldGroup');
       const options = document.querySelectorAll('.proxy-option');
 
       forceProxyRow.style.display = proxyEnabled ? 'flex' : 'none';
       forceProxyNote.style.display = proxyEnabled ? 'block' : 'none';
       proxyCapsule.style.display = proxyEnabled ? 'flex' : 'none';
+      proxyFieldGroup.style.display = proxyEnabled ? 'block' : 'none';
       options.forEach(opt => {
         opt.classList.toggle('active', opt.dataset.type === proxyType);
       });
+      // 移动玻璃拟态滑块到当前选中项
+      const segmentThumb = document.getElementById('proxySegmentThumb');
+      if (segmentThumb) segmentThumb.style.transform = proxyType === 'socks5' ? 'translateX(100%)' : 'translateX(0)';
+      // 根据代理类型切换显示对应的地址输入框
+      document.getElementById('reverseField').style.display = proxyType === 'reverse' ? '' : 'none';
+      document.getElementById('socks5Field').style.display = proxyType === 'socks5' ? '' : 'none';
 
       if (proxyEnabled) {
         forceProxyText.textContent = forceProxy
@@ -446,6 +455,25 @@ export function 生成脚本(参数) {
         .then(() => updateProxyStatus());
     }
 
+    async function 保存代理地址() {
+      const proxyIP = document.getElementById('proxyIPInput').value.trim();
+      const socks5 = document.getElementById('socks5Input').value.trim();
+      const formData = new FormData();
+      formData.append('proxyEnabled', proxyEnabled);
+      formData.append('proxyType', proxyType);
+      formData.append('forceProxy', forceProxy);
+      formData.append('proxyIP', proxyIP);
+      formData.append('socks5', socks5);
+      try {
+        const res = await fetch('/set-proxy-state', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error('保存失败');
+        alert('代理地址已保存');
+        updateProxyStatus();
+      } catch (error) {
+        alert('保存代理地址失败：' + error.message);
+      }
+    }
+
     function 导入Config(配置路径, hostName, type) {
       const tokenParam = subTokenEnabled && subToken ? '?token=' + subToken : '';
       window.location.href = type + '://install-config?url=https://' + hostName + '/' + 配置路径 + '/' + type + tokenParam;
@@ -585,6 +613,62 @@ export function 生成脚本(参数) {
     document.addEventListener('DOMContentLoaded', () => {
       // updateProxyUI() is called inside initializeSettings, so we can remove it from here
       初始化壁纸设置();
+
+      // 标题滚动渐隐：向下滚动时标题逐渐淡出
+      const panelHeader = document.querySelector('.panel-header');
+      if (panelHeader) {
+        let 滚动锁 = false;
+        const 更新标题渐隐 = () => {
+          const progress = Math.min(window.scrollY / 200, 1);
+          const flyOffset = -progress * progress * 300;
+          const opacity = Math.max(0, 1 - progress * 1.4);
+          const scale = 1 - progress * 0.25;
+          const rotate = -progress * 4;
+          const blur = progress * 4;
+          panelHeader.style.transform = 'translateY(' + flyOffset + 'px) scale(' + scale + ') rotate(' + rotate + 'deg)';
+          panelHeader.style.opacity = opacity;
+          panelHeader.style.filter = 'blur(' + blur + 'px)';
+          panelHeader.style.pointerEvents = opacity < 0.1 ? 'none' : '';
+          滚动锁 = false;
+        };
+        window.addEventListener('scroll', () => {
+          if (!滚动锁) {
+            滚动锁 = true;
+            requestAnimationFrame(更新标题渐隐);
+          }
+        }, { passive: true });
+      }
+
+      // 副标题打字机效果（多句诗情画意循环）
+      const 副标题 = document.querySelector('.panel-subtitle');
+      if (副标题) {
+        const 诗句 = ['落樱缤纷，静待君来', '云端漫步，联通山海', '一树樱花一树诗', '花谢花飞，云卷云舒'];
+        let 句索引 = 0, idx = 0, 删除中 = false;
+        const 打字 = () => {
+          const 当前句 = 诗句[句索引];
+          if (!删除中) {
+            idx++;
+            副标题.textContent = 当前句.slice(0, idx);
+            if (idx >= 当前句.length) {
+              setTimeout(() => { 删除中 = true; 打字(); }, 1800);
+              return;
+            }
+            setTimeout(打字, 90);
+          } else {
+            idx--;
+            副标题.textContent = 当前句.slice(0, idx);
+            if (idx <= 0) {
+              删除中 = false;
+              句索引 = (句索引 + 1) % 诗句.length;
+              setTimeout(打字, 400);
+              return;
+            }
+            setTimeout(打字, 45);
+          }
+        };
+        副标题.innerHTML = '';
+        打字();
+      }
     });
 
     // 保存壁纸设置函数
@@ -797,34 +881,9 @@ export function 生成脚本(参数) {
       return true;
     }
 
-    async function toggleSubInfo() {
-      subInfoEnabled = document.getElementById('subInfoToggle').checked;
-      if (subInfoEnabled && !校验CF凭证()) {
-        document.getElementById('subInfoToggle').checked = false;
-        return;
-      }
-      const formData = new FormData();
-      formData.append('subInfoEnabled', subInfoEnabled);
-      formData.append('authMethod', document.getElementById('cfAuthMethod').value);
-      formData.append('accountId', document.getElementById('cfAccountIdInput').value.trim());
-      formData.append('apiToken', 获取CF输入值('cfApiTokenInput'));
-      formData.append('email', 获取CF输入值('cfEmailInput'));
-      formData.append('globalApiKey', 获取CF输入值('cfGlobalApiKeyInput'));
-      try {
-        const res = await fetch('/set-cf-credentials', { method: 'POST', body: formData });
-        if (!res.ok) throw new Error('保存失败');
-        updateSubInfoStatus();
-      } catch (error) {
-        alert('切换请求统计失败，请重试');
-        document.getElementById('subInfoToggle').checked = !subInfoEnabled;
-        subInfoEnabled = !subInfoEnabled;
-      }
-    }
-
     async function 保存CF凭证() {
       if (!校验CF凭证()) return;
       const formData = new FormData();
-      formData.append('subInfoEnabled', String(subInfoEnabled));
       formData.append('authMethod', document.getElementById('cfAuthMethod').value);
       formData.append('accountId', document.getElementById('cfAccountIdInput').value.trim());
       formData.append('apiToken', 获取CF输入值('cfApiTokenInput'));
@@ -834,7 +893,7 @@ export function 生成脚本(参数) {
         const res = await fetch('/set-cf-credentials', { method: 'POST', body: formData });
         if (!res.ok) throw new Error('保存失败');
         alert('CF凭证已保存');
-        updateSubInfoStatus();
+        subInfoEnabled = true;
         await 刷新用量();
       } catch (error) {
         alert('保存CF凭证失败：' + error.message);
@@ -843,6 +902,11 @@ export function 生成脚本(参数) {
 
     async function 刷新用量() {
       const statusElement = document.getElementById('subInfoStatus');
+      if (!subInfoEnabled) {
+        statusElement.textContent = '未配置 CF 凭证，填入令牌后自动开启请求统计';
+        statusElement.className = 'proxy-status direct';
+        return;
+      }
       statusElement.textContent = '查询中...';
       try {
         const res = await fetch('/get-cf-usage');
@@ -858,17 +922,6 @@ export function 生成脚本(参数) {
         }
       } catch (error) {
         statusElement.textContent = '查询失败：' + error.message;
-        statusElement.className = 'proxy-status direct';
-      }
-    }
-
-    function updateSubInfoStatus() {
-      const statusElement = document.getElementById('subInfoStatus');
-      if (subInfoEnabled) {
-        statusElement.textContent = '已启用请求统计，点击"刷新用量"查看';
-        statusElement.className = 'proxy-status success';
-      } else {
-        statusElement.textContent = '当前未启用请求统计';
         statusElement.className = 'proxy-status direct';
       }
     }

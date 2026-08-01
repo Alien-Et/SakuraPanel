@@ -151,9 +151,8 @@ export async function 查询CF请求数(env) {
 }
 
 // 获取Subscription-Userinfo响应头（基于CF请求数）
+// 请求统计根据是否填入CF凭证自动开启：有凭证则开启，无凭证则不开启
 export async function 获取流量信息头(env) {
-  const 流量启用 = await env.KV数据库.get('subInfoEnabled') === 'true';
-  if (!流量启用) return {};
   const 用量 = await 查询CF请求数(env);
   if (!用量.success) return {};
   // 映射：Pages请求=upload，Workers请求=download，上限转字节

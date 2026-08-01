@@ -23,8 +23,8 @@ export async function 路由处理(请求, env) {
     let formData;
 
     if (请求头 && 请求头 === 'websocket') {
-      共享状态.反代地址 = env.PROXYIP || 共享状态.反代地址;
-      共享状态.SOCKS5账号 = env.SOCKS5 || 共享状态.SOCKS5账号;
+      共享状态.反代地址 = (await env.KV数据库.get('proxyIP')) || env.PROXYIP || 共享状态.反代地址;
+      共享状态.SOCKS5账号 = (await env.KV数据库.get('socks5')) || env.SOCKS5 || 共享状态.SOCKS5账号;
       return await 升级请求(请求, env);
     }
 
@@ -444,14 +444,25 @@ export async function 路由处理(请求, env) {
         await env.KV数据库.put('proxyEnabled', proxyEnabled);
         await env.KV数据库.put('proxyType', proxyType);
         await env.KV数据库.put('forceProxy', forceProxy);
+        // 可选：反代地址和 SOCKS5 账号（表单提交时携带），留空表示使用默认值
+        if (formData.has('proxyIP')) {
+          const proxyIP = (formData.get('proxyIP') || '').trim();
+          await env.KV数据库.put('proxyIP', proxyIP);
+          共享状态.反代地址 = proxyIP || env.PROXYIP || 共享状态.反代地址;
+        }
+        if (formData.has('socks5')) {
+          const socks5 = (formData.get('socks5') || '').trim();
+          await env.KV数据库.put('socks5', socks5);
+          共享状态.SOCKS5账号 = socks5 || env.SOCKS5 || 共享状态.SOCKS5账号;
+        }
         return new Response(null, { status: 200 });
 
       case '/get-proxy-status': {
         const 代理启用 = await env.KV数据库.get('proxyEnabled') === 'true';
         const 代理类型 = await env.KV数据库.get('proxyType') || 'reverse';
         const 强制代理 = await env.KV数据库.get('forceProxy') === 'true';
-        const 当前反代地址 = env.PROXYIP || 共享状态.反代地址;
-        const SOCKS5账号 = env.SOCKS5 || '';
+        const 当前反代地址 = (await env.KV数据库.get('proxyIP')) || env.PROXYIP || 共享状态.反代地址;
+        const SOCKS5账号 = (await env.KV数据库.get('socks5')) || env.SOCKS5 || '';
         let status = '直连';
         let 连接地址 = '';
         let 出口IP = '未知';
@@ -493,7 +504,9 @@ export async function 路由处理(请求, env) {
         const proxyEnabled = await env.KV数据库.get('proxyEnabled') === 'true';
         const proxyType = await env.KV数据库.get('proxyType') || 'reverse';
         const forceProxy = await env.KV数据库.get('forceProxy') === 'true';
-        return 创建JSON响应({ proxyEnabled, proxyType, forceProxy });
+        const proxyIP = await env.KV数据库.get('proxyIP') || '';
+        const socks5 = await env.KV数据库.get('socks5') || '';
+        return 创建JSON响应({ proxyEnabled, proxyType, forceProxy, proxyIP, socks5 });
       }
 
       case '/set-b64-state':
@@ -668,11 +681,12 @@ export async function 路由处理(请求, env) {
         if (!cfToken || cfToken !== 有效CfToken) {
           return 创建JSON响应({ error: '未登录或Token无效' }, 401);
         }
-        const subInfoEnabled = await env.KV数据库.get('subInfoEnabled') === 'true';
         const accountId = await env.KV数据库.get('cf_account_id') || '';
         const apiToken = await env.KV数据库.get('cf_api_token') || '';
         const email = await env.KV数据库.get('cf_email') || '';
         const globalApiKey = await env.KV数据库.get('cf_global_api_key') || '';
+        // 根据是否填入凭证自动判定是否启用请求统计
+        const subInfoEnabled = !!(accountId && apiToken) || !!(email && globalApiKey);
         const authMethod = apiToken ? 'token' : (email ? 'email' : 'token');
         return 创建JSON响应({ subInfoEnabled, authMethod, accountId, apiToken, email, globalApiKey });
       }
@@ -685,18 +699,24 @@ export async function 路由处理(请求, env) {
         }
         formData = await 请求.formData();
         const authMethod = formData.get('authMethod') || 'token';
-        await env.KV数据库.put('subInfoEnabled', formData.get('subInfoEnabled'));
-        await env.KV数据库.put('cf_account_id', formData.get('accountId') || '');
+        const accountId = formData.get('accountId') || '';
+        const apiToken = formData.get('apiToken') || '';
+        const email = formData.get('email') || '';
+        const globalApiKey = formData.get('globalApiKey') || '';
+        // 请求统计根据是否填入凭证自动开启：有凭证则开启，无凭证则不开启
+        const hasCredentials = (accountId && apiToken) || (email && globalApiKey);
+        await env.KV数据库.put('subInfoEnabled', hasCredentials ? 'true' : 'false');
+        await env.KV数据库.put('cf_account_id', accountId);
         if (authMethod === 'token') {
           // Token 方式：保存 Token 字段，清空邮箱方式字段
-          await env.KV数据库.put('cf_api_token', formData.get('apiToken') || '');
+          await env.KV数据库.put('cf_api_token', apiToken);
           await env.KV数据库.delete('cf_email');
           await env.KV数据库.delete('cf_global_api_key');
         } else {
           // 邮箱方式：保存邮箱字段，清空 Token 字段
           await env.KV数据库.delete('cf_api_token');
-          await env.KV数据库.put('cf_email', formData.get('email') || '');
-          await env.KV数据库.put('cf_global_api_key', formData.get('globalApiKey') || '');
+          await env.KV数据库.put('cf_email', email);
+          await env.KV数据库.put('cf_global_api_key', globalApiKey);
         }
         await env.KV数据库.delete('cf_usage_cache');
         return new Response(null, { status: 200 });
