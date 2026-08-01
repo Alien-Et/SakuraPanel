@@ -1,5 +1,5 @@
 import { 共享状态 } from './共享状态.js';
-import { 创建HTML响应, 创建重定向响应, 创建JSON响应, 生成UUID, 加密密码, 检查锁定, 验证订阅Token, 获取流量信息头, 生成订阅Token, 查询CF请求数 } from './逻辑/辅助函数.js';
+import { 创建HTML响应, 创建重定向响应, 创建JSON响应, 生成UUID, 加密密码, 提取设备指纹, 检查锁定, 验证订阅Token, 获取流量信息头, 生成订阅Token, 查询CF请求数 } from './逻辑/辅助函数.js';
 import { 获取或初始化UUID, 加载节点和配置, 获取配置 } from './逻辑/节点配置.js';
 import { 升级请求 } from './逻辑/WebSocket处理.js';
 import { 生成猫咪, 生成通用, 生成SingBox } from './逻辑/配置生成器.js';
@@ -19,7 +19,7 @@ export async function 路由处理(请求, env) {
     const hostName = 请求.headers.get('Host');
     const UA = 请求.headers.get('User-Agent') || 'unknown';
     const IP = 请求.headers.get('CF-Connecting-IP') || 'unknown';
-    const 设备标识 = IP;
+    const 设备标识 = 提取设备指纹(UA) + '_' + IP;
     let formData;
 
     if (url.pathname === '/favicon.ico') {

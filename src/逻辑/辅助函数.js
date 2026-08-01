@@ -46,6 +46,27 @@ export async function 加密密码(密码) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// 从UA提取粗粒度设备指纹（浏览器主版本+操作系统类别），
+// 既能区分不同设备避免NAT下同IP误锁，又避免完整UA细微差异导致计数key过多
+export function 提取设备指纹(UA) {
+  const ua = UA || '';
+  let 浏览器 = 'other';
+  let m;
+  if ((m = /Edg(?:e|A|iOS)?\/(\d+)/.exec(ua))) 浏览器 = 'edge' + m[1];
+  else if ((m = /Chrome\/(\d+)/.exec(ua))) 浏览器 = 'chrome' + m[1];
+  else if ((m = /(?:Firefox|FxIOS)\/(\d+)/.exec(ua))) 浏览器 = 'firefox' + m[1];
+  else if ((m = /Version\/(\d+).*Safari/.exec(ua))) 浏览器 = 'safari' + m[1];
+
+  let 系统 = 'other';
+  if (/Windows/.test(ua)) 系统 = 'win';
+  else if (/Android/.test(ua)) 系统 = 'android';
+  else if (/iPhone|iPad|iPod/.test(ua)) 系统 = 'ios';
+  else if (/Mac OS X/.test(ua)) 系统 = 'mac';
+  else if (/Linux/.test(ua)) 系统 = 'linux';
+
+  return 浏览器 + '_' + 系统;
+}
+
 export async function 检查锁定(env, 设备标识) {
   const 锁定时间戳 = await env.KV数据库.get(`lock_${设备标识}`);
   const 当前时间 = Date.now();
