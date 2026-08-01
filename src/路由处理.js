@@ -19,7 +19,7 @@ export async function 路由处理(请求, env) {
     const hostName = 请求.headers.get('Host');
     const UA = 请求.headers.get('User-Agent') || 'unknown';
     const IP = 请求.headers.get('CF-Connecting-IP') || 'unknown';
-    const 设备标识 = `${UA}_${IP}`;
+    const 设备标识 = IP;
     let formData;
 
     if (url.pathname === '/favicon.ico') {
@@ -103,14 +103,14 @@ export async function 路由处理(请求, env) {
       if (输入用户名 === 凭据对象.用户名 && 密码匹配) {
         const 新Token = Math.random().toString(36).substring(2);
         await env.KV数据库.put('current_token', 新Token, { expirationTtl: 300 });
-        await env.KV数据库.put(`fail_${设备标识}`, '0');
+        await env.KV数据库.put(`fail_${设备标识}`, '0', { expirationTtl: 1800 });
         return 创建重定向响应(`/${共享状态.配置路径}`, {
           'Set-Cookie': `token=${新Token}; Path=/; HttpOnly; SameSite=Strict`
         });
       }
 
       let 失败次数 = Number(await env.KV数据库.get(`fail_${设备标识}`) || 0) + 1;
-      await env.KV数据库.put(`fail_${设备标识}`, String(失败次数));
+      await env.KV数据库.put(`fail_${设备标识}`, String(失败次数), { expirationTtl: 1800 });
 
       if (失败次数 >= 共享状态.最大失败次数) {
         await env.KV数据库.put(`lock_${设备标识}`, String(Date.now() + 共享状态.锁定时间), { expirationTtl: 300 });
@@ -150,7 +150,7 @@ export async function 路由处理(请求, env) {
         return 创建HTML响应(生成登录注册界面('登录', { 输错密码: 失败次数 > 0, 剩余次数: 共享状态.最大失败次数 - 失败次数 }));
 
       case '/reset-login-failures':
-        await env.KV数据库.put(`fail_${设备标识}`, '0');
+        await env.KV数据库.put(`fail_${设备标识}`, '0', { expirationTtl: 1800 });
         await env.KV数据库.delete(`lock_${设备标识}`);
         return new Response(null, { status: 200 });
 
