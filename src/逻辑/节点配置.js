@@ -50,7 +50,8 @@ export async function 加载节点和配置(env, hostName) {
     );
 
     const 域名节点列表 = [...new Set(响应列表.flat())];
-    // 按 地址:端口 去重：URL节点先入，手动节点覆盖（手动节点已标准化且带自定义名称）
+    // 按 地址:端口 去重：URL节点先入，手动节点仅在更完整时覆盖（避免不完整的手动节点丢失URL的名称/TLS）
+    const 节点完整度 = (解析, 原始) => (解析.名称 ? 2 : 0) + (原始.includes('@') ? 1 : 0);
     const 节点Map = new Map();
     for (const 节点 of 域名节点列表) {
       const 解析 = 解析节点(节点);
@@ -58,7 +59,11 @@ export async function 加载节点和配置(env, hostName) {
     }
     for (const 节点 of 手动节点列表) {
       const 解析 = 解析节点(节点);
-      if (解析) 节点Map.set(解析.去重键, 节点);
+      if (!解析) continue;
+      const 已有 = 节点Map.get(解析.去重键);
+      if (!已有 || 节点完整度(解析, 节点) >= 节点完整度(解析节点(已有), 已有)) {
+        节点Map.set(解析.去重键, 节点);
+      }
     }
     const 合并节点列表 = [...节点Map.values()];
 
