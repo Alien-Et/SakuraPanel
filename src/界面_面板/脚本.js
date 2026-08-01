@@ -931,7 +931,7 @@ export function 生成脚本(参数) {
       const tokenParam = subTokenEnabled && subToken ? '?token=' + subToken : '';
       const links = [
         { id: 'clashLink', base: 'https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}' },
-        { id: 'v2rayLink', base: 'https://${hostName}/${配置路径}/${atob('djJyYXk=')}' },
+        { id: 'v2rayLink', base: 'https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}' },
         { id: 'singboxLink', base: 'https://${hostName}/${配置路径}/${atob('c2luZ2JveA==')}' }
       ];
       links.forEach(link => {

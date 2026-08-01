@@ -225,11 +225,11 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
     <div class="card">
       <h2 class="card-title">🐰 通用订阅</h2>
       <div class="link-box">
-        <p>订阅链接：<br><a id="v2rayLink" href="https://${hostName}/${配置路径}/${atob('djJyYXk=')}">https://${hostName}/${配置路径}/${atob('djJyYXk=')}</a></p>
+        <p>订阅链接：<br><a id="v2rayLink" href="https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}">https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}</a></p>
       </div>
       <div class="button-group">
         <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">导入手机</button>
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluTQ==')}')">导入电脑</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXlu')}')">导入电脑</button>
       </div>
     </div>
     <div class="card">

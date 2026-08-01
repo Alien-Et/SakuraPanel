@@ -189,23 +189,6 @@ export async function 路由处理(请求, env) {
         });
       }
 
-      case `/${共享状态.配置路径}/` + atob('djJyYXk='): {
-        if (!(await 验证订阅Token(env, hostName, url))) return 创建JSON响应({ error: 'Token无效或缺失' }, 403);
-        await 加载节点和配置(env, hostName);
-        const 通用配置 = await 生成通用(env, hostName);
-        const 机场名称v2 = await env.KV数据库.get('airportName') || '樱花订阅';
-        const cleanAirportNamev2 = 机场名称v2.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
-        const 流量头v2 = await 获取流量信息头(env);
-        return new Response(通用配置, {
-          status: 200,
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8",
-            "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanAirportNamev2)}`,
-            ...流量头v2
-          }
-        });
-      }
-
       case `/${共享状态.配置路径}/` + atob('djJyYXluZw=='): {
         if (!(await 验证订阅Token(env, hostName, url))) return 创建JSON响应({ error: 'Token无效或缺失' }, 403);
         await 加载节点和配置(env, hostName);
