@@ -190,11 +190,24 @@ export function 生成脚本(参数) {
         alert('URL 必须以 http:// 或 https:// 开头哦~');
         return;
       }
-      fetch('/${配置路径}/add-node-path', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: url })
-      })
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      fetch(url, { signal: controller.signal })
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.text();
+        })
+        .then(text => {
+          const validPattern = /\b(?:\d{1,3}\.){3}\d{1,3}\b|\[[0-9a-fA-F:]+\]|\b[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}\.[a-zA-Z]{2,}\b/;
+          if (!validPattern.test(text)) {
+            throw new Error('该地址未返回包含有效地址格式的内容，不允许添加哦~');
+          }
+          return fetch('/${配置路径}/add-node-path', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: url })
+          });
+        })
         .then(response => response.json())
         .then(data => {
           if (data.success) {
@@ -205,7 +218,16 @@ export function 生成脚本(参数) {
             alert(data.error || '添加失败，请稍后再试~');
           }
         })
-        .catch(() => alert('添加失败，网络出错啦~'));
+        .catch((error) => {
+          clearTimeout(timeoutId);
+          if (error.name === 'AbortError') {
+            alert('网络超时，链接不上哦~');
+          } else if (error.message === 'No valid IP addresses found in the response') {
+            alert('该地址未返回包含 IP 的内容，不允许添加哦~');
+          } else {
+            alert('网络异常，链接不上，不允许添加哦~');
+          }
+        });
     }
 
     function 移除节点路径(index) {

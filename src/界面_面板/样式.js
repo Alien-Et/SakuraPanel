@@ -335,6 +335,7 @@ export const 样式 = `
     .file-list, .url-list { margin: 15px 0; max-height: 120px; overflow-y: auto; text-align: left; scrollbar-width: none; -ms-overflow-style: none; }
     .file-list::-webkit-scrollbar, .url-list::-webkit-scrollbar { display: none; }
     .file-item, .url-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 10px; margin: 5px 0; font-size: 0.9em; }
+    .file-item span, .url-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; margin-right: 10px; }
     .file-item button, .url-item button { background: #ff9999; border: none; border-radius: 15px; padding: 5px 10px; color: white; cursor: pointer; transition: background 0.3s ease; }
     .file-item button:hover, .url-item button:hover { background: #ff6666; }
     .progress-container { display: none; margin-top: 15px; }
