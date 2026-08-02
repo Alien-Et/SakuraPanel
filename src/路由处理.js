@@ -200,7 +200,7 @@ export async function 路由处理(请求, env) {
           status: 200,
           headers: {
             "Content-Type": "text/plain;charset=utf-8",
-            "Content-Disposition": `attachment; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanAirportNameng)}`,
+            "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanAirportNameng)}`,
             ...流量头ng
           }
         });
@@ -219,23 +219,6 @@ export async function 路由处理(请求, env) {
             "Content-Type": "application/json; charset=utf-8",
             "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanSbName)}`,
             ...流量头sb
-          }
-        });
-      }
-
-      case `/${共享状态.配置路径}/` + atob('djJyYXlu'): {
-        if (!(await 验证订阅Token(env, hostName, url))) return 创建JSON响应({ error: 'Token无效或缺失' }, 403);
-        await 加载节点和配置(env, hostName);
-        const 电脑通用配置 = await 生成通用(env, hostName);
-        const 机场名称n = await env.KV数据库.get('airportName') || '樱花订阅';
-        const cleanAirportNamen = 机场名称n.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
-        const 流量头n = await 获取流量信息头(env);
-        return new Response(电脑通用配置, {
-          status: 200,
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8",
-            "Content-Disposition": `attachment; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanAirportNamen)}`,
-            ...流量头n
           }
         });
       }
