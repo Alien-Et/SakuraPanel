@@ -562,5 +562,98 @@ export const 样式 = `
         box-shadow: 0 2px 6px rgba(255, 133, 162, 0.25), inset 0 2px 4px rgba(255, 20, 147, 0.5);
       }
     }
+
+    /* 重置确认弹窗样式 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(4px);
+    }
+    .modal.show { display: flex; }
+    .modal-content {
+      background: #fff0f5;
+      border: 2px solid #ff69b4;
+      border-radius: 20px;
+      padding: 25px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 30px rgba(255, 20, 147, 0.35);
+      animation: modalFadeIn 0.25s ease;
+    }
+    .modal-content h3 {
+      margin: 0 0 10px;
+      color: #ff1493;
+      font-size: 1.3em;
+    }
+    .modal-content p {
+      margin: 0 0 15px;
+      color: #666;
+      font-size: 0.95em;
+      line-height: 1.5;
+    }
+    .modal-content .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .modal-content .auth-form input {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid #ffb6c1;
+      font-size: 0.95em;
+      background: #fff;
+      color: #333;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .modal-content .auth-form input:focus {
+      border-color: #ff1493;
+      box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.15);
+    }
+    .modal-content .button-group {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .reset-btn {
+      background: linear-gradient(135deg, #ff85a2, #ff6b8a);
+      border: none;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.95em;
+      transition: all 0.2s ease;
+    }
+    .reset-btn:hover {
+      background: linear-gradient(135deg, #ff6b8a, #ff4785);
+      box-shadow: 0 4px 12px rgba(255, 20, 147, 0.35);
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translateY(15px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @media (prefers-color-scheme: dark) {
+      .modal-content {
+        background: rgba(40, 35, 40, 0.98);
+        border-color: #ff85a2;
+        color: #ffd1dc;
+      }
+      .modal-content h3 { color: #ff85a2; }
+      .modal-content p { color: #ddd; }
+      .modal-content .auth-form input {
+        background: rgba(50, 45, 50, 0.9);
+        border-color: #ff85a2;
+        color: #ffd1dc;
+      }
+    }
     ${花瓣样式}
   `;

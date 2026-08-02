@@ -286,9 +286,27 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
     <div class="card">
       <div class="button-group">
         <a href="/${配置路径}/logout" class="cute-button logout-btn">退出登录</a>
+        <button class="cute-button reset-btn" onclick="显示重置确认()">重置</button>
       </div>
       <div style="text-align: center; margin-top: 10px;">
         <a href="https://github.com/PoemMisty/CFData-WEB" target="_blank" rel="noopener noreferrer" style="color: #888; font-size: 0.9em; text-decoration: none;">🔗 优选工具：CFData-WEB</a>
+      </div>
+    </div>
+
+    <!-- 重置确认弹窗 -->
+    <div id="resetModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h3>⚠️ 确认重置</h3>
+        <p style="color: #888; margin-bottom: 15px;">此操作将清空所有数据，包括账号、节点、代理设置、壁纸等，且需要重新注册。请输入账号密码确认：</p>
+        <div class="auth-form">
+          <input type="text" id="resetUsername" placeholder="请输入账号" autocomplete="username">
+          <input type="password" id="resetPassword" placeholder="请输入密码" autocomplete="current-password">
+        </div>
+        <p id="resetError" style="color: #ff4444; font-size: 0.9em; margin-top: 10px; display: none;"></p>
+        <div class="button-group" style="margin-top: 20px;">
+          <button class="cute-button" onclick="执行重置()">确认重置</button>
+          <button class="cute-button logout-btn" onclick="关闭重置弹窗()">取消</button>
+        </div>
       </div>
     </div>
     <div class="powered-by">由 <a href="https://github.com/Alien-Et/SakuraPanel" target="_blank" rel="noopener noreferrer">SakuraPanel</a> 项目驱动</div>

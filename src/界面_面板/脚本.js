@@ -1105,6 +1105,69 @@ export function 生成脚本(参数) {
       });
     }
 
+    // ====================== 重置功能 ======================
+    function 显示重置确认() {
+      const modal = document.getElementById('resetModal');
+      const errorEl = document.getElementById('resetError');
+      if (modal) {
+        modal.style.display = 'flex';
+        if (errorEl) {
+          errorEl.style.display = 'none';
+          errorEl.textContent = '';
+        }
+        const usernameInput = document.getElementById('resetUsername');
+        const passwordInput = document.getElementById('resetPassword');
+        if (usernameInput) usernameInput.value = '';
+        if (passwordInput) passwordInput.value = '';
+      }
+    }
+
+    function 关闭重置弹窗() {
+      const modal = document.getElementById('resetModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function 执行重置() {
+      const username = document.getElementById('resetUsername').value.trim();
+      const password = document.getElementById('resetPassword').value.trim();
+      const errorEl = document.getElementById('resetError');
+
+      if (!username || !password) {
+        if (errorEl) {
+          errorEl.textContent = '请输入账号和密码';
+          errorEl.style.display = 'block';
+        }
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('password', password);
+
+        const response = await fetch('/${配置路径}/reset', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.redirect) {
+          window.location.href = result.redirect;
+        } else {
+          if (errorEl) {
+            errorEl.textContent = result.error || '账号或密码错误';
+            errorEl.style.display = 'block';
+          }
+        }
+      } catch (error) {
+        if (errorEl) {
+          errorEl.textContent = '请求失败，请重试';
+          errorEl.style.display = 'block';
+        }
+      }
+    }
+
     ${花瓣脚本}
   `;
 }

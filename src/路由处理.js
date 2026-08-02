@@ -133,6 +133,14 @@ export async function 路由处理(请求, env) {
     }
 
     switch (url.pathname) {
+      case '/register': {
+        const 已注册 = await env.KV数据库.get('stored_credentials');
+        if (已注册) {
+          return 创建重定向响应('/login');
+        }
+        return 创建HTML响应(生成登录注册界面('注册'));
+      }
+
       case '/login':
         const 存储凭据 = await env.KV数据库.get('stored_credentials');
         if (!存储凭据) {
@@ -150,16 +158,22 @@ export async function 路由处理(请求, env) {
         return 创建HTML响应(生成登录注册界面('登录', { 输错密码: 失败次数 > 0, 剩余次数: 共享状态.最大失败次数 - 失败次数 }));
 
       case '/reset-login-failures':
-        await env.KV数据库.put(`fail_${设备标识}`, '0', { expirationTtl: 1800 });
-        await env.KV数据库.delete(`lock_${设备标识}`);
+        try {
+          await env.KV数据库.put(`fail_${设备标识}`, '0', { expirationTtl: 1800 });
+          await env.KV数据库.delete(`lock_${设备标识}`);
+        } catch {}
         return new Response(null, { status: 200 });
 
       case '/check-lock':
-        const 锁定检查 = await 检查锁定(env, 设备标识);
-        return 创建JSON响应({
-          locked: 锁定检查.被锁定,
-          remainingTime: 锁定检查.剩余时间
-        });
+        try {
+          const 锁定检查 = await 检查锁定(env, 设备标识);
+          return 创建JSON响应({
+            locked: 锁定检查.被锁定,
+            remainingTime: 锁定检查.剩余时间
+          });
+        } catch {
+          return 创建JSON响应({ locked: false, remainingTime: 0 });
+        }
 
       case `/${共享状态.配置路径}`:
         const Token = 请求.headers.get('Cookie')?.split('=')[1];
@@ -171,6 +185,39 @@ export async function 路由处理(请求, env) {
       case `/${共享状态.配置路径}/logout`:
         await env.KV数据库.delete('current_token');
         return 创建重定向响应('/login', { 'Set-Cookie': 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict' });
+
+      case `/${共享状态.配置路径}/reset`:
+        if (请求.method !== 'POST') return 创建JSON响应({ error: '方法不允许' }, 405);
+        try {
+          formData = await 请求.formData();
+        } catch {
+          return 创建JSON响应({ error: '提交数据格式错误，请重试' }, 400);
+        }
+
+        const 重置用户名 = formData.get('username');
+        const 重置密码 = formData.get('password');
+        const 重置存储凭据 = await env.KV数据库.get('stored_credentials');
+        if (!重置存储凭据) return 创建JSON响应({ error: '账号不存在' }, 400);
+        const 凭据对象 = JSON.parse(重置存储凭据 || '{}');
+        const 密码匹配 = (await 加密密码(重置密码)) === 凭据对象.密码;
+        if (!(重置用户名 === 凭据对象.用户名 && 密码匹配)) {
+          return 创建JSON响应({ error: '账号或密码错误' }, 401);
+        }
+
+        const 需要删除的键 = [
+          'stored_credentials', 'current_token', 'current_uuid',
+          'manual_preferred_ips', 'node_file_paths',
+          'proxyEnabled', 'proxyType', 'forceProxy', 'proxyIP', 'socks5',
+          'b64Enabled', 'echEnabled', 'echSNI', 'echDNS',
+          'subTokenEnabled', 'airportName',
+          'custom_light_bg', 'custom_dark_bg',
+          'cf_account_id', 'cf_api_token', 'cf_email', 'cf_global_api_key', 'cf_usage_cache'
+        ];
+        for (const key of 需要删除的键) {
+          try { await env.KV数据库.delete(key); } catch {}
+        }
+
+        return 创建JSON响应({ success: true, redirect: '/register' });
 
       case `/${共享状态.配置路径}/` + atob('Y2xhc2g='): {
         if (!(await 验证订阅Token(env, hostName, url))) return 创建JSON响应({ error: 'Token无效或缺失' }, 403);
@@ -597,9 +644,13 @@ export async function 路由处理(请求, env) {
 
       case '/get-wallpaper-public':
         // 公共API，不需要认证，用于登录/注册界面
-        const publicLightBg = await env.KV数据库.get('custom_light_bg') || '';
-        const publicDarkBg = await env.KV数据库.get('custom_dark_bg') || '';
-        return 创建JSON响应({ lightWallpaper: publicLightBg, darkWallpaper: publicDarkBg });
+        try {
+          const publicLightBg = await env.KV数据库.get('custom_light_bg') || '';
+          const publicDarkBg = await env.KV数据库.get('custom_dark_bg') || '';
+          return 创建JSON响应({ lightWallpaper: publicLightBg, darkWallpaper: publicDarkBg });
+        } catch {
+          return 创建JSON响应({ lightWallpaper: '/default-light.png', darkWallpaper: '/default-dark.png' });
+        }
 
       case '/reset-wallpaper':
         const resetWallpaperToken = 请求.headers.get('Cookie')?.split('=')[1];

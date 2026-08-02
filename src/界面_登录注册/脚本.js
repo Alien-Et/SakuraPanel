@@ -79,7 +79,7 @@ export function 生成脚本(参数) {
         });
     }
 
-    if (${锁定状态 ? 'true' : 'false'}) {
+    if (${!!锁定状态}) {
       startCountdown();
       setInterval(syncWithServer, 10000);
       document.addEventListener('visibilitychange', () => {
