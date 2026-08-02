@@ -4,7 +4,7 @@ name = "sakura-panel"
 # 主入口文件
 main = "_worker.js"
 # 兼容性日期（Cloudflare Workers API版本）
-compatibility_date = "2024-01-01"
+compatibility_date = "2026-08-02"
 
 # 🖼️ 静态资源目录（默认壁纸等）
 [assets]
