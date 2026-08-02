@@ -263,14 +263,11 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
     </div>
     <div class="card">
       <h2 class="upload-title">🌟 上传你的优选节点</h2>
-      <div class="upload-notice force-proxy-note">
-        <p>请上传包含优选IP或域名的.txt文件，每行一个节点</p>
-      </div>
+      <div style="font-size: 12px; color: #888; margin-bottom: 10px;">请上传包含优选IP或域名的.txt文件，每行一个节点</div>
       <form id="uploadForm" action="/${配置路径}/upload" method="POST" enctype="multipart/form-data">
         <label for="ipFiles" class="upload-label">选择文件</label>
         <input type="file" id="ipFiles" name="ipFiles" accept=".txt" multiple required onchange="显示文件()" style="display: none;">
         <div class="file-list" id="fileList"></div>
-        <button type="submit" class="cute-button upload-btn" onclick="开始上传(event)">上传</button>
         <div class="progress-container" id="progressContainer">
           <div class="progress-bar">
             <div class="progress-fill" id="progressFill"></div>
@@ -278,6 +275,13 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
           <div class="progress-text" id="progressText">0%</div>
         </div>
       </form>
+      <div style="margin-top: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong>已上传节点（<span id="manualNodeCount">0</span> 个）</strong>
+          <button class="cute-button" style="font-size: 0.8em; padding: 4px 10px;" onclick="清空手动节点()">全部删除</button>
+        </div>
+        <div class="file-list" id="manualNodeList" style="max-height: 200px; overflow-y: auto;"></div>
+      </div>
     </div>
     <div class="card">
       <div class="button-group">

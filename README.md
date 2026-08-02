@@ -74,9 +74,9 @@
 - **代理协议**：SOCKS5、HTTP代理
 - **安全特性**：密码加密、账户锁定、访问控制
 - **壁纸系统**：KV存储持久化、主题自动切换、全界面同步
-- **订阅支持**：Clash、V2Ray、SingBox 多种客户端配置
+- **订阅支持**：Clash、v2rayn或v2rayng和SingBox 多种客户端配置
 
-#### API端点
+#### 壁纸同步系统
 
 壁纸系统提供以下API端点：
 - `/set-wallpaper` - 设置壁纸（需要认证）
@@ -141,20 +141,10 @@ npx wrangler deploy --env production
 3. 选择本仓库（Fork 后的仓库）
 4. 构建设置：
    - **构建命令**：留空
-   - **构建输出目录**：`assets`
+   - **构建输出目录**：留空
 5. 点击"保存并部署"
 
 > Pages 部署也使用模块化架构，不支持单文件复制粘贴。
-
-### 4. Pages设置说明
-
-#### 函数设置
-
-1. 在[Cloudflare Pages控制台](https://dash.cloudflare.com/pages)中，选择你的项目
-2. 点击"函数"选项卡
-3. 确保已创建名为`_worker`的函数
-4. 点击函数名称进入编辑器
-5. 确保代码已正确粘贴并保存
 
 #### KV命名空间绑定
 
@@ -215,8 +205,6 @@ npx wrangler deploy --env production
    - `LOCKOUT_DURATION`：账户锁定时间（分钟，默认为`30`）
    - `PROXYIP`：反代地址（默认值：`ProxyIP.JP.CMLiussss.net`）
    - `SOCKS5`：SOCKS5账号（格式：`用户名:密码@主机:端口`）
-   - `CUSTOM_LIGHT_BG`：自定义白天壁纸URL
-   - `CUSTOM_DARK_BG`：自定义暗黑壁纸URL
 6. 点击"保存"
 
 #### Pages环境变量设置
@@ -231,8 +219,6 @@ npx wrangler deploy --env production
    - `LOCKOUT_DURATION`：账户锁定时间（分钟，默认为`30`）
    - `PROXYIP`：反代地址（默认值：`ProxyIP.JP.CMLiussss.net`）
    - `SOCKS5`：SOCKS5账号（格式：`用户名:密码@主机:端口`）
-   - `CUSTOM_LIGHT_BG`：自定义白天壁纸URL
-   - `CUSTOM_DARK_BG`：自定义暗黑壁纸URL
 6. 点击"保存"
 
 ## 网址路径说明
@@ -299,34 +285,7 @@ npx wrangler deploy --env production
   - 包含用户UUID和当前节点列表
 - **示例**：`https://sakura-panel.workers.dev/sub`
 
-#### 6. 节点路径 `/nodes`
-
-- **功能**：获取当前节点列表
-- **行为**：
-  - 返回JSON格式的节点列表
-  - 包含所有可用节点的地址、端口和名称
-  - 可用于调试和节点管理
-- **示例**：`https://sakura-panel.workers.dev/nodes`
-
-#### 7. 用户路径 `/user`
-
-- **功能**：获取当前用户信息
-- **行为**：
-  - 返回JSON格式的用户信息
-  - 包含用户名、UUID和设置
-  - 需要登录状态才能访问
-- **示例**：`https://sakura-panel.workers.dev/user`
-
-#### 8. 设置路径 `/settings`
-
-- **功能**：用户设置界面
-- **行为**：
-  - 显示用户设置选项
-  - 包含代理设置、UUID管理等功能
-  - 支持保存和重置设置
-- **示例**：`https://sakura-panel.workers.dev/settings`
-
-#### 9. WebSocket路径 `/?ed=2560`
+#### 6. WebSocket路径 `/?ed=2560`
 
 - **功能**：WebSocket连接路径
 - **行为**：
@@ -344,63 +303,13 @@ npx wrangler deploy --env production
   - 需要管理员权限才能访问
 - **示例**：`https://sakura-panel.workers.dev/admin`
 
-### API路径
-
-樱花面板还提供一些API路径，用于程序化访问：
-
-#### 1. 登录API `/api/login`
-
-- **方法**：POST
-- **功能**：用户登录
-- **参数**：
-  - `username`：用户名
-  - `password`：密码
-- **返回**：登录结果和用户信息
-
-#### 2. 注册API `/api/register`
-
-- **方法**：POST
-- **功能**：用户注册
-- **参数**：
-  - `username`：用户名
-  - `password`：密码
-- **返回**：注册结果和用户信息
-
-#### 3. 节点上传API `/api/upload-nodes`
-
-- **方法**：POST
-- **功能**：上传节点文件
-- **参数**：
-  - `file`：节点文件
-- **返回**：上传结果
-
-#### 4. 路径管理API `/api/manage-paths`
-
-- **方法**：POST/DELETE
-- **功能**：添加或删除节点路径
-- **参数**：
-  - `url`：节点文件URL
-- **返回**：操作结果
-
-#### 5. 设置API `/api/settings`
-
-- **方法**：GET/POST
-- **功能**：获取或更新用户设置
-- **参数**：
-  - `proxy_enabled`：代理开关
-  - `proxy_type`：代理类型
-  - `force_proxy`：强制代理
-  - `uuid`：用户UUID
-- **返回**：设置信息或更新结果
-
 ### 路径访问权限
 
 不同路径有不同的访问权限要求：
 
 - **公开访问**：`/login`、`/register`
-- **需要登录**：`/`、`/panel`、`/sub`、`/nodes`、`/user`、`/settings`
+- **需要登录**：`/`、`/panel`、`/sub`
 - **管理员权限**：`/admin`
-- **API访问**：所有`/api/*`路径需要相应的权限或认证
 
 ### 路径重定向
 
@@ -420,17 +329,6 @@ npx wrangler deploy --env production
 3. **使用特定子路径**：`https://<your-domain>/panel`（具体路径取决于实际实现）
 
 这些安全访问方式可以有效避免被检测和封锁，同时确保只有知道正确访问方式的用户才能使用樱花面板。
-
-### 自定义路径
-
-樱花面板支持通过环境变量自定义部分路径：
-
-- `LOGIN_PATH`：自定义登录路径（默认：`/login`）
-- `REGISTER_PATH`：自定义注册路径（默认：`/register`）
-- `CONFIG_PATH`：自定义面板路径（默认：`/panel`）
-- `SUB_PATH`：自定义订阅路径（默认：`/sub`）
-
-这些自定义路径可以通过环境变量设置，详见"可选环境变量设置"部分。
 
 ## 使用指南
 
@@ -456,9 +354,15 @@ npx wrangler deploy --env production
 
 1. 在主面板中，找到"上传你的优选节点"部分
 2. 点击"选择文件"，选择包含节点列表的文本文件（每行一个节点）
-3. 点击"上传"按钮，系统会自动处理并更新节点列表
+3. 系统会**自动上传**并处理，无需额外点击上传按钮
 4. 上传的节点会**追加**到现有手动节点列表（不会覆盖原有节点）
 5. 系统按"地址:端口"自动去重，同一节点只保留一条；重新上传同IP:端口的节点可更新其名称
+
+##### 管理已上传节点
+
+1. 在"已上传节点"区域可查看当前所有手动节点
+2. 点击单条节点右侧的"移除"可删除该节点
+3. 点击"全部删除"可清空所有手动节点（需确认）
 
 ##### 添加节点路径
 
@@ -772,8 +676,9 @@ A: 请检查以下几点：
 ### Q: 如何添加自己的节点？
 
 A: 你可以通过以下两种方式添加节点：
-1. 上传包含节点列表的文本文件（支持IP地址和域名）
-2. 添加节点文件的URL，系统会定期从该URL获取节点列表
+1. 在面板中点击"选择文件"上传包含节点列表的.txt文件，系统会自动上传并处理
+2. 添加节点文件的URL，系统会实时从该URL获取节点列表
+3. 已上传的手动节点可以在"已上传节点"区域查看、逐条删除或全部清空
 
 ### Q: 订阅链接无法使用怎么办？
 
@@ -824,6 +729,15 @@ A: 不要在意 Clash 客户端显示的 timeout。如果使用 flclash 能显�
 A: 在面板打开强制代理后，flclash 会显示反代/SK5 的落地 IP 和归属地，无论选择的是哪个归属地的优选 IP，都会强制显示为反代/SK5 的落地 IP 和归属地。
 
 ## 更新日志
+
+### v1.5.0
+- 添加节点路径前增加网络可达性与内容格式校验：
+  - 3 秒超时探测目标 URL，连不上直接拦截
+  - 读取返回内容并校验是否包含 IPv4 / IPv6 / 域名，不允许添加无效地址
+- 优选节点上传改为**选文件即自动上传**，移除手动上传按钮，减少操作步骤
+- 新增手动节点管理界面：在 KV 中展示已上传节点，支持**逐条删除**和**全部清空**
+- 优化超长网络路径显示：文本自动省略，避免按钮被挤出可视区域
+- 新增手动节点管理 API：`get-manual-nodes`、`remove-manual-node`、`clear-manual-nodes`
 
 ### v1.4.0
 - 订阅配置与节点列表改为**完全实时生成/拉取**，移除所有配置缓存（`config_clash`/`config_v2ray`）与版本号（`config_*_version`/`ip_preferred_ips_version`），与SingBox现有模式统一，换UUID不再出现版本不匹配导致的重复生成

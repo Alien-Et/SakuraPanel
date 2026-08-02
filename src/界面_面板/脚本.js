@@ -248,7 +248,63 @@ export function 生成脚本(参数) {
         .catch(() => alert('移除失败，网络出错啦~'));
     }
 
+    function 加载手动节点() {
+      fetch('/${配置路径}/get-manual-nodes')
+        .then(response => response.json())
+        .then(data => {
+          const manualNodeList = document.getElementById('manualNodeList');
+          const manualNodeCount = document.getElementById('manualNodeCount');
+          manualNodeList.innerHTML = '';
+          manualNodeCount.textContent = data.nodes.length;
+          data.nodes.forEach((node, index) => {
+            const div = document.createElement('div');
+            div.className = 'file-item';
+            div.innerHTML = '<span>' + node + '</span><button onclick="移除手动节点(' + index + ')">移除</button>';
+            manualNodeList.appendChild(div);
+          });
+        })
+        .catch(() => alert('加载手动节点失败，请稍后再试~'));
+    }
+
+    function 移除手动节点(index) {
+      fetch('/${配置路径}/remove-manual-node', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            加载手动节点();
+          } else {
+            alert(data.error || '移除失败，请稍后再试~');
+          }
+        })
+        .catch(() => alert('移除失败，网络出错啦~'));
+    }
+
+    function 清空手动节点() {
+      if (!confirm('确定要清空所有已上传的手动节点吗？此操作不可恢复！')) {
+        return;
+      }
+      fetch('/${配置路径}/clear-manual-nodes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            加载手动节点();
+            alert('已清空所有手动节点！');
+          } else {
+            alert(data.error || '清空失败，请稍后再试~');
+          }
+        })
+        .catch(() => alert('清空失败，网络出错啦~'));
+    }
+
     加载节点路径();
+    加载手动节点();
 
     function toggleProxy() {
       proxyEnabled = document.getElementById('proxyToggle').checked;
@@ -559,6 +615,9 @@ export function 生成脚本(参数) {
         div.innerHTML = '<span>' + file.name + ' (' + (file.size / 1024).toFixed(2) + ' KB)</span><button onclick="移除文件(' + index + ')">移除</button>';
         fileList.appendChild(div);
       });
+      if (fileInput.files.length > 0) {
+        开始上传();
+      }
     }
 
     function 移除文件(index) {
@@ -569,8 +628,7 @@ export function 生成脚本(参数) {
       显示文件();
     }
 
-    function 开始上传(event) {
-      event.preventDefault();
+    function 开始上传() {
       const form = document.getElementById('uploadForm');
       const progressContainer = document.getElementById('progressContainer');
       const progressFill = document.getElementById('progressFill');

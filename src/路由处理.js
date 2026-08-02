@@ -721,6 +721,45 @@ export async function 路由处理(请求, env) {
         return 创建JSON响应(用量);
       }
 
+      case `/${共享状态.配置路径}/get-manual-nodes`: {
+        const manualToken = 请求.headers.get('Cookie')?.split('=')[1];
+        const 有效ManualToken = await env.KV数据库.get('current_token');
+        if (!manualToken || manualToken !== 有效ManualToken) {
+          return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+        }
+        const manualNodes = await env.KV数据库.get('manual_preferred_ips');
+        const nodeList = manualNodes ? JSON.parse(manualNodes) : [];
+        return 创建JSON响应({ nodes: nodeList });
+      }
+
+      case `/${共享状态.配置路径}/remove-manual-node`: {
+        const removeManualToken = 请求.headers.get('Cookie')?.split('=')[1];
+        const 有效RemoveManualToken = await env.KV数据库.get('current_token');
+        if (!removeManualToken || removeManualToken !== 有效RemoveManualToken) {
+          return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+        }
+        const removeData = await 请求.json();
+        const removeIndex = removeData.index;
+        const currentManualNodes = await env.KV数据库.get('manual_preferred_ips');
+        const currentNodeList = currentManualNodes ? JSON.parse(currentManualNodes) : [];
+        if (removeIndex < 0 || removeIndex >= currentNodeList.length) {
+          return 创建JSON响应({ error: '无效的索引' }, 400);
+        }
+        currentNodeList.splice(removeIndex, 1);
+        await env.KV数据库.put('manual_preferred_ips', JSON.stringify(currentNodeList));
+        return 创建JSON响应({ success: true, nodes: currentNodeList });
+      }
+
+      case `/${共享状态.配置路径}/clear-manual-nodes`: {
+        const clearToken = 请求.headers.get('Cookie')?.split('=')[1];
+        const 有效ClearToken = await env.KV数据库.get('current_token');
+        if (!clearToken || clearToken !== 有效ClearToken) {
+          return 创建JSON响应({ error: '未登录或Token无效' }, 401);
+        }
+        await env.KV数据库.delete('manual_preferred_ips');
+        return 创建JSON响应({ success: true, nodes: [] });
+      }
+
       default:
         url.hostname = 共享状态.伪装域名;
         url.protocol = 'https:';
