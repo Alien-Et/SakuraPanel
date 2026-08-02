@@ -51,7 +51,7 @@ export async function 生成猫咪(env, hostName) {
   const 国家分组配置 = 国家列表.map(国家 => `
   - name: "${国家}"
     type: url-test
-    url: "http://www.gstatic.com/generate_204"
+    url: "https://cp.cloudflare.com/generate_204"
     interval: 120
     tolerance: 50
     proxies:
@@ -69,15 +69,15 @@ dns:
   enable: true
   listen: 0.0.0.0:53
   default-nameserver:
-    - tls://8.8.8.8:853
-    - tls://1.1.1.1:853
+    - 8.8.8.8
+    - 1.1.1.1
   enhanced-mode: fake-ip
   nameserver:
-    - tls://8.8.8.8:853
-    - tls://1.1.1.1:853
+    - 8.8.8.8
+    - 1.1.1.1
   fallback:
-    - tls://1.1.1.1:853
-    - tls://8.8.8.8:853
+    - 1.1.1.1
+    - 8.8.8.8
   fallback-filter:
     geoip: true
     ipcidr:
@@ -99,7 +99,7 @@ ${国家列表.map(国家 => `      - "${国家}"`).join("\n")}
 
   - name: "🤪自动选择"
     type: url-test
-    url: "http://www.gstatic.com/generate_204"
+    url: "https://cp.cloudflare.com/generate_204"
     interval: 120
     tolerance: 50
     proxies:

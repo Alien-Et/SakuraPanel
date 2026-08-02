@@ -5,7 +5,7 @@ import { 升级请求 } from './逻辑/WebSocket处理.js';
 import { 生成猫咪, 生成通用, 生成SingBox } from './逻辑/配置生成器.js';
 import { 生成登录注册界面 } from './界面_登录注册/模板.js';
 import { 生成订阅页面 } from './界面_面板/模板.js';
-import { 生成KV未绑定提示页面 } from './界面_KV提示/模板.js';
+import { 生成KV未绑定提示页面, 生成错误页面 } from './界面_KV提示/模板.js';
 
 // ====================== 主逻辑 ======================
 export async function 路由处理(请求, env) {
@@ -744,6 +744,11 @@ export async function 路由处理(请求, env) {
     }
   } catch (error) {
     console.error(`全局错误: ${error.message}`);
+    // 浏览器页面请求返回 HTML 错误页（如 KV 配额超限），API/订阅请求仍返回 JSON
+    const acceptHeader = 请求.headers.get('Accept') || '';
+    if (acceptHeader.includes('text/html')) {
+      return 创建HTML响应(生成错误页面(error.message), 500);
+    }
     return 创建JSON响应({ error: `服务器内部错误: ${error.message}` }, 500);
   }
 }
