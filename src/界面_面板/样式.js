@@ -491,7 +491,7 @@ export const 样式 = `
       }
       .custom-select-arrow { color: #ff85a2 !important; }
     }
-    @media (max-width: 600px) {
+    @media (max-width: 480px) {
       .card { padding: 15px; max-width: 90%; }
       .card-title { font-size: 1.3em; }
       .panel-title { font-size: 2.8em; letter-spacing: 8px; }
