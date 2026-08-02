@@ -1,9 +1,12 @@
 import { 共享状态 } from '../共享状态.js';
-import { 获取或初始化UUID } from './节点配置.js';
+import { 获取或初始化UUID, 加载节点和配置 } from './节点配置.js';
 
 // ====================== 配置生成器 ======================
 export async function 生成猫咪(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
+  if (!共享状态.优选节点.length) {
+    await 加载节点和配置(env, hostName);
+  }
   const 节点列表 = 共享状态.优选节点.length ? 共享状态.优选节点 : [`${hostName}:443`];
   // ECH 设置
   const echEnabled = await env.KV数据库.get('echEnabled') !== 'false';
@@ -126,6 +129,9 @@ return 配置文本;
 
 export async function 生成通用(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
+  if (!共享状态.优选节点.length) {
+    await 加载节点和配置(env, hostName);
+  }
   const 节点列表 = 共享状态.优选节点.length ? 共享状态.优选节点 : [`${hostName}:443`];
   const b64Enabled = await env.KV数据库.get('b64Enabled') !== 'false';
   // ECH 设置
@@ -169,6 +175,9 @@ ${配置列表.length ? 配置列表.join("\n") : (atob('dmxlc3M=') + '://' + uu
 // ====================== ${atob('U2luZ0JveCDphY3nva7nlJ/miJDlmag=')} ======================
 export async function 生成SingBox(env, hostName) {
   const uuid = await 获取或初始化UUID(env);
+  if (!共享状态.优选节点.length) {
+    await 加载节点和配置(env, hostName);
+  }
   const 节点列表 = 共享状态.优选节点.length ? 共享状态.优选节点 : [`${hostName}:443`];
   const echEnabled = await env.KV数据库.get('echEnabled') !== 'false';
   const echSNI = (await env.KV数据库.get('echSNI')) || 'cloudflare-ech.com';

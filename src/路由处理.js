@@ -417,6 +417,7 @@ export async function 路由处理(请求, env) {
         }
         paths.splice(index, 1);
         await env.KV数据库.put('node_file_paths', JSON.stringify(paths));
+        共享状态.优选节点 = [];
         await 加载节点和配置(env, hostName);
         return 创建JSON响应({ success: true }, 200);
 
