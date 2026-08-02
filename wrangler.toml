@@ -11,7 +11,7 @@ compatibility_date = "2024-01-01"
 directory = "./assets"
 binding = "ASSETS"
 
-#  KV数据库命名空间配置（生产环境）
+# 📚 KV数据库命名空间配置（全局共享，生产+开发环境共用）
 # 使用 CF 官方自动预配（wrangler >= 4.45.0），不写 id，部署时自动创建并绑定
 [[kv_namespaces]]
 binding = "KV数据库"
@@ -20,11 +20,7 @@ binding = "KV数据库"
 [env.development]
 # 开发环境服务名称（带-dev后缀）
 name = "sakura-panel-dev"
-
-# 📚 KV数据库命名空间配置（开发环境）
-# 同样使用自动预配，首次 wrangler dev/deploy 时自动创建
-[[env.development.kv_namespaces]]
-binding = "KV数据库"
+# KV 配置自动继承顶层，无需重复声明
 
 # 🚀 部署说明：
 # 1. 确保 wrangler >= 4.45.0：npm install -g wrangler@latest
