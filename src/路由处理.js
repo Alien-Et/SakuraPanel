@@ -485,10 +485,9 @@ export async function 路由处理(请求, env) {
         formData = await 请求.formData();
         const proxyEnabled = formData.get('proxyEnabled');
         const proxyType = formData.get('proxyType');
-        const forceProxy = formData.get('forceProxy');
+        let forceProxy = formData.get('forceProxy');
         await env.KV数据库.put('proxyEnabled', proxyEnabled);
         await env.KV数据库.put('proxyType', proxyType);
-        await env.KV数据库.put('forceProxy', forceProxy);
         // 可选：反代地址和 SOCKS5 账号（表单提交时携带），留空表示使用默认值
         if (formData.has('proxyIP')) {
           const proxyIP = (formData.get('proxyIP') || '').trim();
@@ -500,6 +499,12 @@ export async function 路由处理(请求, env) {
           await env.KV数据库.put('socks5', socks5);
           共享状态.SOCKS5账号 = socks5 || env.SOCKS5 || 共享状态.SOCKS5账号;
         }
+        // 如果强制代理但未配置反代和SOCKS5，自动关闭强制代理
+        if (forceProxy === 'true' && !共享状态.反代地址 && !共享状态.SOCKS5账号) {
+          forceProxy = 'false';
+          await env.KV数据库.put('forceProxy', 'false');
+        }
+        await env.KV数据库.put('forceProxy', forceProxy);
         return new Response(null, { status: 200 });
 
       case '/get-proxy-status': {

@@ -6,14 +6,151 @@ import { 获取或初始化UUID } from './节点配置.js';
 export async function 升级请求(请求, env) {
   const 创建接口 = new WebSocketPair();
   const [客户端, 服务端] = Object.values(创建接口);
-  服务端.accept();
+  try { (/** @type {any} */ (服务端)).accept({ allowHalfOpen: true }) }
+  catch (_) { 服务端.accept() }
+  服务端.binaryType = 'arraybuffer';
+
   const uuid = await 获取或初始化UUID(env);
   const TCP连接 = 创建请求TCP连接器(请求);
-  const 结果 = await 解析头(解密(请求.headers.get('sec-websocket-protocol')), env, uuid, TCP连接);
-  if (!结果) return new Response('Invalid request', { status: 400 });
-  const { TCP接口, 初始数据 } = 结果;
-  建立管道(服务端, TCP接口, 初始数据);
-  return new Response(null, { status: 101, webSocket: 客户端 });
+  const clientIP = 请求.headers.get('CF-Connecting-IP') || 'unknown';
+
+  console.log(`[WebSocket] 新连接: IP=${clientIP} UA=${请求.headers.get('User-Agent') || 'unknown'}`);
+
+  // 状态变量
+  let TCP接口 = null;
+  let 初始数据 = null;
+  let 协议已识别 = false;
+  let 转发已建立 = false;
+  let WS消息队列 = Promise.resolve();
+
+  // 写入TCP公共函数
+  const 写入TCP = async (chunk) => {
+    if (!chunk?.byteLength || !TCP接口?.writable) return;
+    const writer = TCP接口.writable.getWriter();
+    try {
+      await writer.write(chunk);
+    } catch (e) {
+      console.error(`[WebSocket] 写入TCP失败: ${e.message}`);
+    } finally {
+      try { writer.releaseLock(); } catch (e) { }
+    }
+  };
+
+  // 异步处理 WS 消息（队列模式，避免并发）
+  const 处理消息 = async (data) => {
+    if (转发已建立) {
+      const chunk = 数据转Uint8Array(data);
+      if (chunk && chunk.byteLength > 0) {
+        console.log(`[WebSocket] 后续数据: ${chunk.byteLength} bytes`);
+        await 写入TCP(chunk);
+      }
+      return;
+    }
+
+    const chunk = 数据转Uint8Array(data);
+    console.log(`[WebSocket] 收到首包: ${chunk.byteLength} bytes`);
+    if (!chunk.byteLength) return;
+
+    // 解析 VLESS 首包
+    if (!协议已识别) {
+      协议已识别 = true;
+      const 解析结果 = 解析VLESS首包(chunk, uuid);
+      if (!解析结果) {
+        console.error('[WebSocket] VLESS 首包解析失败');
+        服务端.close(1008);
+        return;
+      }
+
+      const { 地址, 端口, 地址类型, 剩余数据, respHeader } = 解析结果;
+      console.log(`[WebSocket] VLESS 解析: 地址=${地址} 端口=${端口} 类型=${地址类型} 剩余数据=${剩余数据.byteLength} bytes`);
+
+      // 测速本地响应
+      const 当前反代Address = 共享状态.反代地址;
+      const SOCKS5Account = 共享状态.SOCKS5账号;
+      if (esSitioDePruebaVelocidad(地址) && !当前反代Address && !SOCKS5Account) {
+        console.log(`[WebSocket] 测速请求，本地响应: ${地址}:${端口}`);
+        初始数据 = construirRespuesta204Local();
+      } else {
+        try {
+          console.log(`[WebSocket] 开始连接: ${地址}:${端口}`);
+          TCP接口 = await 智能Connection(地址, 端口, 地址类型, env, TCP连接);
+          console.log(`[WebSocket] 连接成功: ${地址}:${端口}`);
+        } catch (错误) {
+          console.error(`[WebSocket] 连接失败: ${错误.message}`);
+          服务端.close(1011);
+          return;
+        }
+      }
+
+      // 发送 VLESS 响应
+      console.log(`[WebSocket] 发送 VLESS 响应: [${respHeader[0]}, ${respHeader[1]}]`);
+      await 服务端.send(respHeader);
+      if (!TCP接口) {
+        if (初始数据) {
+          console.log(`[WebSocket] 发送本地响应: ${初始数据.byteLength} bytes`);
+          await 服务端.send(初始数据);
+        }
+        服务端.close(1000);
+        return;
+      }
+
+      转发已建立 = true;
+      初始数据 = 剩余数据;
+      console.log(`[WebSocket] 管道建立: 初始数据=${初始数据.byteLength} bytes`);
+
+      // 启动管道
+      建立管道(服务端, TCP接口, 初始数据);
+      return;
+    }
+
+    // 后续数据直接写入 TCP
+    console.log(`[WebSocket] 后续数据: ${chunk.byteLength} bytes`);
+    await 写入TCP(chunk);
+  };
+
+  // 队列式消息处理
+  const 入队消息 = (data) => {
+    WS消息队列 = WS消息队列.then(() => 处理消息(data)).catch(e => {
+      console.error(`[WebSocket] 消息处理错误: ${e.message}`);
+    });
+  };
+
+  服务端.addEventListener('message', (event) => {
+    入队消息(event.data);
+  });
+
+  服务端.addEventListener('close', () => {
+    console.log(`[WebSocket] 客户端关闭: TCP接口=${TCP接口 ? '已建立' : '未建立'}`);
+    try { TCP接口?.close(); } catch (e) { }
+  });
+
+  服务端.addEventListener('error', (err) => {
+    console.error(`[WebSocket] 客户端错误: ${err.message || err}`);
+    try { TCP接口?.close(); } catch (e) { }
+  });
+
+  // 处理 sec-websocket-protocol 中的 Early Data
+  const earlyDataHeader = 请求.headers.get('sec-websocket-protocol') || '';
+  if (earlyDataHeader) {
+    try {
+      const bytes = 解码WS早期数据(earlyDataHeader, uuid);
+      if (bytes?.byteLength) {
+        console.log(`[WebSocket] Early Data: ${bytes.byteLength} bytes`);
+        入队消息(bytes);
+      }
+    } catch (错误) {
+      console.error(`[WebSocket] Early Data 解析失败: ${错误.message}`);
+    }
+  }
+
+  return new Response(null, { status: 101, webSocket: 客户端, headers: { 'Sec-WebSocket-Extensions': '' } });
+}
+
+function 数据转Uint8Array(data) {
+  if (data instanceof Uint8Array) return data;
+  if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+  if (data instanceof ArrayBuffer) return new Uint8Array(data);
+  return new Uint8Array(0);
 }
 
 function 创建请求TCP连接器(请求) {
@@ -30,45 +167,53 @@ function 解密(混淆字符) {
   return Uint8Array.from(atob(混淆字符), c => c.charCodeAt(0)).buffer;
 }
 
-async function 解析头(数据, env, uuid, TCP连接) {
+// 解析 VLESS 首包，返回 { 地址, 端口, 剩余数据, respHeader }
+function 解析VLESS首包(数据, uuid) {
   const 数据数组 = new Uint8Array(数据);
+  if (数据数组.byteLength < 18) return null;
   if (验证密钥(数据数组.slice(1, 17)) !== uuid) return null;
 
-  const 数据定位 = 数据数组[17];
-  const 端口 = new DataView(数据.slice(18 + 数据定位 + 1, 20 + 数据定位 + 1)).getUint16(0);
-  const 地址索引 = 20 + 数据定位 + 1;
-  const 地址类型 = 数据数组[地址索引];
+  const optLen = 数据数组[17];
+  const cmdIndex = 18 + optLen;
+  if (数据数组.byteLength < cmdIndex + 1) return null;
+  const cmd = 数据数组[cmdIndex];
+  if (cmd !== 1 && cmd !== 2) return null;
+
+  const portIndex = cmdIndex + 1;
+  if (数据数组.byteLength < portIndex + 3) return null;
+  const 端口 = (数据数组[portIndex] << 8) | 数据数组[portIndex + 1];
+  const addressType = 数据数组[portIndex + 2];
+  const addressIndex = portIndex + 3;
   let 地址 = '';
-  const 地址信息索引 = 地址索引 + 1;
 
-  switch (地址类型) {
-    case 1: 地址 = new Uint8Array(数据.slice(地址信息索引, 地址信息索引 + 4)).join('.'); break;
-    case 2:
-      const 地址Length = 数据数组[地址信息索引];
-      地址 = new TextDecoder().decode(数据.slice(地址信息索引 + 1, 地址信息索引 + 1 + 地址Length));
-      break;
-    case 3:
-      地址 = Array.from({ length: 8 }, (_, i) => new DataView(数据.slice(地址信息索引, 地址信息索引 + 16)).getUint16(i * 2).toString(16)).join(':');
-      break;
-    default: return null;
+  if (addressType === 1) {
+    if (数据数组.byteLength < addressIndex + 4) return null;
+    地址 = Array.from(数据数组.slice(addressIndex, addressIndex + 4)).join('.');
+  } else if (addressType === 2) {
+    if (数据数组.byteLength < addressIndex + 1) return null;
+    const domainLen = 数据数组[addressIndex];
+    if (数据数组.byteLength < addressIndex + 1 + domainLen) return null;
+    地址 = new TextDecoder().decode(数据数组.slice(addressIndex + 1, addressIndex + 1 + domainLen));
+  } else if (addressType === 3) {
+    if (数据数组.byteLength < addressIndex + 16) return null;
+    const ipv6 = [];
+    for (let i = 0; i < 8; i++) {
+      const base = addressIndex + i * 2;
+      ipv6.push(((数据数组[base] << 8) | 数据数组[base + 1]).toString(16));
+    }
+    地址 = ipv6.join(':');
+  } else {
+    return null;
   }
 
-  const 初始数据 = 数据.slice(地址信息索引 + (地址类型 === 2 ? 数据数组[地址信息索引] + 1 : 地址类型 === 1 ? 4 : 16));
+  const headerLen = addressIndex + (addressType === 1 ? 4 : addressType === 2 ? 1 + 数据数组[addressIndex] : 16);
+  const 剩余数据 = 数据数组.slice(headerLen);
+  const respHeader = new Uint8Array([数据数组[0], 0]);
 
-  // 测速本地响应：如果未配置反代和SOCKS5，直接本地响应
-  const 当前反代Address = (await env.KV数据库.get('proxyIP')) || env.PROXYIP || '';
-  const SOCKS5Account = (await env.KV数据库.get('socks5')) || env.SOCKS5 || '';
-  if (esSitioDePruebaVelocidad(地址) && !当前反代Address && !SOCKS5Account) {
-    console.log(`[WebSocket] 测速请求，本地响应: ${地址}:${端口}`);
-    return { TCP接口: null, 初始数据: construirRespuesta204Local() };
-  }
-
-  const TCP接口 = await 智能Connection(地址, 端口, 地址类型, env, TCP连接);
-  return { TCP接口, 初始数据 };
+  return { 地址, 端口, 地址类型: addressType, 剩余数据, respHeader };
 }
 
 function esSitioDePruebaVelocidad(hostname) {
-  // 使用非 Cloudflare 测速地址，避免代理启用时超时
   const sitiosPrueba = ['gstatic.com', 'www.gstatic.com'];
   hostname = hostname.toLowerCase();
   return sitiosPrueba.some(dominio => hostname === dominio || hostname.endsWith('.' + dominio));
@@ -88,7 +233,7 @@ async function 智能Connection(地址, 端口, 地址类型, env, TCP连接) {
   const SOCKS5Account = 共享状态.SOCKS5账号;
 
   if (!地址 || 地址.trim() === '') {
-    return await 尝试直连(地址, 端口, TCP连接);
+    throw new Error('目标地址为空');
   }
 
   const 是域名 = 地址类型 === 2 && !地址.match(/^\d+\.\d+\.\d+\.\d+$/);
@@ -189,32 +334,100 @@ function 验证密钥(arr) {
   return Array.from(arr.slice(0, 16), b => b.toString(16).padStart(2, '0')).join('').match(/(.{8})(.{4})(.{4})(.{4})(.{12})/).slice(1).join('-').toLowerCase();
 }
 
-async function 建立管道(服务端, TCP接口, 初始数据) {
-  // Send VLESS success response
-  await 服务端.send(new Uint8Array([0, 0]).buffer);
+function 是有效WS早期数据(bytes, token) {
+  if (!bytes?.byteLength) return false;
+  if (bytes.byteLength >= 18 && 验证密钥(bytes.slice(1, 17)) === token) return true;
+  return false;
+}
 
-  // If no TCP connection (speed test local response), send the response and exit
-  if (!TCP接口) {
-    await 服务端.send(初始数据);
-    return;
+const WS早期数据最大头长度 = 4096;
+const WS早期数据最大字节 = 65536;
+
+function 解码WS早期数据(header, token) {
+  if (!header) return null;
+  if (header.length > WS早期数据最大头长度) throw new Error('early data is too large');
+
+  let bytes;
+  const Uint8ArrayBase64 = /** @type {any} */ (Uint8Array);
+  if (typeof Uint8ArrayBase64.fromBase64 === 'function') {
+    try {
+      bytes = Uint8ArrayBase64.fromBase64(header, { alphabet: 'base64url' });
+    } catch (_) { }
   }
+  if (!bytes) {
+    let normalized = header.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = normalized.length % 4;
+    if (padding) normalized += '='.repeat(4 - padding);
+    let binaryString;
+    try {
+      binaryString = atob(normalized);
+    } catch (_) {
+      return null;
+    }
+    bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+  }
+
+  if (bytes.byteLength > WS早期数据最大字节) throw new Error('early data is too large');
+  return 是有效WS早期数据(bytes, token) ? bytes : null;
+}
+
+function 建立管道(服务端, TCP接口, 初始数据) {
+  console.log(`[管道] 建立: TCP接口=${TCP接口 ? '已建立' : 'null'}`);
+  if (!TCP接口) return;
 
   // Forward TCP -> WebSocket
   const tcpReader = TCP接口.readable.getReader();
   const forwardTCPToWS = async () => {
     try {
-      while (true) {
-        const { done, value } = await tcpReader.read();
-        if (done) break;
+      let bytesCount = 0;
+      let httpBuffer = new Uint8Array(0);
+      while (服务端.readyState === WebSocket.OPEN) {
+        const { done, value } = await Promise.race([
+          tcpReader.read(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('TCP读取超时')), 5000)
+          )
+        ]).catch(e => {
+          if (e.message === 'TCP读取超时') return { done: true };
+          throw e;
+        });
+        
+        if (done) {
+          console.log(`[管道 TCP->WS] 结束: 共${bytesCount} bytes`);
+          break;
+        }
         if (value && value.byteLength > 0) {
-          await 服务端.send(value);
+          bytesCount += value.byteLength;
+          
+          // 尝试解析 HTTP 响应
+          httpBuffer = 拼接字节数据(httpBuffer, value);
+          try {
+            const httpText = new TextDecoder().decode(httpBuffer);
+            const headerEnd = httpText.indexOf('\r\n\r\n');
+            if (headerEnd !== -1) {
+              const headerText = httpText.slice(0, headerEnd);
+              const firstLine = headerText.split('\r\n')[0];
+              console.log(`[HTTP 响应] ${firstLine} (${bytesCount} bytes)`);
+              httpBuffer = new Uint8Array(0); // 清空缓冲区
+            }
+          } catch (e) {
+            // 忽略解析错误
+          }
+          
+          try {
+            await 服务端.send(value);
+          } catch (e) {
+            console.log(`[管道 TCP->WS] 发送失败: ${e.message}`);
+            break;
+          }
         }
       }
     } catch (e) {
       console.error(`[管道 TCP->WS] 错误: ${e.message}`);
     } finally {
       try { tcpReader.releaseLock(); } catch (e) { }
-      try { 服务端.close(1000); } catch (e) { }
+      try { if (服务端.readyState !== WebSocket.CLOSED) 服务端.close(1000); } catch (e) { }
     }
   };
 
@@ -222,36 +435,69 @@ async function 建立管道(服务端, TCP接口, 初始数据) {
   const wsWriter = TCP接口.writable.getWriter();
   const forwardWSToTCP = async () => {
     try {
-      // Send initial data if any
       if (初始数据 && 初始数据.byteLength > 0) {
+        console.log(`[管道 WS->TCP] 写入初始数据: ${初始数据.byteLength} bytes`);
         await wsWriter.write(初始数据);
       }
-
-      // Listen for WebSocket messages
-      for await (const msg of 服务端) {
-        if (msg && msg.byteLength > 0) {
-          await wsWriter.write(msg);
-        }
-      }
     } catch (e) {
-      console.error(`[管道 WS->TCP] 错误: ${e.message}`);
+      console.error(`[管道 WS->TCP] 写入初始数据失败: ${e.message}`);
     } finally {
       try { wsWriter.releaseLock(); } catch (e) { }
-      try { TCP接口.close(); } catch (e) { }
     }
   };
 
-  // Start both directions
-  forwardTCPToWS();
-  forwardWSToTCP();
+  // 监听后续 WS 消息
+  const onMessage = async (event) => {
+    const chunk = 数据转Uint8Array(event.data);
+    if (!chunk || !chunk.byteLength) return;
+    
+    // 尝试解析 HTTP 请求
+    try {
+      const httpText = new TextDecoder().decode(chunk);
+      const headerEnd = httpText.indexOf('\r\n\r\n');
+      if (headerEnd !== -1) {
+        const headerText = httpText.slice(0, headerEnd);
+        const firstLine = headerText.split('\r\n')[0];
+        const hostMatch = headerText.match(/^Host:\s*(.+)$/im);
+        const host = hostMatch ? hostMatch[1] : 'unknown';
+        console.log(`[HTTP 请求] ${firstLine} Host=${host} (${chunk.byteLength} bytes)`);
+      }
+    } catch (e) {
+      // 忽略解析错误
+    }
+    
+    const writer = TCP接口.writable.getWriter();
+    try {
+      await writer.write(chunk);
+    } catch (e) {
+      console.error(`[管道 WS->TCP] 写入失败: ${e.message}`);
+    } finally {
+      try { writer.releaseLock(); } catch (e) { }
+    }
+  };
 
-  // Handle WebSocket close/error events
+  服务端.addEventListener('message', (event) => {
+    console.log(`[管道 WS->TCP] 收到消息: ${数据转Uint8Array(event.data).byteLength} bytes`);
+    onMessage(event);
+  });
   服务端.addEventListener('close', () => {
+    console.log(`[管道] 客户端关闭`);
     try { TCP接口.close(); } catch (e) { }
   });
   服务端.addEventListener('error', () => {
+    console.log(`[管道] 客户端错误`);
     try { TCP接口.close(); } catch (e) { }
   });
+
+  forwardTCPToWS();
+  forwardWSToTCP();
+}
+
+function 拼接字节数据(现有, 新增) {
+  const result = new Uint8Array(现有.byteLength + 新增.byteLength);
+  result.set(现有);
+  result.set(新增, 现有.byteLength);
+  return result;
 }
 
 async function 创建SOCKS5(地址类型, 地址, 端口, socks5Account = null, TCP连接) {
