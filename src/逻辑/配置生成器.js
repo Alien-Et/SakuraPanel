@@ -55,7 +55,7 @@ export async function 生成猫咪(env, hostName) {
   const 国家分组配置 = 国家列表.map(国家 => `
   - name: "${国家}"
     type: url-test
-    url: "https://cp.cloudflare.com/generate_204"
+    url: "http://www.gstatic.com/generate_204"
     interval: 120
     tolerance: 50
     proxies:
@@ -104,7 +104,7 @@ ${国家列表.map(国家 => `      - "${国家}"`).join("\n")}
 
   - name: "🤪自动选择"
     type: url-test
-    url: "https://cp.cloudflare.com/generate_204"
+    url: "http://www.gstatic.com/generate_204"
     interval: 120
     tolerance: 50
     proxies:
