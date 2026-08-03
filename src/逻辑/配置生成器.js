@@ -70,22 +70,23 @@ mode: Rule
 log-level: info
 external-controller: :9090
 dns:
-  enable: true
-  listen: 0.0.0.0:53
-  default-nameserver:
-    - 8.8.8.8
-    - 1.1.1.1
-  enhanced-mode: fake-ip
-  nameserver:
-    - 8.8.8.8
-    - 1.1.1.1
-  fallback:
-    - 1.1.1.1
-    - 8.8.8.8
-  fallback-filter:
-    geoip: true
-    ipcidr:
-      - 240.0.0.0/4
+    enable: true
+    listen: 0.0.0.0:53
+    default-nameserver:
+      - 8.8.8.8
+      - 1.1.1.1
+    enhanced-mode: fake-ip
+    nameserver:
+      - https://dns.google/dns-query
+      - https://cloudflare-dns.com/dns-query
+      - https://dns.alidns.com/dns-query
+    fallback:
+      - https://dns.google/dns-query
+      - https://cloudflare-dns.com/dns-query
+    fallback-filter:
+      geoip: true
+      ipcidr:
+        - 240.0.0.0/4
 ${echEnabled ? `  nameserver-policy:
 ${echSNI ? `    "${echSNI}": ${echDNS}
 ` : ''}    "${hostName}": ${echDNS}` : ''}
