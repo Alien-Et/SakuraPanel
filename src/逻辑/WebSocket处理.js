@@ -74,8 +74,8 @@ function construirRespuesta204Local() {
 }
 
 async function 智能Connection(地址, 端口, 地址类型, env) {
-  const 当前反代Address = 共享状态.反代Address;
-  const SOCKS5Account = 共享状态.SOCKS5Account;
+  const 当前反代Address = 共享状态.反代地址;
+  const SOCKS5Account = 共享状态.SOCKS5账号;
 
   if (!地址 || 地址.trim() === '') {
     return await 尝试直连(地址, 端口);
@@ -230,8 +230,8 @@ async function 建立管道(服务端, TCP接口, 初始数据) {
 }
 
 async function 创建SOCKS5(地址类型, 地址, 端口, socks5Account = null) {
-  const 使用SOCKS5Account = socks5Account || 共享状态.SOCKS5Account;
-  const { username, password, hostname, port } = await 解析SOCKS5Account(使用SOCKS5Account);
+  const 使用SOCKS5账号 = socks5Account || 共享状态.SOCKS5账号;
+  const { username, password, hostname, port } = await 解析SOCKS5账号(使用SOCKS5账号);
   const SOCKS5Interface = connect({ hostname, port });
   try {
     await SOCKS5Interface.opened;
