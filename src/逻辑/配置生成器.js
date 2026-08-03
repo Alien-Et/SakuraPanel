@@ -41,7 +41,7 @@ export async function 生成猫咪(env, hostName) {
   udp: false
   tls: ${TLS开关}
   sni: ${hostName}${echBlock}
-  fingerprint: chrome
+  client-fingerprint: chrome
   network: ws
   ws-opts:
     path: "/?ed=2560"
