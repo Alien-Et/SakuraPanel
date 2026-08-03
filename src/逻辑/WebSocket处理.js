@@ -1,3 +1,4 @@
+import { connect } from 'cloudflare:sockets';
 import { 共享状态 } from '../共享状态.js';
 import { 获取或初始化UUID } from './节点配置.js';
 
@@ -17,7 +18,10 @@ export async function 升级请求(请求, env) {
 
 function 创建请求TCP连接器(请求) {
   const fetcher = 请求?.fetcher;
-  if (!fetcher || typeof fetcher.connect !== 'function') throw new Error('request.fetcher.connect unavailable');
+  if (!fetcher || typeof fetcher.connect !== 'function') {
+    console.warn('request.fetcher.connect 不可用，回退到全局 connect');
+    return (options) => connect(options);
+  }
   return (options, init) => init === undefined ? fetcher.connect(options) : fetcher.connect(options, init);
 }
 
