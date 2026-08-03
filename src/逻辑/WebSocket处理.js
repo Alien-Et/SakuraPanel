@@ -131,9 +131,11 @@ export async function 升级请求(请求, env) {
 
   // 处理 sec-websocket-protocol 中的 Early Data
   const earlyDataHeader = 请求.headers.get('sec-websocket-protocol') || '';
+  console.log(`[WebSocket] Early Data 头部: ${earlyDataHeader ? '存在(' + earlyDataHeader.length + ' chars)' : '不存在'}`);
   if (earlyDataHeader) {
     try {
       const bytes = 解码WS早期数据(earlyDataHeader, uuid);
+      console.log(`[WebSocket] Early Data 解码: ${bytes?.byteLength || 0} bytes`);
       if (bytes?.byteLength) {
         console.log(`[WebSocket] Early Data: ${bytes.byteLength} bytes`);
         入队消息(bytes);
@@ -170,45 +172,81 @@ function 解密(混淆字符) {
 // 解析 VLESS 首包，返回 { 地址, 端口, 剩余数据, respHeader }
 function 解析VLESS首包(数据, uuid) {
   const 数据数组 = new Uint8Array(数据);
-  if (数据数组.byteLength < 18) return null;
-  if (验证密钥(数据数组.slice(1, 17)) !== uuid) return null;
+  console.log('[VLESS解析] 开始解析首包，数据总长度:', 数据数组.byteLength);
+  if (数据数组.byteLength < 18) {
+    console.log('[VLESS解析] 数据长度不足18字节，放弃解析');
+    return null;
+  }
+  console.log('[VLESS解析] 版本字节:', 数据数组[0]);
+  const uuid验证结果 = 验证密钥(数据数组.slice(1, 17)) === uuid;
+  console.log('[VLESS解析] UUID验证结果:', uuid验证结果);
+  if (!uuid验证结果) return null;
 
   const optLen = 数据数组[17];
+  console.log('[VLESS解析] optLen:', optLen);
   const cmdIndex = 18 + optLen;
-  if (数据数组.byteLength < cmdIndex + 1) return null;
+  if (数据数组.byteLength < cmdIndex + 1) {
+    console.log('[VLESS解析] 数据长度不足，无法读取cmd');
+    return null;
+  }
   const cmd = 数据数组[cmdIndex];
-  if (cmd !== 1 && cmd !== 2) return null;
+  console.log('[VLESS解析] cmd:', cmd, 'cmdIndex:', cmdIndex);
+  if (cmd !== 1 && cmd !== 2) {
+    console.log('[VLESS解析] cmd不是1或2，放弃解析');
+    return null;
+  }
 
   const portIndex = cmdIndex + 1;
-  if (数据数组.byteLength < portIndex + 3) return null;
+  if (数据数组.byteLength < portIndex + 3) {
+    console.log('[VLESS解析] 数据长度不足，无法读取端口');
+    return null;
+  }
   const 端口 = (数据数组[portIndex] << 8) | 数据数组[portIndex + 1];
   const addressType = 数据数组[portIndex + 2];
+  console.log('[VLESS解析] 端口:', 端口, '地址类型:', addressType, 'portIndex:', portIndex);
   const addressIndex = portIndex + 3;
   let 地址 = '';
 
   if (addressType === 1) {
-    if (数据数组.byteLength < addressIndex + 4) return null;
+    if (数据数组.byteLength < addressIndex + 4) {
+      console.log('[VLESS解析] 数据长度不足，无法读取IPv4地址');
+      return null;
+    }
     地址 = Array.from(数据数组.slice(addressIndex, addressIndex + 4)).join('.');
+    console.log('[VLESS解析] 解析到IPv4地址:', 地址);
   } else if (addressType === 2) {
-    if (数据数组.byteLength < addressIndex + 1) return null;
+    if (数据数组.byteLength < addressIndex + 1) {
+      console.log('[VLESS解析] 数据长度不足，无法读取域名长度');
+      return null;
+    }
     const domainLen = 数据数组[addressIndex];
-    if (数据数组.byteLength < addressIndex + 1 + domainLen) return null;
+    if (数据数组.byteLength < addressIndex + 1 + domainLen) {
+      console.log('[VLESS解析] 数据长度不足，无法读取完整域名');
+      return null;
+    }
     地址 = new TextDecoder().decode(数据数组.slice(addressIndex + 1, addressIndex + 1 + domainLen));
+    console.log('[VLESS解析] 解析到域名:', 地址, '域名长度:', domainLen);
   } else if (addressType === 3) {
-    if (数据数组.byteLength < addressIndex + 16) return null;
+    if (数据数组.byteLength < addressIndex + 16) {
+      console.log('[VLESS解析] 数据长度不足，无法读取IPv6地址');
+      return null;
+    }
     const ipv6 = [];
     for (let i = 0; i < 8; i++) {
       const base = addressIndex + i * 2;
       ipv6.push(((数据数组[base] << 8) | 数据数组[base + 1]).toString(16));
     }
     地址 = ipv6.join(':');
+    console.log('[VLESS解析] 解析到IPv6地址:', 地址);
   } else {
+    console.log('[VLESS解析] 不支持的地址类型:', addressType, '放弃解析');
     return null;
   }
 
   const headerLen = addressIndex + (addressType === 1 ? 4 : addressType === 2 ? 1 + 数据数组[addressIndex] : 16);
   const 剩余数据 = 数据数组.slice(headerLen);
   const respHeader = new Uint8Array([数据数组[0], 0]);
+  console.log('[VLESS解析] 解析完成，地址:', 地址, '端口:', 端口, '剩余数据长度:', 剩余数据.byteLength, 'headerLen:', headerLen);
 
   return { 地址, 端口, 地址类型: addressType, 剩余数据, respHeader };
 }
@@ -336,7 +374,9 @@ function 验证密钥(arr) {
 
 function 是有效WS早期数据(bytes, token) {
   if (!bytes?.byteLength) return false;
-  if (bytes.byteLength >= 18 && 验证密钥(bytes.slice(1, 17)) === token) return true;
+  const 计算UUID = 验证密钥(bytes.slice(1, 17));
+  console.log(`[EarlyData] 验证: 长度=${bytes.byteLength} 计算UUID=${计算UUID} 期望UUID=${token} 匹配=${计算UUID === token}`);
+  if (bytes.byteLength >= 18 && 计算UUID === token) return true;
   return false;
 }
 
@@ -349,9 +389,11 @@ function 解码WS早期数据(header, token) {
 
   let bytes;
   const Uint8ArrayBase64 = /** @type {any} */ (Uint8Array);
+  let 解码方式 = '';
   if (typeof Uint8ArrayBase64.fromBase64 === 'function') {
     try {
       bytes = Uint8ArrayBase64.fromBase64(header, { alphabet: 'base64url' });
+      解码方式 = 'Uint8Array.fromBase64';
     } catch (_) { }
   }
   if (!bytes) {
@@ -361,15 +403,19 @@ function 解码WS早期数据(header, token) {
     let binaryString;
     try {
       binaryString = atob(normalized);
+      解码方式 = 'atob';
     } catch (_) {
+      console.error(`[EarlyData] Base64 解码失败`);
       return null;
     }
     bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
   }
-
+  console.log(`[EarlyData] 解码成功: 方式=${解码方式} 长度=${bytes.byteLength}`);
   if (bytes.byteLength > WS早期数据最大字节) throw new Error('early data is too large');
-  return 是有效WS早期数据(bytes, token) ? bytes : null;
+  const result = 是有效WS早期数据(bytes, token) ? bytes : null;
+  console.log(`[EarlyData] 验证结果: ${result ? '有效' : '无效'}`);
+  return result;
 }
 
 function 建立管道(服务端, TCP接口, 初始数据) {
