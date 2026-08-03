@@ -96,10 +96,8 @@ async function 智能Connection(地址, 端口, 地址类型, env) {
     if (强制代理) {
         if (代理Type === 'reverse' && 当前反代Address) {
           try {
-            const [反代Host, 反代Port] = 当前反代Address.split(':');
-            const 连接 = connect({ hostname: 反代Host, port: 反代Port || 端口 });
-            await 连接.opened;
-            console.log(`强制通过反代连接: ${当前反代Address}`);
+            const 连接 = await 发送CONNECT建立隧道(当前反代Address, 地址, 端口);
+            console.log(`强制通过反代连接: ${当前反代Address} -> ${地址}:${端口}`);
             return 连接;
           } catch (错误) {
             console.error(`强制反代连接失败: ${错误.message}`);
@@ -123,10 +121,8 @@ async function 智能Connection(地址, 端口, 地址类型, env) {
         console.log(`直连失败，动态切换到代理: ${错误.message}`);
         if (代理Type === 'reverse' && 当前反代Address) {
           try {
-            const [反代Host, 反代Port] = 当前反代Address.split(':');
-            const 连接 = connect({ hostname: 反代Host, port: 反代Port || 端口 });
-            await 连接.opened;
-            console.log(`动态通过反代连接: ${当前反代Address}`);
+            const 连接 = await 发送CONNECT建立隧道(当前反代Address, 地址, 端口);
+            console.log(`动态通过反代连接: ${当前反代Address} -> ${地址}:${端口}`);
             return 连接;
           } catch (错误) {
             console.error(`动态反代连接失败: ${错误.message}`);
@@ -146,6 +142,41 @@ async function 智能Connection(地址, 端口, 地址类型, env) {
   }
 
   return await 尝试直连(地址, 端口);
+}
+
+async function 发送CONNECT建立隧道(反代地址, 目标地址, 目标端口) {
+  // 反代地址可能包含端口，如 'host:port' 或纯 'host'
+  const 最后冒号索引 = 反代地址.lastIndexOf(':');
+  let 反代Host = 反代地址;
+  let 反代Port = 443;
+  if (最后冒号索引 !== -1) {
+    const 提取的端口 = Number(反代地址.slice(最后冒号索引 + 1));
+    if (!isNaN(提取的端口) && 提取的端口 > 0 && 提取的端口 <= 65535) {
+      反代Host = 反代地址.slice(0, 最后冒号索引);
+      反代Port = 提取的端口;
+    }
+  }
+  const 连接 = connect({ hostname: 反代Host, port: 反代Port });
+  await 连接.opened;
+  const writer = 连接.writable.getWriter();
+  const encoder = new TextEncoder();
+  const hostPort = `${目标地址}:${目标端口}`;
+  const connectRequest = encoder.encode(`CONNECT ${hostPort} HTTP/1.1\r\nHost: ${hostPort}\r\n\r\n`);
+  await writer.write(connectRequest);
+  writer.releaseLock();
+  const reader = 连接.readable.getReader();
+  let response = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    response += new TextDecoder().decode(value);
+    if (response.includes('\r\n\r\n')) break;
+  }
+  reader.releaseLock();
+  if (!response.startsWith('HTTP/1.1 200') && !response.startsWith('HTTP/1.1 101')) {
+    throw new Error(`CONNECT 失败: ${response.split('\r\n')[0]}`);
+  }
+  return 连接;
 }
 
 async function 尝试直连(地址, 端口) {
