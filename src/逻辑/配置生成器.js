@@ -41,6 +41,7 @@ export async function 生成猫咪(env, hostName) {
   udp: false
   tls: ${TLS开关}
   sni: ${hostName}${echBlock}
+  fingerprint: chrome
   network: ws
   ws-opts:
     path: "/?ed=2560"
@@ -154,7 +155,7 @@ export async function 生成通用(env, hostName) {
       const 修正地址 = 地址.includes(":") ? `[${地址}]` : 地址;
       const TLS开关 = tls === 'notls' ? 'none' : 'tls';
       const encodedPath = encodeURIComponent('/?ed=2560');
-      return `${atob('dmxlc3M=')}://${uuid}@${修正地址}:${端口}?encryption=none&security=${TLS开关}&type=ws&host=${hostName}&path=${encodedPath}&sni=${hostName}${echParam}#${encodeURIComponent(节点名字)}`;
+      return `${atob('dmxlc3M=')}://${uuid}@${修正地址}:${端口}?encryption=none&security=${TLS开关}&type=ws&host=${hostName}&path=${encodedPath}&sni=${hostName}&fp=chrome${echParam}#${encodeURIComponent(节点名字)}`;
     } catch (error) {
       console.error(`生成通用节点失败: ${节点}, 错误: ${error.message}`);
       return null;
