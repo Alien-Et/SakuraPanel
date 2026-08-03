@@ -1,4 +1,3 @@
-import { connect } from 'cloudflare:sockets';
 import { 共享状态 } from '../共享状态.js';
 import { 获取或初始化UUID } from './节点配置.js';
 
@@ -8,11 +7,18 @@ export async function 升级请求(请求, env) {
   const [客户端, 服务端] = Object.values(创建接口);
   服务端.accept();
   const uuid = await 获取或初始化UUID(env);
-  const 结果 = await 解析头(解密(请求.headers.get('sec-websocket-protocol')), env, uuid);
+  const TCP连接 = 创建请求TCP连接器(请求);
+  const 结果 = await 解析头(解密(请求.headers.get('sec-websocket-protocol')), env, uuid, TCP连接);
   if (!结果) return new Response('Invalid request', { status: 400 });
   const { TCP接口, 初始数据 } = 结果;
   建立管道(服务端, TCP接口, 初始数据);
   return new Response(null, { status: 101, webSocket: 客户端 });
+}
+
+function 创建请求TCP连接器(请求) {
+  const fetcher = 请求?.fetcher;
+  if (!fetcher || typeof fetcher.connect !== 'function') throw new Error('request.fetcher.connect unavailable');
+  return (options, init) => init === undefined ? fetcher.connect(options) : fetcher.connect(options, init);
 }
 
 function 解密(混淆字符) {
@@ -20,7 +26,7 @@ function 解密(混淆字符) {
   return Uint8Array.from(atob(混淆字符), c => c.charCodeAt(0)).buffer;
 }
 
-async function 解析头(数据, env, uuid) {
+async function 解析头(数据, env, uuid, TCP连接) {
   const 数据数组 = new Uint8Array(数据);
   if (验证密钥(数据数组.slice(1, 17)) !== uuid) return null;
 
@@ -53,7 +59,7 @@ async function 解析头(数据, env, uuid) {
     return { TCP接口: null, 初始数据: construirRespuesta204Local() };
   }
 
-  const TCP接口 = await 智能Connection(地址, 端口, 地址类型, env);
+  const TCP接口 = await 智能Connection(地址, 端口, 地址类型, env, TCP连接);
   return { TCP接口, 初始数据 };
 }
 
@@ -73,12 +79,12 @@ function construirRespuesta204Local() {
   );
 }
 
-async function 智能Connection(地址, 端口, 地址类型, env) {
+async function 智能Connection(地址, 端口, 地址类型, env, TCP连接) {
   const 当前反代Address = 共享状态.反代地址;
   const SOCKS5Account = 共享状态.SOCKS5账号;
 
   if (!地址 || 地址.trim() === '') {
-    return await 尝试直连(地址, 端口);
+    return await 尝试直连(地址, 端口, TCP连接);
   }
 
   const 是域名 = 地址类型 === 2 && !地址.match(/^\d+\.\d+\.\d+\.\d+$/);
@@ -90,14 +96,14 @@ async function 智能Connection(地址, 端口, 地址类型, env) {
     const 代理Type = await env.KV数据库.get('proxyType') || 'reverse';
 
     if (!代理启用) {
-      return await 尝试直连(地址, 端口);
+      return await 尝试直连(地址, 端口, TCP连接);
     }
 
     if (强制代理) {
         if (代理Type === 'reverse' && 当前反代Address) {
           try {
             const { hostname: 反代Host, port: 反代Port } = 解析反代地址端口(当前反代Address);
-            const 连接 = connect({ hostname: 反代Host, port: 反代Port || 端口 });
+            const 连接 = TCP连接({ hostname: 反代Host, port: 反代Port || 端口 });
             await 连接.opened;
             console.log(`强制通过反代连接: ${当前反代Address}`);
             return 连接;
@@ -107,7 +113,7 @@ async function 智能Connection(地址, 端口, 地址类型, env) {
           }
         } else if (代理Type === 'socks5' && SOCKS5Account) {
           try {
-            const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口);
+            const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口, SOCKS5Account, TCP连接);
             console.log(`强制通过 SOCKS5 连接: ${地址}:${端口}`);
             return SOCKS5连接;
           } catch (错误) {
@@ -117,14 +123,14 @@ async function 智能Connection(地址, 端口, 地址类型, env) {
         }
     } else {
       try {
-        const 连接 = await 尝试直连(地址, 端口);
+        const 连接 = await 尝试直连(地址, 端口, TCP连接);
         return 连接;
       } catch (错误) {
         console.log(`直连失败，动态切换到代理: ${错误.message}`);
         if (代理Type === 'reverse' && 当前反代Address) {
           try {
             const { hostname: 反代Host, port: 反代Port } = 解析反代地址端口(当前反代Address);
-            const 连接 = connect({ hostname: 反代Host, port: 反代Port || 端口 });
+            const 连接 = TCP连接({ hostname: 反代Host, port: 反代Port || 端口 });
             await 连接.opened;
             console.log(`动态通过反代连接: ${当前反代Address}`);
             return 连接;
@@ -133,7 +139,7 @@ async function 智能Connection(地址, 端口, 地址类型, env) {
           }
         } else if (代理Type === 'socks5' && SOCKS5Account) {
           try {
-            const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口, SOCKS5Account);
+            const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口, SOCKS5Account, TCP连接);
             console.log(`动态通过 SOCKS5 连接: ${地址}:${端口}`);
             return SOCKS5连接;
           } catch (错误) {
@@ -145,7 +151,7 @@ async function 智能Connection(地址, 端口, 地址类型, env) {
     }
   }
 
-  return await 尝试直连(地址, 端口);
+  return await 尝试直连(地址, 端口, TCP连接);
 }
 
 async function 解析反代地址端口(反代地址) {
@@ -163,9 +169,9 @@ async function 解析反代地址端口(反代地址) {
   return { hostname: 地址, port: 端口 };
 }
 
-async function 尝试直连(地址, 端口) {
+async function 尝试直连(地址, 端口, TCP连接) {
   try {
-    const 连接 = connect({ hostname: 地址, port: 端口 });
+    const 连接 = TCP连接({ hostname: 地址, port: 端口 });
     await 连接.opened;
     console.log(`回退到直连: ${地址}:${端口}`);
     return 连接;
@@ -244,10 +250,10 @@ async function 建立管道(服务端, TCP接口, 初始数据) {
   });
 }
 
-async function 创建SOCKS5(地址类型, 地址, 端口, socks5Account = null) {
+async function 创建SOCKS5(地址类型, 地址, 端口, socks5Account = null, TCP连接) {
   const 使用SOCKS5账号 = socks5Account || 共享状态.SOCKS5账号;
   const { username, password, hostname, port } = await 解析SOCKS5账号(使用SOCKS5账号);
-  const SOCKS5Interface = connect({ hostname, port });
+  const SOCKS5Interface = TCP连接({ hostname, port });
   try {
     await SOCKS5Interface.opened;
   } catch (错误) {
