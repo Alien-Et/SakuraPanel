@@ -6,6 +6,22 @@ main = "_worker.js"
 # 兼容性日期（Cloudflare Workers API版本）
 compatibility_date = "2026-08-02"
 
+# 📊 可观测性配置（日志和追踪）
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+persist = true
+head_sampling_rate = 1
+
 # 🖼️ 静态资源目录（默认壁纸等）
 [assets]
 directory = "./assets"

@@ -22,6 +22,8 @@ export async function 路由处理(请求, env) {
     const 设备标识 = 提取设备指纹(UA) + '_' + IP;
     let formData;
 
+    console.log(`[路由] ${请求.method} ${url.pathname} Upgrade=${请求头} UA=${UA} IP=${IP}`);
+
     if (url.pathname === '/favicon.ico') {
       return new Response('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌸</text></svg>', {
         status: 200,
@@ -32,6 +34,7 @@ export async function 路由处理(请求, env) {
     if (请求头 && 请求头 === 'websocket') {
       共享状态.反代地址 = (await env.KV数据库.get('proxyIP')) || env.PROXYIP || 共享状态.反代地址;
       共享状态.SOCKS5账号 = (await env.KV数据库.get('socks5')) || env.SOCKS5 || 共享状态.SOCKS5账号;
+      console.log(`[路由] WebSocket 升级: 反代=${共享状态.反代地址 || '无'} SOCKS5=${共享状态.SOCKS5账号 ? '已配置' : '无'}`);
       return await 升级请求(请求, env);
     }
 
