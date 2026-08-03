@@ -81,12 +81,20 @@ dns:
       - https://cloudflare-dns.com/dns-query
       - https://dns.alidns.com/dns-query
     fallback:
-      - https://dns.google/dns-query
-      - https://cloudflare-dns.com/dns-query
+      - https://dns.quad9.net/dns-query
+      - https://dns.adguard.com/dns-query
+      - https://doh.opendns.com/dns-query
     fallback-filter:
       geoip: true
+      geoip-code: CN
       ipcidr:
         - 240.0.0.0/4
+        - 127.0.0.0/8
+        - 100.64.0.0/10
+      domain:
+        - '+.googleapis.com'
+        - '+.github.com'
+        - '+.gstatic.com'
 ${echEnabled ? `    nameserver-policy:
 ${echSNI ? `      "${echSNI}": ${echDNS}
 ` : ''}      "${hostName}": ${echDNS}` : ''}
