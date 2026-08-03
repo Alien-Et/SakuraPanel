@@ -87,9 +87,9 @@ dns:
       geoip: true
       ipcidr:
         - 240.0.0.0/4
-${echEnabled ? `  nameserver-policy:
-${echSNI ? `    "${echSNI}": ${echDNS}
-` : ''}    "${hostName}": ${echDNS}` : ''}
+${echEnabled ? `    nameserver-policy:
+${echSNI ? `      "${echSNI}": ${echDNS}
+` : ''}      "${hostName}": ${echDNS}` : ''}
 
 proxies:
 ${节点配置}
