@@ -106,15 +106,15 @@ async function 智能Connection(地址, 端口, 地址类型, env) {
             throw new Error(`强制反代失败: ${错误.message}`);
           }
         } else if (代理Type === 'socks5' && SOCKS5Account) {
-        try {
-          const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口);
-          console.log(`强制通过 SOCKS5 连接: ${地址}:${端口}`);
-          return SOCKS5连接;
-        } catch (错误) {
-          console.error(`强制 SOCKS5 连接失败: ${错误.message}`);
-          throw new Error(`强制 SOCKS5 失败: ${错误.message}`);
+          try {
+            const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口);
+            console.log(`强制通过 SOCKS5 连接: ${地址}:${端口}`);
+            return SOCKS5连接;
+          } catch (错误) {
+            console.error(`强制 SOCKS5 连接失败: ${错误.message}`);
+            throw new Error(`强制 SOCKS5 失败: ${错误.message}`);
+          }
         }
-      }
     } else {
       try {
         const 连接 = await 尝试直连(地址, 端口);
@@ -235,8 +235,8 @@ async function 创建SOCKS5(地址类型, 地址, 端口, socks5Account = null) 
   const SOCKS5Interface = connect({ hostname, port });
   try {
     await SOCKS5Interface.opened;
-  } catch {
-    return new Response('SOCKS5未连通', { status: 400 });
+  } catch (错误) {
+    throw new Error(`SOCKS5未连通: ${错误.message}`);
   }
   const writer = SOCKS5Interface.writable.getWriter();
   const reader = SOCKS5Interface.readable.getReader();
@@ -244,31 +244,24 @@ async function 创建SOCKS5(地址类型, 地址, 端口, socks5Account = null) 
   await writer.write(new Uint8Array([5, 2, 0, 2]));
   let res = (await reader.read()).value;
   if (res[1] === 0x02) {
-    if (!username || !password) return 关闭接口();
+    if (!username || !password) throw new Error('SOCKS5需要认证但未提供账号密码');
     await writer.write(new Uint8Array([1, username.length, ...encoder.encode(username), password.length, ...encoder.encode(password)]));
     res = (await reader.read()).value;
-    if (res[0] !== 0x01 || res[1] !== 0x00) return 关闭接口();
+    if (res[0] !== 0x01 || res[1] !== 0x00) throw new Error('SOCKS5认证失败');
   }
   let 转换地址;
   switch (地址类型) {
     case 1: 转换地址 = new Uint8Array([1, ...地址.split('.').map(Number)]); break;
     case 2: 转换地址 = new Uint8Array([3, 地址.length, ...encoder.encode(地址)]); break;
     case 3: 转换地址 = new Uint8Array([4, ...地址.split(':').flatMap(x => [parseInt(x.slice(0, 2), 16), parseInt(x.slice(2), 16)])]); break;
-    default: return 关闭接口();
+    default: throw new Error(`不支持的地址类型: ${地址类型}`);
   }
   await writer.write(new Uint8Array([5, 1, 0, ...转换地址, 端口 >> 8, 端口 & 0xff]));
   res = (await reader.read()).value;
-  if (res[0] !== 0x05 || res[1] !== 0x00) return 关闭接口();
+  if (res[0] !== 0x05 || res[1] !== 0x00) throw new Error('SOCKS5连接请求失败');
   writer.releaseLock();
   reader.releaseLock();
   return SOCKS5Interface;
-
-  function 关闭接口() {
-    writer.releaseLock();
-    reader.releaseLock();
-    SOCKS5Interface.close();
-    return new Response('SOCKS5握手失败', { status: 400 });
-  }
 }
 
 async function 解析SOCKS5Account(SOCKS5) {
