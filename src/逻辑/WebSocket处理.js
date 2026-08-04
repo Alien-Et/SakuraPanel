@@ -294,7 +294,6 @@ async function 智能Connection(地址, 端口, 地址类型, env, TCP连接) {
   const 当前反代Address = 共享状态.反代地址;
   const SOCKS5Account = 共享状态.SOCKS5账号;
   console.log(`[智能连接] 开始: 地址=${地址} 端口=${端口} 类型=${地址类型} 反代=${当前反代Address || '无'} SOCKS5=${SOCKS5Account || '无'}`);
-  console.log(`[智能连接] 反代地址来源: ${JSON.stringify(共享状态)}`);
 
   if (!地址 || 地址.trim() === '') {
     console.error('[智能连接] 目标地址为空');
