@@ -531,17 +531,19 @@ async function 并发拨号(候选列表, TCP连接) {
     await socket.opened;
     return socket;
   }
-  const attempts = 候选列表.map(候选 => 
-    TCP连接({ hostname: 候选.hostname, port: 候选.port }).then(socket => ({ socket, candidate: 候选 }))
-  );
+  const attempts = 候选列表.map(候选 => {
+    const socket = TCP连接({ hostname: 候选.hostname, port: 候选.port });
+    return socket.opened.then(() => ({ socket, candidate: 候选 })).catch((错误) => {
+      console.warn(`[并发拨号] 候选 ${候选.hostname}:${候选.port} 失败: ${错误.message}`);
+      throw { socket, candidate: 候选, 错误 };
+    });
+  });
   const winner = await Promise.race(attempts);
   for (const attempt of attempts) {
     if (attempt !== winner) {
-      attempt.then(({ socket }) => {
-        if (socket !== winner.socket) {
-          try { socket?.close?.(); } catch (e) { }
-        }
-      }).catch(() => { });
+      attempt.catch(({ socket }) => {
+        try { socket?.close?.(); } catch (e) { }
+      });
     }
   }
   return winner.socket;
