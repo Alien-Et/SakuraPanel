@@ -1,5 +1,6 @@
 // ====================== 订阅面板界面 - 脚本 ======================
 import { 脚本 as 花瓣脚本 } from '../界面_主题/花瓣效果.js';
+import { 配置路径映射 } from '../逻辑/辅助函数.js';
 
 export function 生成脚本(参数) {
   const { 默认白天背景图, 默认暗黑背景图, 配置路径, hostName } = 参数;
@@ -1092,9 +1093,9 @@ export function 生成脚本(参数) {
     function updateSubLinks() {
       const tokenParam = subTokenEnabled && subToken ? '?token=' + subToken : '';
       const links = [
-        { id: 'clashLink', base: 'https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}' },
-        { id: 'v2rayLink', base: 'https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}' },
-        { id: 'singboxLink', base: 'https://${hostName}/${配置路径}/${atob('c2luZ2JveA==')}' }
+        { id: '猫咪订阅链接', base: 'https://${hostName}/${配置路径}/${配置路径映射.魔法1}' },
+        { id: '通用订阅链接', base: 'https://${hostName}/${配置路径}/${配置路径映射.魔法2}' },
+        { id: 'SB订阅链接', base: 'https://${hostName}/${配置路径}/${配置路径映射.魔法3}' }
       ];
       links.forEach(link => {
         const el = document.getElementById(link.id);

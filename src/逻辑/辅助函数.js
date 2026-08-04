@@ -1,4 +1,42 @@
 // ====================== 辅助函数 ======================
+// 通用常量
+export const 默认节点路径 = [
+  'https://raw.githubusercontent.com/Alien-Et/SakuraPanel/refs/heads/main/ips.txt',
+  'https://raw.githubusercontent.com/Alien-Et/SakuraPanel/refs/heads/main/url.txt'
+];
+
+export const 配置路径映射 = {
+  魔法1: atob('Y2xhc2g='),
+  魔法2: atob('djJyYXluZw=='),
+  魔法3: atob('c2luZ2JveA==')
+};
+
+// 安全获取 Cookie 值
+export function 获取Cookie值(请求, 名称) {
+  const cookieHeader = 请求.headers.get('Cookie') || '';
+  const cookies = cookieHeader.split(';').map(c => c.trim().split('='));
+  for (const [key, value] of cookies) {
+    if (key === 名称) return value;
+  }
+  return null;
+}
+
+// 统一验证请求 Token
+export async function 验证请求Token(请求, env) {
+  const token = 获取Cookie值(请求, 'token');
+  const 有效Token = await env.KV数据库.get('current_token');
+  return token && token === 有效Token;
+}
+
+// 统一获取表单数据
+export async function 获取表单数据(请求) {
+  try {
+    return await 请求.formData();
+  } catch {
+    return null;
+  }
+}
+
 export function 创建HTML响应(内容, 状态码 = 200) {
   return new Response(内容, {
     status: 状态码,

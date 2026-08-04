@@ -2,6 +2,7 @@ import { 默认白天背景图, 默认暗黑背景图 } from '../常量.js';
 import { 样式 } from './样式.js';
 import { 生成脚本 } from './脚本.js';
 import { 容器HTML as 花瓣容器HTML } from '../界面_主题/花瓣效果.js';
+import { 配置路径映射 } from '../逻辑/辅助函数.js';
 
 // ====================== 订阅面板界面 - 模板 ======================
 export function 生成订阅页面(配置路径, hostName, uuid) {
@@ -237,28 +238,28 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
     <div class="card">
       <h2 class="card-title">🐾 猫咪订阅</h2>
       <div class="link-box">
-        <p>订阅链接：<br><a id="clashLink" href="https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}">https://${hostName}/${配置路径}/${atob('Y2xhc2g=')}</a></p>
+        <p>订阅链接：<br><a id="猫咪订阅链接" href="https://${hostName}/${配置路径}/${配置路径映射.魔法1}">https://${hostName}/${配置路径}/${配置路径映射.魔法1}</a></p>
       </div>
       <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('Y2xhc2g=')}')">一键导入</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${配置路径映射.魔法1}')">一键导入</button>
       </div>
     </div>
     <div class="card">
       <h2 class="card-title">🐰 通用订阅</h2>
       <div class="link-box">
-        <p>订阅链接：<br><a id="v2rayLink" href="https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}">https://${hostName}/${配置路径}/${atob('djJyYXluZw==')}</a></p>
+        <p>订阅链接：<br><a id="通用订阅链接" href="https://${hostName}/${配置路径}/${配置路径映射.魔法2}">https://${hostName}/${配置路径}/${配置路径映射.魔法2}</a></p>
       </div>
       <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('djJyYXluZw==')}')">导入手机</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${配置路径映射.魔法2}')">导入手机</button>
       </div>
     </div>
     <div class="card">
       <h2 class="card-title">📦 SB订阅</h2>
       <div class="link-box">
-        <p>订阅链接：<br><a id="singboxLink" href="https://${hostName}/${配置路径}/${atob('c2luZ2JveA==')}">https://${hostName}/${配置路径}/${atob('c2luZ2JveA==')}</a></p>
+        <p>订阅链接：<br><a id="SB订阅链接" href="https://${hostName}/${配置路径}/${配置路径映射.魔法3}">https://${hostName}/${配置路径}/${配置路径映射.魔法3}</a></p>
       </div>
       <div class="button-group">
-        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${atob('c2luZ2JveA==')}')">一键导入</button>
+        <button class="cute-button config2-btn" onclick="导入Config('${配置路径}', '${hostName}', '${配置路径映射.魔法3}')">一键导入</button>
       </div>
     </div>
     <div class="card">
