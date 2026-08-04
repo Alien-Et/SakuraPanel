@@ -358,7 +358,7 @@ export async function 路由处理(请求, env) {
               }
 
               // 标准化节点格式
-              const standardPort = port || '443'; // 默认端口443
+              const standardPort = port || (protocol === 'notls' ? '80' : '443');
               const standardizedLine = `${address}:${standardPort}#${nodeName}@${protocol}`;
               validLines.push(standardizedLine);
             }
