@@ -276,7 +276,23 @@ function 解析VLESS首包(数据, uuid) {
 }
 
 function esSitioDePruebaVelocidad(hostname) {
-  const sitiosPrueba = ['gstatic.com', 'www.gstatic.com'];
+  const sitiosPrueba = [
+    // Cloudflare
+    'cp.cloudflare.com',
+    // Google
+    'gstatic.com',
+    'www.gstatic.com',
+    'clients3.google.com',
+    'connectivitycheck.gstatic.com',
+    // Apple
+    'apple.com',
+    'www.apple.com',
+    'captive.apple.com',
+    // Microsoft
+    'msftconnecttest.com',
+    // Firefox
+    'detectportal.firefox.com'
+  ];
   hostname = hostname.toLowerCase();
   return sitiosPrueba.some(dominio => hostname === dominio || hostname.endsWith('.' + dominio));
 }
