@@ -26,11 +26,28 @@ export async function 升级请求(请求, env) {
   // 写入TCP公共函数
   const 写入TCP = async (chunk) => {
     if (!chunk?.byteLength || !TCP接口?.writable) return;
+    
+    // 尝试解析 HTTP 请求
+    try {
+      const httpText = new TextDecoder().decode(chunk);
+      const headerEnd = httpText.indexOf('\r\n\r\n');
+      if (headerEnd !== -1) {
+        const headerText = httpText.slice(0, headerEnd);
+        const firstLine = headerText.split('\r\n')[0];
+        const hostMatch = headerText.match(/^Host:\s*(.+)$/im);
+        const host = hostMatch ? hostMatch[1] : 'unknown';
+        console.log(`[HTTP 请求] ${firstLine} Host=${host} (${chunk.byteLength} bytes)`);
+      }
+    } catch (e) {
+      // 忽略解析错误
+    }
+    
     const writer = TCP接口.writable.getWriter();
     try {
       await writer.write(chunk);
+      console.log(`[管道 WS->TCP] 写入: ${chunk.byteLength} bytes`);
     } catch (e) {
-      console.error(`[WebSocket] 写入TCP失败: ${e.message}`);
+      console.error(`[管道 WS->TCP] 写入失败: ${e.message}`);
     } finally {
       try { writer.releaseLock(); } catch (e) { }
     }
@@ -99,7 +116,7 @@ export async function 升级请求(请求, env) {
       console.log(`[WebSocket] 管道建立: 初始数据=${初始数据.byteLength} bytes`);
 
       // 启动管道
-      建立管道(服务端, TCP接口, 初始数据);
+      await 建立管道(服务端, TCP接口, 初始数据);
       return;
     }
 
@@ -116,6 +133,7 @@ export async function 升级请求(请求, env) {
   };
 
   服务端.addEventListener('message', (event) => {
+    console.log(`[WebSocket] 收到消息: ${数据转Uint8Array(event.data).byteLength} bytes`);
     入队消息(event.data);
   });
 
@@ -144,6 +162,8 @@ export async function 升级请求(请求, env) {
       console.error(`[WebSocket] Early Data 解析失败: ${错误.message}`);
     }
   }
+
+  console.log(`[WebSocket] 等待客户端消息...`);
 
   return new Response(null, { status: 101, webSocket: 客户端, headers: { 'Sec-WebSocket-Extensions': '' } });
 }
@@ -180,7 +200,11 @@ function 解析VLESS首包(数据, uuid) {
   console.log('[VLESS解析] 版本字节:', 数据数组[0]);
   const uuid验证结果 = 验证密钥(数据数组.slice(1, 17)) === uuid;
   console.log('[VLESS解析] UUID验证结果:', uuid验证结果);
-  if (!uuid验证结果) return null;
+  if (!uuid验证结果) {
+    const 计算UUID = 验证密钥(数据数组.slice(1, 17));
+    console.log('[VLESS解析] UUID不匹配，计算值:', 计算UUID, '期望值:', uuid);
+    return null;
+  }
 
   const optLen = 数据数组[17];
   console.log('[VLESS解析] optLen:', optLen);
@@ -191,8 +215,8 @@ function 解析VLESS首包(数据, uuid) {
   }
   const cmd = 数据数组[cmdIndex];
   console.log('[VLESS解析] cmd:', cmd, 'cmdIndex:', cmdIndex);
-  if (cmd !== 1 && cmd !== 2) {
-    console.log('[VLESS解析] cmd不是1或2，放弃解析');
+  if (cmd !== 1 && cmd !== 2 && cmd !== 3) {
+    console.log('[VLESS解析] cmd不是1/2/3，放弃解析');
     return null;
   }
 
@@ -269,8 +293,11 @@ function construirRespuesta204Local() {
 async function 智能Connection(地址, 端口, 地址类型, env, TCP连接) {
   const 当前反代Address = 共享状态.反代地址;
   const SOCKS5Account = 共享状态.SOCKS5账号;
+  console.log(`[智能连接] 开始: 地址=${地址} 端口=${端口} 类型=${地址类型} 反代=${当前反代Address || '无'} SOCKS5=${SOCKS5Account || '无'}`);
+  console.log(`[智能连接] 反代地址来源: ${JSON.stringify(共享状态)}`);
 
   if (!地址 || 地址.trim() === '') {
+    console.error('[智能连接] 目标地址为空');
     throw new Error('目标地址为空');
   }
 
@@ -283,29 +310,31 @@ async function 智能Connection(地址, 端口, 地址类型, env, TCP连接) {
     const 代理Type = await env.KV数据库.get('proxyType') || 'reverse';
 
     if (!代理启用) {
+      console.log(`[智能连接] 代理已禁用，直连: ${地址}:${端口}`);
       return await 尝试直连(地址, 端口, TCP连接);
     }
 
     if (强制代理) {
         if (代理Type === 'reverse' && 当前反代Address) {
           try {
-            const { hostname: 反代Host, port: 反代Port } = 解析反代地址端口(当前反代Address);
-            const 连接 = TCP连接({ hostname: 反代Host, port: 反代Port || 端口 });
-            await 连接.opened;
-            console.log(`强制通过反代连接: ${当前反代Address}`);
+            const 候选列表 = await 解析反代为候选列表(当前反代Address);
+            console.log(`[智能连接] 强制反代: 候选=${候选列表.map(c => `${c.hostname}:${c.port}`).join(', ')} 目标=${地址}:${端口}`);
+            const 连接 = await 并发拨号(候选列表, TCP连接);
+            console.log(`[智能连接] 强制反代连接成功`);
             return 连接;
           } catch (错误) {
-            console.error(`强制反代连接失败: ${错误.message}`);
+            console.error(`[智能连接] 强制反代连接失败: ${错误.message}`);
             throw new Error(`强制反代失败: ${错误.message}`);
           }
         } else if (代理Type === 'socks5' && SOCKS5Account) {
           try {
+            console.log(`[智能连接] 强制SOCKS5: ${地址}:${端口}`);
             const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口, SOCKS5Account, TCP连接);
-            console.log(`强制通过 SOCKS5 连接: ${地址}:${端口}`);
+            console.log(`[智能连接] 强制SOCKS5连接成功`);
             return SOCKS5连接;
           } catch (错误) {
-            console.error(`强制 SOCKS5 连接失败: ${错误.message}`);
-            throw new Error(`强制 SOCKS5 失败: ${错误.message}`);
+            console.error(`[智能连接] 强制SOCKS5连接失败: ${错误.message}`);
+            throw new Error(`强制SOCKS5失败: ${错误.message}`);
           }
         }
     } else {
@@ -313,24 +342,25 @@ async function 智能Connection(地址, 端口, 地址类型, env, TCP连接) {
         const 连接 = await 尝试直连(地址, 端口, TCP连接);
         return 连接;
       } catch (错误) {
-        console.log(`直连失败，动态切换到代理: ${错误.message}`);
+        console.log(`[智能连接] 直连失败，动态切换代理: ${错误.message}`);
         if (代理Type === 'reverse' && 当前反代Address) {
           try {
-            const { hostname: 反代Host, port: 反代Port } = 解析反代地址端口(当前反代Address);
-            const 连接 = TCP连接({ hostname: 反代Host, port: 反代Port || 端口 });
-            await 连接.opened;
-            console.log(`动态通过反代连接: ${当前反代Address}`);
+            const 候选列表 = await 解析反代为候选列表(当前反代Address);
+            console.log(`[智能连接] 动态反代: 候选=${候选列表.map(c => `${c.hostname}:${c.port}`).join(', ')} 目标=${地址}:${端口}`);
+            const 连接 = await 并发拨号(候选列表, TCP连接);
+            console.log(`[智能连接] 动态反代连接成功`);
             return 连接;
           } catch (错误) {
-            console.error(`动态反代连接失败: ${错误.message}`);
+            console.error(`[智能连接] 动态反代连接失败: ${错误.message}`);
           }
         } else if (代理Type === 'socks5' && SOCKS5Account) {
           try {
+            console.log(`[智能连接] 动态SOCKS5: ${地址}:${端口}`);
             const SOCKS5连接 = await 创建SOCKS5(地址类型, 地址, 端口, SOCKS5Account, TCP连接);
-            console.log(`动态通过 SOCKS5 连接: ${地址}:${端口}`);
+            console.log(`[智能连接] 动态SOCKS5连接成功`);
             return SOCKS5连接;
           } catch (错误) {
-            console.error(`动态 SOCKS5 连接失败: ${错误.message}`);
+            console.error(`[智能连接] 动态SOCKS5连接失败: ${错误.message}`);
           }
         }
         throw new Error(`所有连接尝试失败: ${错误.message}`);
@@ -338,11 +368,12 @@ async function 智能Connection(地址, 端口, 地址类型, env, TCP连接) {
     }
   }
 
+  console.log(`[智能连接] 非IP/域名，直接直连: ${地址}:${端口}`);
   return await 尝试直连(地址, 端口, TCP连接);
 }
 
 async function 解析反代地址端口(反代地址) {
-  if (!反代地址) return { hostname: 反代地址, port: 443 };
+  if (!反代地址) return [{ hostname: 反代地址, port: 443 }];
   let 地址 = 反代地址, 端口 = 443;
   if (反代地址.includes(']:')) {
     const parts = 反代地址.split(']:');
@@ -353,17 +384,223 @@ async function 解析反代地址端口(反代地址) {
     地址 = 反代地址.slice(0, colonIndex);
     端口 = parseInt(反代地址.slice(colonIndex + 1), 10) || 端口;
   }
-  return { hostname: 地址, port: 端口 };
+  return [{ hostname: 地址, port: 端口 }];
+}
+
+// DoH 查询缓存
+const DoH缓存 = {};
+const DoH缓存最大条目 = 1000;
+const DoH记录类型映射 = { A: 1, AAAA: 28, TXT: 16 };
+
+async function DoH查询(域名, 记录类型, DoH解析服务 = 'https://cloudflare-dns.com/dns-query') {
+  const 规范化域名 = String(域名 || '').trim().toLowerCase().replace(/\.$/, '');
+  const 规范化记录类型 = String(记录类型 || '').trim().toUpperCase();
+  const 缓存键 = `${规范化域名}:${规范化记录类型}`;
+  const qtype = DoH记录类型映射[规范化记录类型] || 1;
+  const 当前时间戳 = Date.now();
+  const 现缓存项 = DoH缓存[缓存键];
+  if (现缓存项 && 当前时间戳 < 现缓存项.过期时间) {
+    console.log(`[DoH查询] 命中缓存 ${域名} ${记录类型}`);
+    return 现缓存项.data.map(data => ({ type: qtype, data }));
+  }
+  const 开始时间 = performance.now();
+  console.log(`[DoH查询] 开始查询 ${域名} ${记录类型} via ${DoH解析服务}`);
+  try {
+    const 编码域名 = (name) => {
+      const parts = name.endsWith('.') ? name.slice(0, -1).split('.') : name.split('.');
+      const bufs = [];
+      for (const label of parts) {
+        const enc = new TextEncoder().encode(label);
+        bufs.push(new Uint8Array([enc.length]), enc);
+      }
+      bufs.push(new Uint8Array([0]));
+      const total = bufs.reduce((s, b) => s + b.length, 0);
+      const result = new Uint8Array(total);
+      let off = 0;
+      for (const b of bufs) { result.set(b, off); off += b.length }
+      return result;
+    };
+
+    const qname = 编码域名(规范化域名);
+    const query = new Uint8Array(12 + qname.length + 4);
+    const qview = new DataView(query.buffer);
+    qview.setUint16(0, crypto.getRandomValues(new Uint16Array(1))[0]);
+    qview.setUint16(2, 0x0100);
+    qview.setUint16(4, 1);
+    query.set(qname, 12);
+    qview.setUint16(12 + qname.length, qtype);
+    qview.setUint16(12 + qname.length + 2, 1);
+
+    const response = await fetch(DoH解析服务, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/dns-message',
+        'Accept': 'application/dns-message',
+      },
+      body: query,
+    });
+    if (!response.ok) {
+      console.warn(`[DoH查询] 请求失败 ${域名} ${记录类型} 响应代码:${response.status}`);
+      return [];
+    }
+
+    const buf = new Uint8Array(await response.arrayBuffer());
+    const dv = new DataView(buf.buffer);
+    const ancount = dv.getUint16(6);
+    console.log(`[DoH查询] 收到响应 ${域名} ${记录类型} (${buf.length}字节, ${ancount}条应答)`);
+
+    const answers = [];
+    let offset = 12;
+    const qdcount = dv.getUint16(4);
+    for (let i = 0; i < qdcount; i++) {
+      let p = offset, safe = 128;
+      while (p < buf.length && safe-- > 0) {
+        const len = buf[p];
+        if (len === 0) { offset = p + 1; break; }
+        if ((len & 0xC0) === 0xC0) { offset = p + 2; break; }
+        p += len + 1;
+      }
+      offset += 4;
+    }
+    for (let i = 0; i < ancount && offset < buf.length; i++) {
+      let p = offset, safe = 128;
+      while (p < buf.length && safe-- > 0) {
+        const len = buf[p];
+        if (len === 0) { p++; break; }
+        if ((len & 0xC0) === 0xC0) { p += 2; break; }
+        p += len + 1;
+      }
+      offset = p;
+      const type = dv.getUint16(offset); offset += 2;
+      offset += 2;
+      const ttl = dv.getUint32(offset); offset += 4;
+      const rdlen = dv.getUint16(offset); offset += 2;
+      const rdata = buf.slice(offset, offset + rdlen);
+      offset += rdlen;
+
+      let data;
+      if (type === 1 && rdlen === 4) {
+        data = `${rdata[0]}.${rdata[1]}.${rdata[2]}.${rdata[3]}`;
+      } else if (type === 28 && rdlen === 16) {
+        const segs = [];
+        for (let j = 0; j < 16; j += 2) segs.push(((rdata[j] << 8) | rdata[j + 1]).toString(16));
+        data = segs.join(':');
+      } else if (type === 16) {
+        const parts = [];
+        let tOff = 0;
+        while (tOff < rdlen) {
+          const tLen = rdata[tOff++];
+          parts.push(new TextDecoder().decode(rdata.slice(tOff, tOff + tLen)));
+          tOff += tLen;
+        }
+        data = parts.join('');
+      } else {
+        data = Array.from(rdata).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+      answers.push({ type, TTL: ttl, data });
+    }
+
+    const 耗时 = (performance.now() - 开始时间).toFixed(2);
+    console.log(`[DoH查询] 查询完成 ${域名} ${记录类型} ${耗时}ms 共${answers.length}条结果`);
+    const 相关记录 = answers.filter(answer => answer.type === qtype);
+    const 缓存数据 = 相关记录.map(answer => answer.data);
+    if (相关记录.length > 0) {
+      const 缓存TTL = Math.max(300, Math.min(...相关记录.map(a => a.TTL)));
+      DoH缓存[缓存键] = { data: 缓存数据, 过期时间: Date.now() + 缓存TTL * 1000 };
+    } else {
+      console.warn(`[DoH查询] 未获取到${记录类型}记录，不缓存空结果: ${域名}`);
+    }
+    if (Object.keys(DoH缓存).length > DoH缓存最大条目) {
+      const 清理时间戳 = Date.now();
+      for (const [k, v] of Object.entries(DoH缓存)) {
+        if (清理时间戳 >= v.过期时间) delete DoH缓存[k];
+      }
+    }
+    return answers;
+  } catch (error) {
+    const 耗时 = (performance.now() - 开始时间).toFixed(2);
+    console.error(`[DoH查询] 查询失败 ${域名} ${记录类型} ${耗时}ms:`, error);
+    return [];
+  }
+}
+
+// 并发拨号
+async function 并发拨号(候选列表, TCP连接) {
+  if (候选列表.length === 1) {
+    const 候选 = 候选列表[0];
+    const socket = TCP连接({ hostname: 候选.hostname, port: 候选.port });
+    await socket.opened;
+    return socket;
+  }
+  const attempts = 候选列表.map(候选 => 
+    TCP连接({ hostname: 候选.hostname, port: 候选.port }).then(socket => ({ socket, candidate: 候选 }))
+  );
+  const winner = await Promise.race(attempts);
+  for (const attempt of attempts) {
+    if (attempt !== winner) {
+      attempt.then(({ socket }) => {
+        if (socket !== winner.socket) {
+          try { socket?.close?.(); } catch (e) { }
+        }
+      }).catch(() => { });
+    }
+  }
+  return winner.socket;
+}
+
+// 解析反代域名为多个 IP
+async function 解析反代为候选列表(反代地址) {
+  if (!反代地址) return [{ hostname: '127.0.0.1', port: 443 }];
+  
+  // 如果是 IP:PORT 格式，直接返回
+  const ipv4Regex = /^(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)(?::\d+)?$/;
+  if (ipv4Regex.test(反代地址)) {
+    const colonIndex = 反代地址.lastIndexOf(':');
+    const host = colonIndex > 0 ? 反代地址.slice(0, colonIndex) : 反代地址;
+    const port = colonIndex > 0 ? parseInt(反代地址.slice(colonIndex + 1), 10) : 443;
+    return [{ hostname: host, port }];
+  }
+
+  // 解析域名
+  const colonIndex = 反代地址.lastIndexOf(':');
+  const host = colonIndex > 0 && !反代地址.startsWith('[') ? 反代地址.slice(0, colonIndex) : 反代地址;
+  const port = colonIndex > 0 && !反代地址.startsWith('[') ? parseInt(反代地址.slice(colonIndex + 1), 10) : 443;
+
+  const [aRecords, aaaaRecords] = await Promise.all([
+    DoH查询(host, 'A'),
+    DoH查询(host, 'AAAA')
+  ]);
+
+  const 候选列表 = [];
+  for (const r of aRecords) {
+    if (r.type === 1 && typeof r.data === 'string') {
+      候选列表.push({ hostname: r.data, port });
+    }
+  }
+  for (const r of aaaaRecords) {
+    if (r.type === 28 && typeof r.data === 'string') {
+      候选列表.push({ hostname: `[${r.data}]`, port });
+    }
+  }
+
+  if (候选列表.length === 0) {
+    console.warn(`[反代解析] 未获取到IP，回退到原域名: ${host}`);
+    return [{ hostname: host, port }];
+  }
+
+  console.log(`[反代解析] ${host} 解析到 ${候选列表.length} 个IP: ${候选列表.map(c => `${c.hostname}:${c.port}`).join(', ')}`);
+  return 候选列表;
 }
 
 async function 尝试直连(地址, 端口, TCP连接) {
+  console.log(`[直连] 开始: ${地址}:${端口}`);
   try {
     const 连接 = TCP连接({ hostname: 地址, port: 端口 });
     await 连接.opened;
-    console.log(`回退到直连: ${地址}:${端口}`);
+    console.log(`[直连] 成功: ${地址}:${端口}`);
     return 连接;
   } catch (错误) {
-    console.error(`直连失败: ${错误.message}`);
+    console.error(`[直连] 失败: ${地址}:${端口} - ${错误.message}`);
     throw new Error(`无法连接: ${错误.message}`);
   }
 }
@@ -418,8 +655,8 @@ function 解码WS早期数据(header, token) {
   return result;
 }
 
-function 建立管道(服务端, TCP接口, 初始数据) {
-  console.log(`[管道] 建立: TCP接口=${TCP接口 ? '已建立' : 'null'}`);
+async function 建立管道(服务端, TCP接口, 初始数据) {
+  console.log(`[管道] 建立: TCP接口=${TCP接口 ? '已建立' : '未建立'}`);
   if (!TCP接口) return;
 
   // Forward TCP -> WebSocket
@@ -445,6 +682,7 @@ function 建立管道(服务端, TCP接口, 初始数据) {
         }
         if (value && value.byteLength > 0) {
           bytesCount += value.byteLength;
+          console.log(`[管道 TCP->WS] 读取数据: ${value.byteLength} bytes，累计: ${bytesCount} bytes`);
           
           // 尝试解析 HTTP 响应
           httpBuffer = 拼接字节数据(httpBuffer, value);
@@ -463,6 +701,7 @@ function 建立管道(服务端, TCP接口, 初始数据) {
           
           try {
             await 服务端.send(value);
+            console.log(`[管道 TCP->WS] 发送到客户端: ${value.byteLength} bytes`);
           } catch (e) {
             console.log(`[管道 TCP->WS] 发送失败: ${e.message}`);
             break;
@@ -478,54 +717,23 @@ function 建立管道(服务端, TCP接口, 初始数据) {
   };
 
   // Forward WebSocket -> TCP
-  const wsWriter = TCP接口.writable.getWriter();
   const forwardWSToTCP = async () => {
+    const writer = TCP接口.writable.getWriter();
     try {
       if (初始数据 && 初始数据.byteLength > 0) {
         console.log(`[管道 WS->TCP] 写入初始数据: ${初始数据.byteLength} bytes`);
-        await wsWriter.write(初始数据);
+        await writer.write(初始数据);
       }
     } catch (e) {
       console.error(`[管道 WS->TCP] 写入初始数据失败: ${e.message}`);
-    } finally {
-      try { wsWriter.releaseLock(); } catch (e) { }
-    }
-  };
-
-  // 监听后续 WS 消息
-  const onMessage = async (event) => {
-    const chunk = 数据转Uint8Array(event.data);
-    if (!chunk || !chunk.byteLength) return;
-    
-    // 尝试解析 HTTP 请求
-    try {
-      const httpText = new TextDecoder().decode(chunk);
-      const headerEnd = httpText.indexOf('\r\n\r\n');
-      if (headerEnd !== -1) {
-        const headerText = httpText.slice(0, headerEnd);
-        const firstLine = headerText.split('\r\n')[0];
-        const hostMatch = headerText.match(/^Host:\s*(.+)$/im);
-        const host = hostMatch ? hostMatch[1] : 'unknown';
-        console.log(`[HTTP 请求] ${firstLine} Host=${host} (${chunk.byteLength} bytes)`);
-      }
-    } catch (e) {
-      // 忽略解析错误
-    }
-    
-    const writer = TCP接口.writable.getWriter();
-    try {
-      await writer.write(chunk);
-    } catch (e) {
-      console.error(`[管道 WS->TCP] 写入失败: ${e.message}`);
     } finally {
       try { writer.releaseLock(); } catch (e) { }
     }
   };
 
-  服务端.addEventListener('message', (event) => {
-    console.log(`[管道 WS->TCP] 收到消息: ${数据转Uint8Array(event.data).byteLength} bytes`);
-    onMessage(event);
-  });
+  // 先写入初始数据，确保完成后再监听消息
+  await forwardWSToTCP();
+
   服务端.addEventListener('close', () => {
     console.log(`[管道] 客户端关闭`);
     try { TCP接口.close(); } catch (e) { }
@@ -535,8 +743,8 @@ function 建立管道(服务端, TCP接口, 初始数据) {
     try { TCP接口.close(); } catch (e) { }
   });
 
+  // 启动 TCP -> WS 转发
   forwardTCPToWS();
-  forwardWSToTCP();
 }
 
 function 拼接字节数据(现有, 新增) {
