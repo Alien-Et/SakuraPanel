@@ -1,5 +1,6 @@
-import { 共享状态 } from '../共享状态.js';
+﻿import { 共享状态 } from '../共享状态.js';
 import { 获取或初始化UUID, 加载节点和配置 } from './节点配置.js';
+import { D1获取, D1批量获取 } from './辅助函数.js';
 
 // ====================== 配置生成器 ======================
 export async function 生成猫咪(env, hostName) {
@@ -8,12 +9,12 @@ export async function 生成猫咪(env, hostName) {
     await 加载节点和配置(env, hostName);
   }
   const 节点列表 = 共享状态.优选节点.length ? 共享状态.优选节点 : [`${hostName}:443`];
-  // ECH 设置
-  const echEnabled = await env.KV数据库.get('echEnabled') !== 'false';
-  const echSNI = (await env.KV数据库.get('echSNI')) || '';
-  const echDNS = (await env.KV数据库.get('echDNS')) || 'https://dns.alidns.com/dns-query';
+  const echSettings = await D1批量获取(env, ['echEnabled', 'echSNI', 'echDNS']);
+  const echEnabled = echSettings.echEnabled !== 'false';
+  const echSNI = (echSettings.echSNI) || '';
+  const echDNS = (echSettings.echDNS) || 'https://dns.alidns.com/dns-query';
   // 获取机场名称，默认为"樱花订阅"
-  const 机场名称 = await env.KV数据库.get('airportName') || '樱花订阅';
+  const 机场名称 = await D1获取(env, 'airportName') || '樱花订阅';
   const 国家分组 = {};
 
   节点列表.forEach((节点, 索引) => {
@@ -143,15 +144,15 @@ export async function 生成通用(env, hostName) {
     await 加载节点和配置(env, hostName);
   }
   const 节点列表 = 共享状态.优选节点.length ? 共享状态.优选节点 : [`${hostName}:443`];
-  const b64Enabled = await env.KV数据库.get('b64Enabled') !== 'false';
-  // ECH 设置
-  const echEnabled = await env.KV数据库.get('echEnabled') !== 'false';
-  const echSNI = (await env.KV数据库.get('echSNI')) || '';
-  const echDNS = (await env.KV数据库.get('echDNS')) || 'https://dns.alidns.com/dns-query';
+  const b64Enabled = await D1获取(env, 'b64Enabled') !== 'false';
+  const echSettings = await D1批量获取(env, ['echEnabled', 'echSNI', 'echDNS']);
+  const echEnabled = echSettings.echEnabled !== 'false';
+  const echSNI = (echSettings.echSNI) || '';
+  const echDNS = (echSettings.echDNS) || 'https://dns.alidns.com/dns-query';
   // ECH 参数：&ech=SNI+DNS  （SNI 为空时省略 SNI+ 部分）
   const echParam = echEnabled ? `&ech=${encodeURIComponent((echSNI ? echSNI + '+' : '') + echDNS)}` : '';
   // 获取机场名称，默认为"樱花订阅"
-  const 机场名称 = await env.KV数据库.get('airportName') || '樱花订阅';
+  const 机场名称 = await D1获取(env, 'airportName') || '樱花订阅';
   const 配置列表 = 节点列表.map(节点 => {
     try {
       const [主内容, tls = 'tls'] = 节点.split("@");
@@ -189,9 +190,10 @@ export async function 生成SingBox(env, hostName) {
     await 加载节点和配置(env, hostName);
   }
   const 节点列表 = 共享状态.优选节点.length ? 共享状态.优选节点 : [`${hostName}:443`];
-  const echEnabled = await env.KV数据库.get('echEnabled') !== 'false';
-  const echSNI = (await env.KV数据库.get('echSNI')) || 'cloudflare-ech.com';
-  const 机场名称 = await env.KV数据库.get('airportName') || '樱花订阅';
+  const echSettings = await D1批量获取(env, ['echEnabled', 'echSNI']);
+  const echEnabled = echSettings.echEnabled !== 'false';
+  const echSNI = (echSettings.echSNI) || 'cloudflare-ech.com';
+  const 机场名称 = await D1获取(env, 'airportName') || '樱花订阅';
 
   // 构建 outbounds（VLESS 节点）
   const outbounds = 节点列表.map(节点 => {
