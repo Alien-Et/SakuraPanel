@@ -62,7 +62,7 @@
 - 支持自定义全局壁纸，所有界面同步显示
   - 🌅 支持白天/暗黑模式分别设置不同壁纸
   - 🔄 自动主题切换，实时更新背景
-  - 💾 KV数据库存储，设置持久化保存
+  -  💾 D1数据库存储，设置持久化保存
   - 🛡️ 认证保护，防止未授权修改
   - 📱 全界面同步，登录/配置/订阅页面统一显示
 
@@ -70,18 +70,18 @@
 
 - **前端技术**：HTML5、CSS3、JavaScript (ES6+)
 - **后端技术**：Cloudflare Workers/Pages Functions
-- **数据库**：Cloudflare KV存储
+- **数据库**：Cloudflare D1数据库
 - **加密技术**：SHA-256哈希、Base64编码
 - **网络协议**：VLESS、HTTP/HTTPS、WebSocket
 - **代理协议**：SOCKS5、HTTP代理
 - **安全特性**：密码加密、账户锁定、访问控制
-- **壁纸系统**：KV存储持久化、主题自动切换、全界面同步
+- **壁纸系统**：D1数据库持久化、主题自动切换、全界面同步
 - **订阅支持**：Clash、v2rayn或v2rayng和SingBox 多种客户端配置
 
 ## 系统要求
 
 - Cloudflare Workers账户
-- Cloudflare KV存储空间（用于数据持久化）
+- Cloudflare D1数据库（用于数据持久化）
 - 支持WebSocket的现代浏览器
 
 ## 安装与部署
@@ -89,24 +89,9 @@
 ### 1. 准备工作
 
 1. 注册并登录[Cloudflare账户](https://dash.cloudflare.com/profile/api-tokens)
-2. 创建一个KV命名空间，用于存储用户数据：
-   - 访问[Cloudflare KV存储页面](https://dash.cloudflare.com/workers/kv/namespaces)
-   - 点击"创建命名空间"
-   - 输入命名空间名称（例如：`SakuraPanel-KV`）
-   - 点击"添加"
-3. 记录创建的KV命名空间ID，后续绑定需要使用
+2. 本项目使用 D1 数据库存储数据，部署时 wrangler 会自动创建并绑定数据库，无需手动创建。
 
-### 2. KV存储绑定
-
-1. 在Cloudflare控制台中，进入[Workers & Pages](https://dash.cloudflare.com/)
-2. 选择你的Worker或Pages项目
-3. 点击"设置" -> "变量"
-4. 在"KV命名空间绑定"部分，添加以下绑定：
-   - **变量名称**：`KV数据库`
-   - **KV命名空间**：选择你创建的KV命名空间
-5. 点击"保存"
-
-### 3. 部署代码
+### 2. 部署代码
 
 #### 方法一：一键部署（推荐）
 
@@ -123,7 +108,7 @@ cd SakuraPanel
 npm install
 
 # 部署到 Cloudflare Workers
-npx wrangler deploy --env production
+npx wrangler deploy
 ```
 
 > 本项目使用模块化架构（ES Modules），不支持单文件复制粘贴部署。
@@ -140,14 +125,9 @@ npx wrangler deploy --env production
 
 > Pages 部署也使用模块化架构，不支持单文件复制粘贴。
 
-#### KV命名空间绑定
+#### D1 数据库说明
 
-1. 在[Cloudflare Pages控制台](https://dash.cloudflare.com/pages)中，选择你的项目
-2. 点击"设置" -> "函数"
-3. 在"KV命名空间绑定"部分，添加以下绑定：
-   - **变量名称**：`KV数据库`
-   - **KV命名空间**：选择你之前创建的KV命名空间
-4. 点击"保存"
+本项目使用 D1 数据库存储数据，部署时 wrangler 会自动创建并绑定数据库，无需手动创建。
 
 #### 环境变量配置
 
@@ -159,7 +139,7 @@ npx wrangler deploy --env production
    - `LOCKOUT_DURATION`：账户锁定时间（分钟，默认为`30`）
 4. 点击"保存"
 
-### 4. 自定义域名设置
+### 3. 自定义域名设置
 
 #### Workers自定义域名设置
 
@@ -185,7 +165,7 @@ npx wrangler deploy --env production
 
 **注意**：自定义域名必须已经添加到你的Cloudflare账户中，并且使用Cloudflare的DNS服务。如果使用其他DNS提供商，请确保正确配置CNAME记录。
 
-### 5. 可选环境变量设置
+### 4. 可选环境变量设置
 
 #### Workers环境变量设置
 
@@ -197,8 +177,8 @@ npx wrangler deploy --env production
    - `PASSWORD_HASH_SALT`：密码加密盐值（默认为`default_salt`）
    - `MAX_LOGIN_ATTEMPTS`：最大登录尝试次数（默认为`5`）
    - `LOCKOUT_DURATION`：账户锁定时间（分钟，默认为`30`）
-   - `PROXYIP`：反代地址（默认值：`ProxyIP.JP.CMLiussss.net`）
-   - `SOCKS5`：SOCKS5账号（格式：`用户名:密码@主机:端口`）
+   - `PROXYIP`：反代地址 fallback（默认值：`ProxyIP.JP.CMLiussss.net`，仅在 D1 未配置时生效）
+   - `SOCKS5`：SOCKS5账号 fallback（格式：`用户名:密码@主机:端口`，仅在 D1 未配置时生效）
 6. 点击"保存"
 
 #### Pages环境变量设置
@@ -210,8 +190,8 @@ npx wrangler deploy --env production
    - `PASSWORD_HASH_SALT`：密码加密盐值（默认为`default_salt`）
    - `MAX_LOGIN_ATTEMPTS`：最大登录尝试次数（默认为`5`）
    - `LOCKOUT_DURATION`：账户锁定时间（分钟，默认为`30`）
-   - `PROXYIP`：反代地址（默认值：`ProxyIP.JP.CMLiussss.net`）
-   - `SOCKS5`：SOCKS5账号（格式：`用户名:密码@主机:端口`）
+   - `PROXYIP`：反代地址 fallback（默认值：`ProxyIP.JP.CMLiussss.net`，仅在 D1 未配置时生效）
+   - `SOCKS5`：SOCKS5账号 fallback（格式：`用户名:密码@主机:端口`，仅在 D1 未配置时生效）
 6. 点击"保存"
 
 ## 网址路径说明
@@ -269,14 +249,17 @@ npx wrangler deploy --env production
   - 需要登录状态才能访问
 - **示例**：`https://sakura-panel.workers.dev/panel`
 
-#### 5. 订阅路径 `/sub`
+#### 5. 订阅路径 `/panel/clash`、`/panel/v2rayn`、`/panel/singbox`
 
 - **功能**：获取订阅链接内容
 - **行为**：
   - 返回订阅链接对应的配置内容
   - 支持Clash订阅、通用订阅和SingBox订阅三种格式
   - 包含用户UUID和当前节点列表
-- **示例**：`https://sakura-panel.workers.dev/sub`
+- **示例**：
+  - `https://sakura-panel.workers.dev/panel/clash`
+  - `https://sakura-panel.workers.dev/panel/v2rayn`
+  - `https://sakura-panel.workers.dev/panel/singbox`
 
 #### 6. WebSocket路径 `/?ed=2560`
 
@@ -308,7 +291,7 @@ npx wrangler deploy --env production
 不同路径有不同的访问权限要求：
 
 - **公开访问**：`/login`、`/register`
-- **需要登录**：`/`、`/panel`、`/sub`
+- **需要登录**：`/`、`/panel`、`/panel/clash`、`/panel/v2rayn`、`/panel/singbox`
 - **管理员权限**：无（当前版本无独立管理员路径）
 
 ### 路径重定向
@@ -324,8 +307,10 @@ npx wrangler deploy --env production
 为了安全地访问樱花面板，用户可以通过以下方式：
 
 1. **直接访问登录路径**：`https://<your-domain>/login`
-2. **使用特定参数**：`https://<your-domain>/?panel=login`（具体参数取决于实际实现）
-3. **使用特定子路径**：`https://<your-domain>/panel`（具体路径取决于实际实现）
+2. **直接访问注册路径**：`https://<your-domain>/register`
+3. **直接访问面板路径**：`https://<your-domain>/panel`（需先登录）
+
+> 注意：根路径 `/` 会伪装成普通网站，不会直接显示面板。请使用上述路径直接访问。
 
 这些安全访问方式可以有效避免被检测和封锁，同时确保只有知道正确访问方式的用户才能使用樱花面板。
 
@@ -333,16 +318,16 @@ npx wrangler deploy --env production
 
 ### 首次使用
 
-1. 访问部署后的Worker URL
-2. 系统会自动跳转到注册页面
-3. 设置用户名（4-20位字母数字）和密码（至少6位）
-4. 完成注册后，系统会自动登录并进入主面板
+1. 直接访问 `https://<your-domain>/register` 注册账号
+2. 设置用户名（4-20位字母数字）和密码（至少6位）
+3. 完成注册后，系统会自动跳转到主面板 `/panel`
 
 ### 登录与安全
 
+- 访问 `https://<your-domain>/login` 登录
 - 登录失败达到上限（默认5次）后，**该设备**将被锁定5分钟
 - 设备标识采用粗粒度指纹（浏览器主版本+操作系统+IP，如 `edge135_android_1.2.3.4`），既避免NAT下同IP多用户互相误锁，又避免完整UA细微差异导致计数键膨胀
-- 失败计数与锁定键均设置30分钟自动过期，KV无无效数据堆积
+- 失败计数与锁定键均设置30分钟自动过期，D1无无效数据堆积
 - 支持通过Cookie保持登录状态（有效期5分钟）
 
 ### 节点管理
@@ -386,7 +371,7 @@ npx wrangler deploy --env production
 
 1. 设置的壁纸会自动同步到所有界面（登录、注册、配置、订阅等）
 2. 系统会根据用户的主题偏好自动切换对应的壁纸
-3. 壁纸设置保存在KV数据库中，重启后仍然有效
+3. 壁纸设置保存在D1数据库中，重启后仍然有效
 
 #### 恢复默认壁纸
 
@@ -574,7 +559,7 @@ username:password@socks.example.com:1080
   - 使用正常的网页结构和资源引用
   - 模拟真实网站的交互行为
 - **隐蔽入口**：
-  - 通过特定参数（如`?panel=login`）访问登录页面
+  - 通过特定子路径（如`/login`）访问登录页面
   - 通过特定子路径（如`/panel`）访问主面板
   - 这些入口不会在伪装网页中直接显示
 
@@ -663,14 +648,14 @@ username:password@socks.example.com:1080
 
 ## 常见问题
 
-### Q: 如何绑定KV存储空间？
+### Q: 如何绑定D1数据库？
 
-A: 在Cloudflare Workers设置中，进入"变量"页面，在"KV命名空间绑定"部分添加变量名为`KV数据库`的绑定，并选择你创建的KV命名空间。
+A: 本项目使用 D1 数据库存储数据，部署时 wrangler 会自动创建并绑定数据库，无需手动绑定。如果使用 Pages 部署，需要在 Pages 控制台的"函数"设置中添加 D1 数据库绑定，绑定名为 `D1DB`。
 
 ### Q: 为什么无法登录？
 
 A: 请检查以下几点：
-1. 确保已经正确绑定了KV存储空间
+1. 确保已经正确绑定了D1数据库
 2. 检查用户名和密码是否正确
 3. 如果多次登录失败，账户可能被锁定，请等待5分钟后重试
 
@@ -736,16 +721,16 @@ A: 在面板打开强制代理后，flclash 会显示反代/SK5 的落地 IP 和
   - 3 秒超时探测目标 URL，连不上直接拦截
   - 读取返回内容并校验是否包含 IPv4 / IPv6 / 域名，不允许添加无效地址
 - 优选节点上传改为**选文件即自动上传**，移除手动上传按钮，减少操作步骤
-- 新增手动节点管理界面：在 KV 中展示已上传节点，支持**逐条删除**和**全部清空**
+- 新增手动节点管理界面：在 D1 中展示已上传节点，支持**逐条删除**和**全部清空**
 - 优化超长网络路径显示：文本自动省略，避免按钮被挤出可视区域
 - 新增手动节点管理 API：`get-manual-nodes`、`remove-manual-node`、`clear-manual-nodes`
 
 ### v1.4.0
 - 订阅配置与节点列表改为**完全实时生成/拉取**，移除所有配置缓存（`config_clash`/`config_v2ray`）与版本号（`config_*_version`/`ip_preferred_ips_version`），与SingBox现有模式统一，换UUID不再出现版本不匹配导致的重复生成
-- 移除节点列表缓存（`ip_preferred_ips`）及冗余日志键（`ip_error_log`），每次订阅请求实时拉取URL节点并合并手动节点；KV仅持久化 `node_file_paths` 与 `manual_preferred_ips`
+- 移除节点列表缓存（`ip_preferred_ips`）及冗余日志键（`ip_error_log`），每次订阅请求实时拉取URL节点并合并手动节点；D1仅持久化 `node_file_paths` 与 `manual_preferred_ips`
 - 节点去重改为按 **`地址:端口`** 统一去重，新增 `解析节点()` 兼容多种格式（IPv6/IPv4/域名、带/不带端口、带/不带名称协议），解决URL节点与手动上传标准化节点格式差异导致的重复问题
 - 手动上传节点由覆盖改为**追加+去重**，新节点追加到现有列表并按去重键合并，重新上传同IP:端口的节点可更新名称
-- 登录失败设备标识改为粗粒度指纹（浏览器主版本+操作系统+IP），失败计数键 `fail_*` 与锁定键 `lock_*` 设置30分钟自动过期，避免NAT下同IP误锁及KV无效数据堆积
+- 登录失败设备标识改为粗粒度指纹（浏览器主版本+操作系统+IP），失败计数键 `fail_*` 与锁定键 `lock_*` 设置30分钟自动过期，避免NAT下同IP误锁及D1无效数据堆积
 - 添加节点路径增加预拉取验证，反馈拉取状态与节点数量
 
 ### v1.3.0
@@ -803,7 +788,7 @@ A: 在面板打开强制代理后，flclash 会显示反代/SK5 的落地 IP 和
 ### v1.2.0
 - 新增Base64加密功能：
   - 添加Base64加密开关，支持对订阅链接进行加密
-  - 点击开关后立即将猫咪和通用配置加密/解密并保存到KV数据库
+  - 点击开关后立即将猫咪和通用配置加密/解密并保存到D1数据库
   - 提高订阅链接的安全性，防止被轻易识别和拦截
 - 优化配置生成逻辑，支持加密和非加密两种模式
 - 改进用户界面，添加加密设置卡片

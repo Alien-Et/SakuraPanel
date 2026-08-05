@@ -27,21 +27,22 @@ head_sampling_rate = 1
 directory = "./assets"
 binding = "ASSETS"
 
-# 📚 KV数据库命名空间配置（全局共享，生产+开发环境共用）
+# 📚 D1 数据库命名空间配置（全局共享，生产+开发环境共用）
 # 使用 CF 官方自动预配（wrangler >= 4.45.0），不写 id，部署时自动创建并绑定
-[[kv_namespaces]]
-binding = "KV数据库"
+[[d1_databases]]
+binding = "D1DB"
+database_name = "sakura-panel"
 
 # 🛠️ 开发环境配置
 [env.development]
 # 开发环境服务名称（带-dev后缀）
 name = "sakura-panel-dev"
-# KV 配置自动继承顶层，无需重复声明
+# D1 配置自动继承顶层，无需重复声明
 
 # 🚀 部署说明：
 # 1. 确保 wrangler >= 4.45.0：npm install -g wrangler@latest
 # 2. 直接运行：npx wrangler deploy
-#    - wrangler 会自动创建 KV 命名空间并绑定到 env.KV数据库
-#    - 创建后 namespace id 会自动写回本配置文件
-# 3. 如需指定命名空间名为 "sakura"，可先运行：npx wrangler kv namespace create "sakura"
-#    然后将返回的 id 填入上方 [[kv_namespaces]] 的 id 字段
+#    - wrangler 会自动创建 D1 数据库并绑定到 env.D1DB
+#    - 创建后 database id 会自动写回本配置文件
+# 3. 如需指定数据库名为 "sakura"，可先运行：npx wrangler d1 create "sakura"
+#    然后将返回的 id 填入上方 [[d1_databases]] 的 id 字段

@@ -1,0 +1,51 @@
+name: Deploy to Cloudflare Workers
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 需要完整 git 历史才能获取 tag
+
+      - name: Get latest version tag
+        id: get_version
+        run: |
+          # 获取最新 tag，如果没有 tag 则用 commit hash
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "version=$TAG" >> $GITHUB_OUTPUT
+          echo "Latest version: $TAG"
+
+      - name: Update version file
+        run: |
+          # 把版本号写进 src/版本.js
+          sed -i "s/export const 版本号 = \".*\";/export const 版本号 = \"${{ steps.get_version.outputs.version }}\";/" src/版本.js
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Deploy to Cloudflare
+        run: wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

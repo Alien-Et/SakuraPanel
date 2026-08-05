@@ -4,7 +4,7 @@ import { 生成脚本 } from './脚本.js';
 import { 容器HTML as 花瓣容器HTML } from '../界面_主题/花瓣效果.js';
 
 // ====================== 登录/注册界面 - 模板 ======================
-export function 生成登录注册界面(类型, 额外参数 = {}) {
+export function 生成登录注册界面(类型, 额外参数 = {}, 页面标题) {
   const 界面数据 = {
     注册: {
       title: '🌸首次使用注册🌸',
@@ -36,11 +36,14 @@ export function 生成登录注册界面(类型, 额外参数 = {}) {
     }
   };
 
+  const 页面标题文本 = 页面标题 || (类型 === '登录' ? '欢迎登录' : '注册新账号');
+
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${页面标题文本}</title>
   <style>${样式}</style>
 </head>
 <body>

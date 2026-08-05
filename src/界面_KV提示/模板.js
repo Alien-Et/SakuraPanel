@@ -10,6 +10,7 @@ export function 生成KV未绑定提示页面() {
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💔 KV未绑定</title>
   <style>${样式}</style>
 </head>
 <body>
@@ -34,7 +35,7 @@ export function 生成错误页面(错误信息) {
   // 转义 HTML 特殊字符，防止错误信息中的 <>&" 破坏页面结构
   const 转义信息 = (错误信息 || '未知错误').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-  const 标题 = 是KV错误 ? '💾 KV配额已用完' : '😵 服务器开小差了';
+  const 标题 = 是KV错误 ? 'KV配额已用完' : '服务器开小差了';
   const 说明 = 是KV错误
     ? 'Cloudflare KV 存储的每日免费配额已经用完啦~<br>请等待 <span class="highlight">每天 UTC 0点</span> 自动重置，<br>或前往 Cloudflare 控制台查看配额使用情况。'
     : '服务器处理请求时遇到了一些问题~<br>请稍后 <span class="highlight">刷新重试</span>，如果问题持续存在，请检查配置。';
@@ -44,6 +45,7 @@ export function 生成错误页面(错误信息) {
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${标题}</title>
   <style>${样式}</style>
   <style>
     .retry-btn {
