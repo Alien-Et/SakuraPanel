@@ -3,14 +3,16 @@ import { 样式 } from './样式.js';
 import { 生成脚本 } from './脚本.js';
 import { 容器HTML as 花瓣容器HTML } from '../界面_主题/花瓣效果.js';
 import { 配置路径映射 } from '../逻辑/辅助函数.js';
+import { 版本号 } from '../版本.js';
 
 // ====================== 订阅面板界面 - 模板 ======================
-export function 生成订阅页面(配置路径, hostName, uuid) {
+export function 生成订阅页面(配置路径, hostName, uuid, 页面标题 = '樱花面板') {
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${页面标题}</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -310,7 +312,7 @@ export function 生成订阅页面(配置路径, hostName, uuid) {
         </div>
       </div>
     </div>
-    <div class="powered-by">由 <a href="https://github.com/Alien-Et/SakuraPanel" target="_blank" rel="noopener noreferrer">SakuraPanel</a> 项目驱动</div>
+    <div class="powered-by">由 <a href="https://github.com/Alien-Et/SakuraPanel" target="_blank" rel="noopener noreferrer">SakuraPanel</a> 项目驱动 · 版本 ${版本号}</div>
   </div>
   <script>${生成脚本({ 默认白天背景图, 默认暗黑背景图, 配置路径, hostName })}</script>
 </body>
