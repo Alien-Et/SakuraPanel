@@ -246,13 +246,13 @@ export async function 路由处理(请求, env) {
         const 手机通用配置 = await 生成通用(env, hostName);
         const 机场名称 = await D1获取(env, 'airportName') || '樱花订阅';
         const cleanAirportName = 机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
-        const 流量头 = await 获取流量信息头(env);
+        const 流量头ng = await 获取流量信息头(env);
         return new Response(手机通用配置, {
           status: 200,
           headers: {
             "Content-Type": "text/plain;charset=utf-8",
             "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanAirportName)}`,
-            ...流量头
+            ...流量头ng
           }
         });
       }
@@ -262,14 +262,14 @@ export async function 路由处理(请求, env) {
         await 加载节点和配置(env, hostName);
         const singbox配置 = await 生成SingBox(env, hostName);
         const singbox机场名称 = await D1获取(env, 'airportName') || '樱花订阅';
-        const cleanSingboxName = singbox机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
-        const 流量头 = await 获取流量信息头(env);
+        const cleanSbName = singbox机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
+        const 流量头sb = await 获取流量信息头(env);
         return new Response(singbox配置, {
           status: 200,
           headers: {
             "Content-Type": "application/json; charset=utf-8",
-            "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanSingboxName)}`,
-            ...流量头
+            "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanSbName)}`,
+            ...流量头sb
           }
         });
       }
@@ -377,16 +377,16 @@ export async function 路由处理(请求, env) {
           // 合并现有手动节点 + 新上传节点，按 地址:端口 去重（新上传覆盖旧的，可更新名称）
           const 当前手动节点 = await D1获取(env, 'manual_preferred_ips');
           const 当前节点列表 = 当前手动节点 ? JSON.parse(当前手动节点) : [];
-          const 去重映射 = new Map();
+          const 合并Map = new Map();
           for (const 节点 of 当前节点列表) {
             const 解析 = 解析节点(节点);
-            if (解析) 去重映射.set(解析.去重键, 节点);
+            if (解析) 合并Map.set(解析.去重键, 节点);
           }
           for (const 节点 of allIpList) {
             const 解析 = 解析节点(节点);
-            if (解析) 去重映射.set(解析.去重键, 节点);
+            if (解析) 合并Map.set(解析.去重键, 节点);
           }
-          const uniqueIpList = [...去重映射.values()];
+          const uniqueIpList = [...合并Map.values()];
 
           // 去重统计：上传数、新增数、去重数、当前总数
           const 上传节点数 = allIpList.length;

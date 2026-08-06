@@ -299,7 +299,7 @@ function esSitioDePruebaVelocidad(hostname) {
     'detectportal.firefox.com'
   ];
   hostname = hostname.toLowerCase();
-  return 测试站点列表.some(dominio => hostname ===  dominio || hostname.endsWith('.' +  dominio));
+  return 测试站点列表.some(dominio => hostname === dominio || hostname.endsWith('.' + dominio));
 }
 
 function construirRespuesta204Local() {
@@ -428,29 +428,29 @@ async function DoH查询(域名, 记录类型, DoH解析服务 = 'https://cloudf
   log(`[DoH查询] 开始查询 ${域名} ${记录类型} via ${DoH解析服务}`);
   try {
     const 编码域名 = (name) => {
-      const 域名标签 = name.endsWith('.') ? name.slice(0, -1).split('.') : name.split('.');
+      const parts = name.endsWith('.') ? name.slice(0, -1).split('.') : name.split('.');
       const bufs = [];
-      for (const label of 域名标签) {
+      for (const label of parts) {
         const enc = new TextEncoder().encode(label);
         bufs.push(new Uint8Array([enc.length]), enc);
       }
       bufs.push(new Uint8Array([0]));
       const total = bufs.reduce((s, b) => s + b.length, 0);
       const result = new Uint8Array(total);
-      let 写入偏移 = 0;
-      for (const b of bufs) { result.set(b, 写入偏移); 写入偏移 += b.length }
+      let off = 0;
+      for (const b of bufs) { result.set(b, off); off += b.length }
       return result;
     };
 
     const qname = 编码域名(规范化域名);
     const query = new Uint8Array(12 + qname.length + 4);
-    const 查询视图 = new DataView(query.buffer);
-    查询视图.setUint16(0, crypto.getRandomValues(new Uint16Array(1))[0]);
-    查询视图.setUint16(2, 0x0100);
-    查询视图.setUint16(4, 1);
+    const qview = new DataView(query.buffer);
+    qview.setUint16(0, crypto.getRandomValues(new Uint16Array(1))[0]);
+    qview.setUint16(2, 0x0100);
+    qview.setUint16(4, 1);
     query.set(qname, 12);
-    查询视图.setUint16(12 + qname.length, qtype);
-    查询视图.setUint16(12 + qname.length + 2, 1);
+    qview.setUint16(12 + qname.length, qtype);
+    qview.setUint16(12 + qname.length + 2, 1);
 
     const response = await fetch(DoH解析服务, {
       method: 'POST',
@@ -466,36 +466,36 @@ async function DoH查询(域名, 记录类型, DoH解析服务 = 'https://cloudf
     }
 
     const buf = new Uint8Array(await response.arrayBuffer());
-    const 数据视图 = new DataView(buf.buffer);
-    const ancount = 数据视图.getUint16(6);
+    const dv = new DataView(buf.buffer);
+    const ancount = dv.getUint16(6);
     log(`[DoH查询] 收到响应 ${域名} ${记录类型} (${buf.length}字节, ${ancount}条应答)`);
 
     const answers = [];
     let offset = 12;
-    const qdcount = 数据视图.getUint16(4);
+    const qdcount = dv.getUint16(4);
     for (let i = 0; i < qdcount; i++) {
-      let 记录偏移 = offset, 安全计数 = 128;
-      while (记录偏移 < buf.length && 安全计数-- > 0) {
-        const len = buf[记录偏移];
-        if (len === 0) { offset = 记录偏移 + 1; break; }
-        if ((len & 0xC0) === 0xC0) { offset = 记录偏移 + 2; break; }
-        记录偏移 += len + 1;
+      let p = offset, safe = 128;
+      while (p < buf.length && safe-- > 0) {
+        const len = buf[p];
+        if (len === 0) { offset = p + 1; break; }
+        if ((len & 0xC0) === 0xC0) { offset = p + 2; break; }
+        p += len + 1;
       }
       offset += 4;
     }
     for (let i = 0; i < ancount && offset < buf.length; i++) {
-      let 记录偏移 = offset, 安全计数 = 128;
-      while (记录偏移 < buf.length && 安全计数-- > 0) {
-        const len = buf[记录偏移];
-        if (len === 0) { 记录偏移++; break; }
-        if ((len & 0xC0) === 0xC0) { 记录偏移 += 2; break; }
-        记录偏移 += len + 1;
+      let p = offset, safe = 128;
+      while (p < buf.length && safe-- > 0) {
+        const len = buf[p];
+        if (len === 0) { p++; break; }
+        if ((len & 0xC0) === 0xC0) { p += 2; break; }
+        p += len + 1;
       }
-      offset = 记录偏移;
-      const type = 数据视图.getUint16(offset); offset += 2;
+      offset = p;
+      const type = dv.getUint16(offset); offset += 2;
       offset += 2;
-      const ttl = 数据视图.getUint32(offset); offset += 4;
-      const rdlen = 数据视图.getUint16(offset); offset += 2;
+      const ttl = dv.getUint32(offset); offset += 4;
+      const rdlen = dv.getUint16(offset); offset += 2;
       const rdata = buf.slice(offset, offset + rdlen);
       offset += rdlen;
 
@@ -507,14 +507,14 @@ async function DoH查询(域名, 记录类型, DoH解析服务 = 'https://cloudf
         for (let j = 0; j < 16; j += 2) segs.push(((rdata[j] << 8) | rdata[j + 1]).toString(16));
         data = segs.join(':');
       } else if (type === 16) {
-        const txt分段 = [];
-        let txt偏移 = 0;
-        while (txt偏移 < rdlen) {
-          const txt长度 = rdata[txt偏移++];
-          txt分段.push(new TextDecoder().decode(rdata.slice(txt偏移, txt偏移 + txt长度)));
-          txt偏移 += txt长度;
+        const parts = [];
+        let tOff = 0;
+        while (tOff < rdlen) {
+          const tLen = rdata[tOff++];
+          parts.push(new TextDecoder().decode(rdata.slice(tOff, tOff + tLen)));
+          tOff += tLen;
         }
-        data = txt分段.join('');
+        data = parts.join('');
       } else {
         data = Array.from(rdata).map(b => b.toString(16).padStart(2, '0')).join('');
       }
@@ -565,13 +565,13 @@ async function 并发拨号(候选列表, TCP连接, 最大并发数) {
     });
   });
   
-  let 成功连接 = null;
+  let winner = null;
   try {
-    成功连接 = await Promise.any(attempts);
-    return 成功连接.socket;
+    winner = await Promise.any(attempts);
+    return winner.socket;
   } finally {
     // 关闭其他未成功的连接，释放资源
-    if (成功连接) {
+    if (winner) {
       for (const attempt of attempts) {
         attempt.catch(({ socket }) => {
           try { socket?.close?.(); } catch (e) { }
@@ -835,11 +835,11 @@ async function 创建SOCKS5(地址类型, 地址, 端口, socks5Account = null, 
 }
 
 async function 解析SOCKS5账号(SOCKS5) {
-  const [地址部分, 凭证部分] = SOCKS5.split("@").reverse();
+  const [latter, former] = SOCKS5.split("@").reverse();
   let username, password, hostname, port;
-  if (凭证部分) [username, password] = 凭证部分.split(":");
-  const 地址片段 = 地址部分.split(":");
-  port = Number(地址片段.pop());
-  hostname = 地址片段.join(":");
+  if (former) [username, password] = former.split(":");
+  const latters = latter.split(":");
+  port = Number(latters.pop());
+  hostname = latters.join(":");
   return { username, password, hostname, port };
 }

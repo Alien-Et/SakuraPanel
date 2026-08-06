@@ -623,9 +623,9 @@ export function 生成脚本(参数) {
 
     function 移除文件(index) {
       const fileInput = document.getElementById('ipFiles');
-      const 文件转移器 = new DataTransfer();
-      Array.from(fileInput.files).forEach((file, i) => { if (i !== index) 文件转移器.items.add(file); });
-      fileInput.files = 文件转移器.files;
+      const dt = new DataTransfer();
+      Array.from(fileInput.files).forEach((file, i) => { if (i !== index) dt.items.add(file); });
+      fileInput.files = dt.files;
       显示文件();
     }
 
@@ -1018,9 +1018,9 @@ export function 生成脚本(参数) {
 
     // 获取输入框的真实值（脱敏时取 data-original）
     function 获取CF输入值(id) {
-      const 元素 = document.getElementById(id);
-      if (元素.dataset.masked) return 元素.dataset.original || '';
-      return 元素.value.trim();
+      const el = document.getElementById(id);
+      if (el.dataset.masked) return el.dataset.original || '';
+      return el.value.trim();
     }
 
     // 校验当前认证方式的字段完整性
@@ -1098,10 +1098,10 @@ export function 生成脚本(参数) {
         { id: 'SB订阅链接', base: 'https://${hostName}/${配置路径}/${配置路径映射.魔法3}' }
       ];
       links.forEach(link => {
-        const 元素 = document.getElementById(link.id);
-        if (元素) {
-          元素.href = link.base + tokenParam;
-          元素.textContent = link.base + tokenParam;
+        const el = document.getElementById(link.id);
+        if (el) {
+          el.href = link.base + tokenParam;
+          el.textContent = link.base + tokenParam;
         }
       });
     }

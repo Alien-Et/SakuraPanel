@@ -269,11 +269,11 @@ export async function 查询CF请求数(env) {
 
     // 如果没有 Account ID，用邮箱+API Key 查询
     if (!finalAccountId && hasEmailKey) {
-      const 响应 = await fetch(`${API}/accounts`, { method: 'GET', headers: hdr });
-      if (!响应.ok) throw new Error(`账户获取失败: HTTP ${响应.status}`);
-      const 数据 = await 响应.json();
-      if (!数据?.result?.length) throw new Error('未找到账户');
-      finalAccountId = 数据.result[0]?.id;
+      const r = await fetch(`${API}/accounts`, { method: 'GET', headers: hdr });
+      if (!r.ok) throw new Error(`账户获取失败: HTTP ${r.status}`);
+      const d = await r.json();
+      if (!d?.result?.length) throw new Error('未找到账户');
+      finalAccountId = d.result[0]?.id;
     }
 
     if (!finalAccountId) throw new Error('无法确定Account ID');

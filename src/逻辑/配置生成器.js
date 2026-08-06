@@ -63,9 +63,7 @@ export async function 生成猫咪(env, hostName) {
 ${[...国家分组[国家].IPv4, ...国家分组[国家].IPv6].map(n => `      - "${n.name}"`).join("\n")}
 `).join("");
 
-  const 配置文本 = `# Generated at: ${new Date().toISOString()}
-# Airport: ${机场名称}
-mixed-port: 7890
+  const 配置文本 = `mixed-port: 7890
 allow-lan: true
 mode: Rule
 log-level: info
@@ -172,9 +170,7 @@ export async function 生成通用(env, hostName) {
     }
   }).filter(Boolean);
 
-  const 配置文本 = `# Generated at: ${new Date().toISOString()}
-# Airport: ${机场名称}
-${配置列表.length ? 配置列表.join("\n") : (atob('dmxlc3M=') + '://' + uuid + '@' + hostName + ':443?encryption=none&security=tls&type=ws&host=' + hostName + '&path=' + encodeURIComponent('/?ed=2560') + '&sni=' + hostName + echParam + '#默认节点')}`;
+  const 配置文本 = `${配置列表.length ? 配置列表.join("\n") : (atob('dmxlc3M=') + '://' + uuid + '@' + hostName + ':443?encryption=none&security=tls&type=ws&host=' + hostName + '&path=' + encodeURIComponent('/?ed=2560') + '&sni=' + hostName + echParam + '#默认节点')}`;
 
   // 如果启用了Base64加密，则对整个配置文本进行Base64编码
   if (b64Enabled) {
