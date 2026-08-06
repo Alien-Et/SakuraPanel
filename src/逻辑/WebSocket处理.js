@@ -1,7 +1,7 @@
 import { connect } from 'cloudflare:sockets';
 import { 共享状态 } from '../共享状态.js';
 import { 获取或初始化UUID } from './节点配置.js';
-import { D1获取, D1批量获取, log } from './辅助函数.js';
+import { D1获取, D1批量获取, log, error } from './辅助函数.js';
 
 // ====================== WebSocket处理 ======================
 export async function 升级请求(请求, env) {
@@ -52,7 +52,7 @@ export async function 升级请求(请求, env) {
       await writer.write(chunk);
       log(`[管道 WS->TCP] 写入: ${chunk.byteLength} bytes`);
     } catch (e) {
-      console.error(`[管道 WS->TCP] 写入失败: ${e.message}`);
+      error(`[管道 WS->TCP] 写入失败: ${e.message}`);
     } finally {
       try { writer.releaseLock(); } catch (e) { }
     }
@@ -78,7 +78,7 @@ export async function 升级请求(请求, env) {
       协议已识别 = true;
       const 解析结果 = 解析VLESS首包(chunk, uuid);
       if (!解析结果) {
-        console.error('[WebSocket] VLESS 首包解析失败');
+        error('[WebSocket] VLESS 首包解析失败');
         服务端.close(1008);
         return;
       }
@@ -98,7 +98,7 @@ export async function 升级请求(请求, env) {
           TCP接口 = await 智能Connection(地址, 端口, 地址类型, env, TCP连接, TCP并发拨号数, 反代并发拨号数);
           log(`[WebSocket] 连接成功: ${地址}:${端口}`);
         } catch (错误) {
-          console.error(`[WebSocket] 连接失败: ${错误.message}`);
+          error(`[WebSocket] 连接失败: ${错误.message}`);
           服务端.close(1011);
           return;
         }
@@ -133,7 +133,7 @@ export async function 升级请求(请求, env) {
   // 队列式消息处理
   const 入队消息 = (data) => {
     WS消息队列 = WS消息队列.then(() => 处理消息(data)).catch(e => {
-      console.error(`[WebSocket] 消息处理错误: ${e.message}`);
+      error(`[WebSocket] 消息处理错误: ${e.message}`);
     });
   };
 
@@ -148,7 +148,7 @@ export async function 升级请求(请求, env) {
   });
 
   服务端.addEventListener('error', (err) => {
-    console.error(`[WebSocket] 客户端错误: ${err.message || err}`);
+    error(`[WebSocket] 客户端错误: ${err.message || err}`);
     try { TCP接口?.close(); } catch (e) { }
   });
 
@@ -164,7 +164,7 @@ export async function 升级请求(请求, env) {
         入队消息(bytes);
       }
     } catch (错误) {
-      console.error(`[WebSocket] Early Data 解析失败: ${错误.message}`);
+      error(`[WebSocket] Early Data 解析失败: ${错误.message}`);
     }
   }
 
@@ -281,7 +281,7 @@ function 解析VLESS首包(数据, uuid) {
 }
 
 function esSitioDePruebaVelocidad(hostname) {
-  const sitiosPrueba = [
+  const 测试站点列表 = [
     // Cloudflare
     'cp.cloudflare.com',
     // Google
@@ -299,7 +299,7 @@ function esSitioDePruebaVelocidad(hostname) {
     'detectportal.firefox.com'
   ];
   hostname = hostname.toLowerCase();
-  return sitiosPrueba.some(dominio => hostname === dominio || hostname.endsWith('.' + dominio));
+  return 测试站点列表.some(dominio => hostname ===  dominio || hostname.endsWith('.' +  dominio));
 }
 
 function construirRespuesta204Local() {
@@ -317,7 +317,7 @@ async function 智能Connection(地址, 端口, 地址类型, env, TCP连接, TC
   log(`[智能连接] 开始: 地址=${地址} 端口=${端口} 类型=${地址类型} 反代=${当前反代Address || '无'} SOCKS5=${SOCKS5Account || '无'}`);
 
   if (!地址 || 地址.trim() === '') {
-    console.error('[智能连接] 目标地址为空');
+    error('[智能连接] 目标地址为空');
     throw new Error('目标地址为空');
   }
 
@@ -344,7 +344,7 @@ async function 智能Connection(地址, 端口, 地址类型, env, TCP连接, TC
             log(`[智能连接] 强制反代连接成功`);
             return 连接;
           } catch (错误) {
-            console.error(`[智能连接] 强制反代连接失败: ${错误.message}`);
+            error(`[智能连接] 强制反代连接失败: ${错误.message}`);
             throw new Error(`强制反代失败: ${错误.message}`);
           }
         } else if (代理Type === 'socks5' && SOCKS5Account) {
@@ -354,7 +354,7 @@ async function 智能Connection(地址, 端口, 地址类型, env, TCP连接, TC
             log(`[智能连接] 强制SOCKS5连接成功`);
             return SOCKS5连接;
           } catch (错误) {
-            console.error(`[智能连接] 强制SOCKS5连接失败: ${错误.message}`);
+            error(`[智能连接] 强制SOCKS5连接失败: ${错误.message}`);
             throw new Error(`强制SOCKS5失败: ${错误.message}`);
           }
         }
@@ -372,7 +372,7 @@ async function 智能Connection(地址, 端口, 地址类型, env, TCP连接, TC
             log(`[智能连接] 动态反代连接成功`);
             return 连接;
           } catch (错误) {
-            console.error(`[智能连接] 动态反代连接失败: ${错误.message}`);
+            error(`[智能连接] 动态反代连接失败: ${错误.message}`);
           }
         } else if (代理Type === 'socks5' && SOCKS5Account) {
           try {
@@ -381,7 +381,7 @@ async function 智能Connection(地址, 端口, 地址类型, env, TCP连接, TC
             log(`[智能连接] 动态SOCKS5连接成功`);
             return SOCKS5连接;
           } catch (错误) {
-            console.error(`[智能连接] 动态SOCKS5连接失败: ${错误.message}`);
+            error(`[智能连接] 动态SOCKS5连接失败: ${错误.message}`);
           }
         }
         throw new Error(`所有连接尝试失败: ${错误.message}`);
@@ -405,7 +405,7 @@ async function 解析反代地址端口(反代地址) {
     地址 = 反代地址.slice(0, colonIndex);
     端口 = parseInt(反代地址.slice(colonIndex + 1), 10) || 端口;
   }
-  return [{ hostname: 地址, port: 端口 }];
+  return [{ hostname: 地址, port }];
 }
 
 // DoH 查询缓存
@@ -419,38 +419,38 @@ async function DoH查询(域名, 记录类型, DoH解析服务 = 'https://cloudf
   const 缓存键 = `${规范化域名}:${规范化记录类型}`;
   const qtype = DoH记录类型映射[规范化记录类型] || 1;
   const 当前时间戳 = Date.now();
-  const 现缓存项 = DoH缓存[缓存键];
-  if (现缓存项 && 当前时间戳 < 现缓存项.过期时间) {
+  const 当前缓存项 = DoH缓存[缓存键];
+  if (当前缓存项 && 当前时间戳 < 当前缓存项.过期时间) {
     log(`[DoH查询] 命中缓存 ${域名} ${记录类型}`);
-    return 现缓存项.data.map(data => ({ type: qtype, data }));
+    return 当前缓存项.data.map(data => ({ type: qtype, data }));
   }
   const 开始时间 = performance.now();
   log(`[DoH查询] 开始查询 ${域名} ${记录类型} via ${DoH解析服务}`);
   try {
     const 编码域名 = (name) => {
-      const parts = name.endsWith('.') ? name.slice(0, -1).split('.') : name.split('.');
+      const 域名标签 = name.endsWith('.') ? name.slice(0, -1).split('.') : name.split('.');
       const bufs = [];
-      for (const label of parts) {
+      for (const label of 域名标签) {
         const enc = new TextEncoder().encode(label);
         bufs.push(new Uint8Array([enc.length]), enc);
       }
       bufs.push(new Uint8Array([0]));
       const total = bufs.reduce((s, b) => s + b.length, 0);
       const result = new Uint8Array(total);
-      let off = 0;
-      for (const b of bufs) { result.set(b, off); off += b.length }
+      let 写入偏移 = 0;
+      for (const b of bufs) { result.set(b, 写入偏移); 写入偏移 += b.length }
       return result;
     };
 
     const qname = 编码域名(规范化域名);
     const query = new Uint8Array(12 + qname.length + 4);
-    const qview = new DataView(query.buffer);
-    qview.setUint16(0, crypto.getRandomValues(new Uint16Array(1))[0]);
-    qview.setUint16(2, 0x0100);
-    qview.setUint16(4, 1);
+    const 查询视图 = new DataView(query.buffer);
+    查询视图.setUint16(0, crypto.getRandomValues(new Uint16Array(1))[0]);
+    查询视图.setUint16(2, 0x0100);
+    查询视图.setUint16(4, 1);
     query.set(qname, 12);
-    qview.setUint16(12 + qname.length, qtype);
-    qview.setUint16(12 + qname.length + 2, 1);
+    查询视图.setUint16(12 + qname.length, qtype);
+    查询视图.setUint16(12 + qname.length + 2, 1);
 
     const response = await fetch(DoH解析服务, {
       method: 'POST',
@@ -466,36 +466,36 @@ async function DoH查询(域名, 记录类型, DoH解析服务 = 'https://cloudf
     }
 
     const buf = new Uint8Array(await response.arrayBuffer());
-    const dv = new DataView(buf.buffer);
-    const ancount = dv.getUint16(6);
+    const 数据视图 = new DataView(buf.buffer);
+    const ancount = 数据视图.getUint16(6);
     log(`[DoH查询] 收到响应 ${域名} ${记录类型} (${buf.length}字节, ${ancount}条应答)`);
 
     const answers = [];
     let offset = 12;
-    const qdcount = dv.getUint16(4);
+    const qdcount = 数据视图.getUint16(4);
     for (let i = 0; i < qdcount; i++) {
-      let p = offset, safe = 128;
-      while (p < buf.length && safe-- > 0) {
-        const len = buf[p];
-        if (len === 0) { offset = p + 1; break; }
-        if ((len & 0xC0) === 0xC0) { offset = p + 2; break; }
-        p += len + 1;
+      let 记录偏移 = offset, 安全计数 = 128;
+      while (记录偏移 < buf.length && 安全计数-- > 0) {
+        const len = buf[记录偏移];
+        if (len === 0) { offset = 记录偏移 + 1; break; }
+        if ((len & 0xC0) === 0xC0) { offset = 记录偏移 + 2; break; }
+        记录偏移 += len + 1;
       }
       offset += 4;
     }
     for (let i = 0; i < ancount && offset < buf.length; i++) {
-      let p = offset, safe = 128;
-      while (p < buf.length && safe-- > 0) {
-        const len = buf[p];
-        if (len === 0) { p++; break; }
-        if ((len & 0xC0) === 0xC0) { p += 2; break; }
-        p += len + 1;
+      let 记录偏移 = offset, 安全计数 = 128;
+      while (记录偏移 < buf.length && 安全计数-- > 0) {
+        const len = buf[记录偏移];
+        if (len === 0) { 记录偏移++; break; }
+        if ((len & 0xC0) === 0xC0) { 记录偏移 += 2; break; }
+        记录偏移 += len + 1;
       }
-      offset = p;
-      const type = dv.getUint16(offset); offset += 2;
+      offset = 记录偏移;
+      const type = 数据视图.getUint16(offset); offset += 2;
       offset += 2;
-      const ttl = dv.getUint32(offset); offset += 4;
-      const rdlen = dv.getUint16(offset); offset += 2;
+      const ttl = 数据视图.getUint32(offset); offset += 4;
+      const rdlen = 数据视图.getUint16(offset); offset += 2;
       const rdata = buf.slice(offset, offset + rdlen);
       offset += rdlen;
 
@@ -507,14 +507,14 @@ async function DoH查询(域名, 记录类型, DoH解析服务 = 'https://cloudf
         for (let j = 0; j < 16; j += 2) segs.push(((rdata[j] << 8) | rdata[j + 1]).toString(16));
         data = segs.join(':');
       } else if (type === 16) {
-        const parts = [];
-        let tOff = 0;
-        while (tOff < rdlen) {
-          const tLen = rdata[tOff++];
-          parts.push(new TextDecoder().decode(rdata.slice(tOff, tOff + tLen)));
-          tOff += tLen;
+        const txt分段 = [];
+        let txt偏移 = 0;
+        while (txt偏移 < rdlen) {
+          const txt长度 = rdata[txt偏移++];
+          txt分段.push(new TextDecoder().decode(rdata.slice(txt偏移, txt偏移 + txt长度)));
+          txt偏移 += txt长度;
         }
-        data = parts.join('');
+        data = txt分段.join('');
       } else {
         data = Array.from(rdata).map(b => b.toString(16).padStart(2, '0')).join('');
       }
@@ -540,7 +540,7 @@ async function DoH查询(域名, 记录类型, DoH解析服务 = 'https://cloudf
     return answers;
   } catch (error) {
     const 耗时 = (performance.now() - 开始时间).toFixed(2);
-    console.error(`[DoH查询] 查询失败 ${域名} ${记录类型} ${耗时}ms:`, error);
+    error(`[DoH查询] 查询失败 ${域名} ${记录类型} ${耗时}ms:`, error);
     return [];
   }
 }
@@ -565,13 +565,13 @@ async function 并发拨号(候选列表, TCP连接, 最大并发数) {
     });
   });
   
-  let winner = null;
+  let 成功连接 = null;
   try {
-    winner = await Promise.any(attempts);
-    return winner.socket;
+    成功连接 = await Promise.any(attempts);
+    return 成功连接.socket;
   } finally {
     // 关闭其他未成功的连接，释放资源
-    if (winner) {
+    if (成功连接) {
       for (const attempt of attempts) {
         attempt.catch(({ socket }) => {
           try { socket?.close?.(); } catch (e) { }
@@ -639,7 +639,7 @@ async function 尝试直连(地址, 端口, TCP连接) {
     log(`[直连] 成功: ${地址}:${端口}`);
     return 连接;
   } catch (错误) {
-    console.error(`[直连] 失败: ${地址}:${端口} - ${错误.message}`);
+    error(`[直连] 失败: ${地址}:${端口} - ${错误.message}`);
     throw new Error(`无法连接: ${错误.message}`);
   }
 }
@@ -681,7 +681,7 @@ function 解码WS早期数据(header, token) {
       binaryString = atob(normalized);
       解码方式 = 'atob';
     } catch (_) {
-      console.error(`[EarlyData] Base64 解码失败`);
+      error(`[EarlyData] Base64 解码失败`);
       return null;
     }
     bytes = new Uint8Array(binaryString.length);
@@ -748,13 +748,13 @@ async function 建立管道(服务端, TCP接口, 初始数据) {
             //   log(`[管道 TCP->WS] 转发: ${value.byteLength} bytes，累计: ${bytesCount} bytes`);
             // }
           } catch (e) {
-            console.error(`[管道 TCP->WS] 发送失败: ${e.message}`);
+            error(`[管道 TCP->WS] 发送失败: ${e.message}`);
             break;
           }
         }
       }
     } catch (e) {
-      console.error(`[管道 TCP->WS] 错误: ${e.message}`);
+      error(`[管道 TCP->WS] 错误: ${e.message}`);
     } finally {
       try { tcpReader.releaseLock(); } catch (e) { }
       try { if (服务端.readyState !== WebSocket.CLOSED) 服务端.close(1000); } catch (e) { }
@@ -770,7 +770,7 @@ async function 建立管道(服务端, TCP接口, 初始数据) {
         await writer.write(初始数据);
       }
     } catch (e) {
-      console.error(`[管道 WS->TCP] 写入初始数据失败: ${e.message}`);
+      error(`[管道 WS->TCP] 写入初始数据失败: ${e.message}`);
     } finally {
       try { writer.releaseLock(); } catch (e) { }
     }
@@ -835,11 +835,11 @@ async function 创建SOCKS5(地址类型, 地址, 端口, socks5Account = null, 
 }
 
 async function 解析SOCKS5账号(SOCKS5) {
-  const [latter, former] = SOCKS5.split("@").reverse();
+  const [地址部分, 凭证部分] = SOCKS5.split("@").reverse();
   let username, password, hostname, port;
-  if (former) [username, password] = former.split(":");
-  const latters = latter.split(":");
-  port = Number(latters.pop());
-  hostname = latters.join(":");
+  if (凭证部分) [username, password] = 凭证部分.split(":");
+  const 地址片段 = 地址部分.split(":");
+  port = Number(地址片段.pop());
+  hostname = 地址片段.join(":");
   return { username, password, hostname, port };
 }

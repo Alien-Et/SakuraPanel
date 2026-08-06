@@ -1,4 +1,4 @@
-// ====================== KV未绑定提示界面 - 脚本 ======================
+// ====================== D1未绑定提示界面 - 脚本 ======================
 import { 脚本 as 花瓣脚本 } from '../界面_主题/花瓣效果.js';
 
 export function 生成脚本(参数) {
@@ -8,7 +8,7 @@ export function 生成脚本(参数) {
     const darkBg = '${默认暗黑背景图}';
     const bgImage = document.getElementById('backgroundImage');
 
-    // KV未绑定时直接使用默认壁纸，无需调用API
+    // D1未绑定时直接使用默认壁纸，无需调用API
     function updateBackground() {
       const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
       bgImage.src = isDarkMode ? darkBg : lightBg;

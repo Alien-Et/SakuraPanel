@@ -1,17 +1,17 @@
 import { 共享状态 } from './共享状态.js';
-import { 创建HTML响应, 创建重定向响应, 创建JSON响应, 生成UUID, 加密密码, 提取设备指纹, 检查锁定, 验证订阅Token, 获取流量信息头, 生成订阅Token, 查询CF请求数, 解析节点, 获取Cookie值, 验证请求Token, 获取表单数据, 默认节点路径, 配置路径映射, D1初始化, D1获取, D1设置, D1删除, D1批量获取, log } from './逻辑/辅助函数.js';
+import { 创建HTML响应, 创建重定向响应, 创建JSON响应, 生成UUID, 加密密码, 提取设备指纹, 检查锁定, 验证订阅Token, 获取流量信息头, 生成订阅Token, 查询CF请求数, 解析节点, 获取Cookie值, 验证请求Token, 获取表单数据, 默认节点路径, 配置路径映射, D1初始化, D1获取, D1设置, D1删除, D1批量获取, log, error } from './逻辑/辅助函数.js';
 import { 获取或初始化UUID, 加载节点和配置 } from './逻辑/节点配置.js';
 import { 升级请求 } from './逻辑/WebSocket处理.js';
 import { 生成猫咪, 生成通用, 生成SingBox } from './逻辑/配置生成器.js';
 import { 生成登录注册界面 } from './界面_登录注册/模板.js';
 import { 生成订阅页面 } from './界面_面板/模板.js';
-import { 生成KV未绑定提示页面, 生成错误页面 } from './界面_KV提示/模板.js';
+import { 生成D1未绑定提示页面, 生成错误页面 } from './界面_D1提示/模板.js';
 
 // ====================== 主逻辑 ======================
 export async function 路由处理(请求, env) {
   try {
     if (!env.D1DB) {
-      return 创建HTML响应(生成KV未绑定提示页面());
+      return 创建HTML响应(生成D1未绑定提示页面());
     }
     await D1初始化(env);
 
@@ -244,15 +244,15 @@ export async function 路由处理(请求, env) {
         if (!(await 验证订阅Token(env, hostName, url))) return 创建JSON响应({ error: 'Token无效或缺失' }, 403);
         await 加载节点和配置(env, hostName);
         const 手机通用配置 = await 生成通用(env, hostName);
-        const 机场名称ng = await D1获取(env, 'airportName') || '樱花订阅';
-        const cleanAirportNameng = 机场名称ng.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
-        const 流量头ng = await 获取流量信息头(env);
+        const 机场名称 = await D1获取(env, 'airportName') || '樱花订阅';
+        const cleanAirportName = 机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
+        const 流量头 = await 获取流量信息头(env);
         return new Response(手机通用配置, {
           status: 200,
           headers: {
             "Content-Type": "text/plain;charset=utf-8",
-            "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanAirportNameng)}`,
-            ...流量头ng
+            "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanAirportName)}`,
+            ...流量头
           }
         });
       }
@@ -261,15 +261,15 @@ export async function 路由处理(请求, env) {
         if (!(await 验证订阅Token(env, hostName, url))) return 创建JSON响应({ error: 'Token无效或缺失' }, 403);
         await 加载节点和配置(env, hostName);
         const singbox配置 = await 生成SingBox(env, hostName);
-        const sb机场名称 = await D1获取(env, 'airportName') || '樱花订阅';
-        const cleanSbName = sb机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
-        const 流量头sb = await 获取流量信息头(env);
+        const singbox机场名称 = await D1获取(env, 'airportName') || '樱花订阅';
+        const cleanSingboxName = singbox机场名称.replace(/[^\u4e00-\u9fa5a-zA-Z0-9_-]/g, '');
+        const 流量头 = await 获取流量信息头(env);
         return new Response(singbox配置, {
           status: 200,
           headers: {
             "Content-Type": "application/json; charset=utf-8",
-            "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanSbName)}`,
-            ...流量头sb
+            "Content-Disposition": `inline; filename="subscription"; filename*=utf-8''${encodeURIComponent(cleanSingboxName)}`,
+            ...流量头
           }
         });
       }
@@ -377,16 +377,16 @@ export async function 路由处理(请求, env) {
           // 合并现有手动节点 + 新上传节点，按 地址:端口 去重（新上传覆盖旧的，可更新名称）
           const 当前手动节点 = await D1获取(env, 'manual_preferred_ips');
           const 当前节点列表 = 当前手动节点 ? JSON.parse(当前手动节点) : [];
-          const 合并Map = new Map();
+          const 去重映射 = new Map();
           for (const 节点 of 当前节点列表) {
             const 解析 = 解析节点(节点);
-            if (解析) 合并Map.set(解析.去重键, 节点);
+            if (解析) 去重映射.set(解析.去重键, 节点);
           }
           for (const 节点 of allIpList) {
             const 解析 = 解析节点(节点);
-            if (解析) 合并Map.set(解析.去重键, 节点);
+            if (解析) 去重映射.set(解析.去重键, 节点);
           }
-          const uniqueIpList = [...合并Map.values()];
+          const uniqueIpList = [...去重映射.values()];
 
           // 去重统计：上传数、新增数、去重数、当前总数
           const 上传节点数 = allIpList.length;
@@ -402,7 +402,7 @@ export async function 路由处理(请求, env) {
           await D1设置(env, 'manual_preferred_ips', JSON.stringify(uniqueIpList));
           return 创建JSON响应({ message: '上传成功：共上传 ' + 上传节点数 + ' 个，新增 ' + 新增数 + ' 个，去重 ' + 去重数 + ' 个，当前共 ' + 当前总数 + ' 个手动节点' }, 200, { 'Location': `/${共享状态.配置路径}` });
         } catch (错误) {
-          console.error(`上传处理失败: ${错误.message}`);
+          error(`上传处理失败: ${错误.message}`);
           return 创建JSON响应({ error: `上传处理失败: ${错误.message}` }, 500);
         }
 
@@ -673,7 +673,7 @@ export async function 路由处理(请求, env) {
           await 生成猫咪(env, hostName);
           return 创建JSON响应({ success: true });
         } catch (错误) {
-          console.error(`生成猫咪配置失败: ${错误.message}`);
+          error(`生成猫咪配置失败: ${错误.message}`);
           return 创建JSON响应({ error: `生成猫咪配置失败: ${错误.message}` }, 500);
         }
 
@@ -686,7 +686,7 @@ export async function 路由处理(请求, env) {
           await 生成通用(env, hostName);
           return 创建JSON响应({ success: true });
         } catch (错误) {
-          console.error(`生成通用配置失败: ${错误.message}`);
+          error(`生成通用配置失败: ${错误.message}`);
           return 创建JSON响应({ error: `生成通用配置失败: ${错误.message}` }, 500);
         }
 
@@ -809,14 +809,14 @@ export async function 路由处理(请求, env) {
         try {
           return await fetch(伪装URL, 请求);
         } catch (错误) {
-          console.error(`伪装请求失败: ${错误.message}`);
+          error(`伪装请求失败: ${错误.message}`);
           return 创建HTML响应(生成错误页面('服务暂时不可用'), 502);
         }
       }
     }
   } catch (error) {
-    console.error(`全局错误: ${error.message}`);
-    // 浏览器页面请求返回 HTML 错误页（如 KV 配额超限），API/订阅请求仍返回 JSON
+    error(`全局错误: ${error.message}`);
+    // 浏览器页面请求返回 HTML 错误页（如 D1 配额超限），API/订阅请求仍返回 JSON
     const acceptHeader = 请求.headers.get('Accept') || '';
     if (acceptHeader.includes('text/html')) {
       return 创建HTML响应(生成错误页面(error.message), 500);

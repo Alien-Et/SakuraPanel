@@ -1,6 +1,6 @@
 ﻿import { 共享状态 } from '../共享状态.js';
 import { 获取或初始化UUID, 加载节点和配置 } from './节点配置.js';
-import { D1获取, D1批量获取 } from './辅助函数.js';
+import { D1获取, D1批量获取, error } from './辅助函数.js';
 
 // ====================== 配置生成器 ======================
 export async function 生成猫咪(env, hostName) {
@@ -167,7 +167,7 @@ export async function 生成通用(env, hostName) {
       const encodedPath = encodeURIComponent('/?ed=2560');
       return `${atob('dmxlc3M=')}://${uuid}@${修正地址}:${端口}?encryption=none&security=${TLS开关}&type=ws&host=${hostName}&path=${encodedPath}&sni=${hostName}&fp=chrome${echParam}#${encodeURIComponent(节点名字)}`;
     } catch (error) {
-      console.error(`生成通用节点失败: ${节点}, 错误: ${error.message}`);
+      error(`生成通用节点失败: ${节点}, 错误: ${error.message}`);
       return null;
     }
   }).filter(Boolean);
@@ -233,7 +233,7 @@ export async function 生成SingBox(env, hostName) {
       }
       return outbound;
     } catch (error) {
-      console.error(`${atob('55Sf5oiQIFNpbmdCb3gg6IqC54K55aSx6LSl')}${节点}, 错误: ${error.message}`);
+      error(`${atob('55Sf5oiQIFNpbmdCb3gg6IqC54K55aSx6LSl')}${节点}, 错误: ${error.message}`);
       return null;
     }
   }).filter(Boolean);

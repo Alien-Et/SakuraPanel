@@ -12,10 +12,16 @@ export const 配置路径映射 = {
   魔法3: atob('c2luZ2JveA==')
 };
 
-// 全局日志开关（通过 共享状态.调试模式 控制）
+// 日志分级：off=关闭, error=仅错误, info=仅正常, all=全量
 export function log(...args) {
-  if (共享状态.调试模式) {
+  if (共享状态.日志级别 === 'all' || 共享状态.日志级别 === 'info') {
     console.log(...args);
+  }
+}
+
+export function error(...args) {
+  if (共享状态.日志级别 === 'all' || 共享状态.日志级别 === 'error') {
+    console.error(...args);
   }
 }
 
@@ -263,11 +269,11 @@ export async function 查询CF请求数(env) {
 
     // 如果没有 Account ID，用邮箱+API Key 查询
     if (!finalAccountId && hasEmailKey) {
-      const r = await fetch(`${API}/accounts`, { method: 'GET', headers: hdr });
-      if (!r.ok) throw new Error(`账户获取失败: HTTP ${r.status}`);
-      const d = await r.json();
-      if (!d?.result?.length) throw new Error('未找到账户');
-      finalAccountId = d.result[0]?.id;
+      const 响应 = await fetch(`${API}/accounts`, { method: 'GET', headers: hdr });
+      if (!响应.ok) throw new Error(`账户获取失败: HTTP ${响应.status}`);
+      const 数据 = await 响应.json();
+      if (!数据?.result?.length) throw new Error('未找到账户');
+      finalAccountId = 数据.result[0]?.id;
     }
 
     if (!finalAccountId) throw new Error('无法确定Account ID');
@@ -301,7 +307,7 @@ export async function 查询CF请求数(env) {
     await D1设置(env, 'cf_usage_cache', JSON.stringify({ 时间戳: Date.now(), 用量 }), 300);
     return 用量;
   } catch (错误) {
-    console.error('获取CF使用量错误:', 错误.message);
+    error('获取CF使用量错误:', 错误.message);
     return { success: false, pages: 0, workers: 0, total: 0, max: 100000, error: 错误.message };
   }
 }

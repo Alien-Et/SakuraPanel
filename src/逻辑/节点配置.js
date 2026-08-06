@@ -1,6 +1,6 @@
 import { 共享状态 } from '../共享状态.js';
 import { 默认白天背景图, 默认暗黑背景图 } from '../常量.js';
-import { 生成UUID, 解析节点, D1获取, D1设置, D1批量获取 } from './辅助函数.js';
+import { 生成UUID, 解析节点, D1获取, D1设置, D1批量获取, error } from './辅助函数.js';
 
 // ====================== 节点配置相关 ======================
 export async function 获取或初始化UUID(env) {
@@ -44,7 +44,7 @@ export async function 加载节点和配置(env, hostName) {
           const 文本 = await 响应.text();
           return 文本.split('\n').map(line => line.trim()).filter(Boolean);
         } catch (错误) {
-          console.error(`拉取 ${路径} 失败: ${错误.message}`);
+          error(`拉取 ${路径} 失败: ${错误.message}`);
           return [];
         }
       })
